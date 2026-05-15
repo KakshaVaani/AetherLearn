@@ -1,5 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
+import {
+  studentAccessibilityVisuals,
+  studentTextMetrics,
+  useStudentPreferences
+} from "@/api/studentPreferences";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
@@ -8,8 +13,12 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { colors, spacing } from "@/constants/theme";
 
 export default function FeedbackScreen() {
+  const preferences = useStudentPreferences();
+  const metrics = studentTextMetrics(preferences.textSize);
+  const visuals = studentAccessibilityVisuals(preferences);
+
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header title="Feedback" subtitle="Gemma 4 draft feedback after submission." showBack />
 
       <Card style={styles.scoreCard}>
@@ -18,18 +27,22 @@ export default function FeedbackScreen() {
       </Card>
 
       <SectionHeader title="What you did well" />
-      <Card style={styles.card}>
-        <Text style={styles.body}>You correctly named sunlight and water as things plants need.</Text>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
+        <Text style={[styles.body, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+          You correctly named sunlight and water as things plants need.
+        </Text>
       </Card>
 
       <SectionHeader title="Missing concepts" />
-      <Card style={styles.card}>
-        <Text style={styles.body}>Add carbon dioxide and explain that plants release oxygen.</Text>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
+        <Text style={[styles.body, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+          Add carbon dioxide and explain that plants release oxygen.
+        </Text>
       </Card>
 
       <SectionHeader title="Suggested improvement" />
-      <Card style={styles.card}>
-        <Text style={styles.body}>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
+        <Text style={[styles.body, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
           Try using this sentence: Plants use sunlight, water, and carbon dioxide to make glucose.
         </Text>
       </Card>

@@ -1,8 +1,19 @@
-import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { router, Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { getSession } from "@/api/session";
 import { colors } from "@/constants/theme";
 
 export default function RootLayout() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const publicRoute = pathname === "/" || pathname.startsWith("/login");
+    if (!publicRoute && !getSession()) {
+      router.replace("/");
+    }
+  }, [pathname]);
+
   return (
     <>
       <StatusBar style="dark" backgroundColor={colors.background} />

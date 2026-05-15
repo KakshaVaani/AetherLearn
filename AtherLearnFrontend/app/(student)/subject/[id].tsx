@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  studentAccessibilityVisuals,
+  studentTextMetrics,
+  useStudentPreferences
+} from "@/api/studentPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -13,8 +18,7 @@ import { assignments } from "@/data/assignments";
 import { classrooms } from "@/data/classrooms";
 import { lectures } from "@/data/lectures";
 import { subjects } from "@/data/subjects";
-import { currentStudent } from "@/data/users";
-import { Assignment, Lecture } from "@/types";
+import { AccessibilityMode, Assignment, Lecture } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 type FeedFilter = "All" | "Notes" | "Assignments";
@@ -29,6 +33,8 @@ export default function StudentSubjectDetailScreen() {
   const subject = subjects.find((item) => item.id === id) ?? subjects[0];
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("All");
   const [generatedLectureIds, setGeneratedLectureIds] = useState<string[]>([]);
+  const preferences = useStudentPreferences();
+  const visuals = studentAccessibilityVisuals(preferences);
 
   const feedItems = useMemo(() => {
     const noteItems: FeedItem[] = lectures
@@ -71,24 +77,25 @@ export default function StudentSubjectDetailScreen() {
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header title={subject.name} subtitle={classrooms[0].title + " classroom stream"} showBack />
 
-      <Card style={styles.heroCard}>
+      <Card style={[styles.heroCard, visuals.cardStyle]}>
         <View style={styles.heroHeader}>
           <View style={[styles.subjectMark, { backgroundColor: subject.color }]}>
             <Ionicons name="library-outline" size={24} color={colors.white} />
           </View>
           <View style={styles.heroText}>
-            <Text style={styles.heroTitle}>{subject.name}</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text style={[styles.heroTitle, visuals.titleTextStyle]}>{subject.name}</Text>
+            <Text style={[styles.heroSubtitle, visuals.metaTextStyle]}>
               Latest teacher PDFs and assignments appear first. Filter when you want a focused view.
             </Text>
           </View>
         </View>
         <View style={styles.badgeRow}>
           <Badge label={subject.badge ?? "Local mode ready"} tone="success" />
-          <AccessibilityBadge mode={currentStudent.accessibilityMode ?? "Standard"} />
+          <AccessibilityBadge mode={preferences.accessibilityMode} />
+          <Badge label={preferences.textSize + " text"} tone="primary" />
         </View>
       </Card>
 
@@ -139,45 +146,58 @@ type NotePostProps = {
 };
 
 function NotePost({ lecture, generated, onGenerate }: NotePostProps) {
-  const mode = currentStudent.accessibilityMode ?? "Standard";
-  const aiNotes = getPersonalizedNotes(lecture);
+  const preferences = useStudentPreferences();
+  const visuals = studentAccessibilityVisuals(preferences);
+  const metrics = studentTextMetrics(preferences.textSize);
+  const aiNotes = getPersonalizedNotes(lecture, preferences.accessibilityMode);
 
   return (
-    <Card style={styles.postCard}>
+    <Card style={[styles.postCard, visuals.readingCardStyle]}>
       <View style={styles.postHeader}>
         <View style={styles.postIcon}>
           <Ionicons name="document-text-outline" size={22} color={colors.primary} />
         </View>
         <View style={styles.postText}>
-          <Text style={styles.postEyebrow}>Teacher uploaded PDF notes</Text>
-          <Text style={styles.postTitle}>{lecture.title}</Text>
-          <Text style={styles.postMeta}>Posted {formatDate(lecture.postedAt)}</Text>
+          <Text style={[styles.postEyebrow, visuals.metaTextStyle]}>Teacher uploaded PDF notes</Text>
+          <Text style={[styles.postTitle, { fontSize: metrics.titleFontSize, lineHeight: metrics.titleLineHeight }]}>
+            {lecture.title}
+          </Text>
+          <Text style={[styles.postMeta, { fontSize: metrics.metaFontSize, lineHeight: metrics.metaLineHeight }]}>
+            Posted {formatDate(lecture.postedAt)}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.pdfBox}>
+      <View style={[styles.pdfBox, visuals.cardStyle]}>
         <Ionicons name="document-attach-outline" size={22} color={colors.danger} />
         <View style={styles.pdfText}>
-          <Text style={styles.pdfName}>{lecture.teacherPdf.fileName}</Text>
-          <Text style={styles.postMeta}>
+          <Text style={[styles.pdfName, visuals.titleTextStyle]}>{lecture.teacherPdf.fileName}</Text>
+          <Text style={[styles.postMeta, { fontSize: metrics.metaFontSize, lineHeight: metrics.metaLineHeight }]}>
             {lecture.teacherPdf.pageCount} pages - uploaded {lecture.teacherPdf.uploadedAt}
           </Text>
         </View>
       </View>
 
       <View style={styles.noteSection}>
-        <Text style={styles.sectionLabel}>Teacher notes</Text>
-        <Text style={styles.noteBody}>{lecture.teacherNotes}</Text>
+        <Text style={[styles.sectionLabel, visuals.titleTextStyle]}>Teacher notes</Text>
+        <Text style={[styles.noteBody, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+          {lecture.teacherNotes}
+        </Text>
       </View>
 
       {generated ? (
-        <View style={styles.aiSection}>
+        <View style={[styles.aiSection, visuals.cardStyle]}>
           <View style={styles.aiHeader}>
-            <AccessibilityBadge mode={mode} />
+            <AccessibilityBadge mode={preferences.accessibilityMode} />
             <Badge label="AI notes ready" tone="success" />
+            {preferences.accessibilityMode === "Multilingual" ? (
+              <Badge label={preferences.language} tone="secondary" />
+            ) : null}
           </View>
-          <Text style={styles.sectionLabel}>Your AI notes</Text>
-          <Text style={styles.noteBody}>{aiNotes}</Text>
+          <Text style={[styles.sectionLabel, visuals.titleTextStyle]}>Your AI notes</Text>
+          <Text style={[styles.noteBody, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+            {aiNotes}
+          </Text>
         </View>
       ) : (
         <AppButton
@@ -196,13 +216,15 @@ function NotePost({ lecture, generated, onGenerate }: NotePostProps) {
           leftIcon={<Ionicons name="book-outline" size={18} color={colors.primary} />}
           onPress={() => router.push({ pathname: "/(student)/lesson/[id]", params: { id: lecture.id } })}
         />
-        <AppButton
-          title="Audio"
-          variant="ghost"
-          fullWidth={false}
-          leftIcon={<Ionicons name="play-circle-outline" size={18} color={colors.primary} />}
-          onPress={() => router.push({ pathname: "/(student)/audio/[id]", params: { id: lecture.id } })}
-        />
+        {preferences.audioSupport ? (
+          <AppButton
+            title="Audio"
+            variant="ghost"
+            fullWidth={false}
+            leftIcon={<Ionicons name="play-circle-outline" size={18} color={colors.primary} />}
+            onPress={() => router.push({ pathname: "/(student)/audio/[id]", params: { id: lecture.id } })}
+          />
+        ) : null}
       </View>
     </Card>
   );
@@ -242,9 +264,7 @@ function AssignmentPost({ assignment }: AssignmentPostProps) {
   );
 }
 
-function getPersonalizedNotes(lecture: Lecture) {
-  const mode = currentStudent.accessibilityMode ?? "Standard";
-
+function getPersonalizedNotes(lecture: Lecture, mode: AccessibilityMode) {
   switch (mode) {
     case "Blind / Low Vision":
       return lecture.outputs.blindLowVision;

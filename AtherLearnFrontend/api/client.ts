@@ -45,11 +45,26 @@ export async function apiRequest<T>(
     Object.entries(authHeader()).forEach(([key, value]) => headers.set(key, value));
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers
-  });
-  const payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers
+    });
+  } catch {
+    throw new ApiClientError(
+      `Cannot reach backend at ${API_BASE_URL}. Check the backend is running and the mobile app is not using localhost.`,
+      "NETWORK_ERROR",
+      0
+    );
+  }
+
+  let payload: ApiSuccess<T> | ApiError;
+  try {
+    payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  } catch {
+    throw new ApiClientError("Backend returned an unreadable response.", "INVALID_RESPONSE", response.status);
+  }
 
   if (!response.ok || !payload.ok) {
     const message = payload.ok ? "Request failed" : payload.error.message;

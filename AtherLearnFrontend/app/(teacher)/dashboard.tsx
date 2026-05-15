@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { getSession } from "@/api/session";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -14,9 +15,12 @@ import { featuredLecture } from "@/data/lectures";
 import { colors, spacing } from "@/constants/theme";
 
 export default function TeacherDashboardScreen() {
+  const session = getSession();
+  const firstName = session?.name?.trim().split(/\s+/)[0] || "Teacher";
+
   return (
     <ScreenContainer>
-      <Header title="Good morning, Ms. Sharma" subtitle="Your classroom access layer is ready." />
+      <Header title={`Good morning, ${firstName}`} subtitle="Your classroom access layer is ready." />
 
       <View style={styles.statGrid}>
         <StatCard value="3" label="Classrooms" accent={colors.primary} />

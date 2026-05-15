@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchTeacherDashboard } from "@/api/backend";
+import { getSession } from "@/api/session";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -61,6 +62,8 @@ function QuickAction({
 export default function HomeScreen() {
   const [lessons, setLessons] = useState<LessonPack[]>(lessonPacks);
   const [connected, setConnected] = useState(false);
+  const session = getSession();
+  const firstName = session?.name?.trim().split(/\s+/)[0] || "Teacher";
 
   useEffect(() => {
     let mounted = true;
@@ -86,7 +89,7 @@ export default function HomeScreen() {
         </View>
         <View style={styles.headerText}>
           <Text style={styles.brandName}>AtherLearn</Text>
-          <Text style={styles.subtitle}>Good morning, Teacher</Text>
+          <Text style={styles.subtitle}>Good morning, {firstName}</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Notifications" style={styles.iconButton}>
           <Ionicons name="notifications-outline" size={20} color={colors.muted} />
