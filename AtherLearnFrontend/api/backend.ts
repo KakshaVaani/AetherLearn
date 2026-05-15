@@ -38,6 +38,14 @@ type StudentLessonResponse = {
   };
 };
 
+type AskLessonResponse = {
+  answer: string;
+  simpleAnswer?: string;
+  confidence?: number;
+  followUpSuggestion?: string;
+  sourceLimited?: boolean;
+};
+
 export async function demoLogin(role: Role) {
   const response = await apiJson<LoginResponse>("/api/auth/demo-login", "POST", { role }, false);
   saveSession({
@@ -138,6 +146,24 @@ export async function fetchStudentLesson(lessonId: string): Promise<{ lesson: Le
     lesson: backendLessonToLecture(response.lesson as never),
     progress: response.access.progress
   };
+}
+
+export async function generateStructuredStudentNotes(lessonId: string, input: {
+  mode: string;
+  language: string;
+  textSize: string;
+}) {
+  const response = await apiJson<AskLessonResponse>(`/api/student/lessons/${lessonId}/ask`, "POST", {
+    question: [
+      "Generate good, decent, student-friendly structured notes for this topic.",
+      "Use headings, bullet points, key definitions, step-by-step explanation, quick revision, and practice questions.",
+      `Student accessibility mode: ${input.mode}.`,
+      `Preferred language: ${input.language}.`,
+      `Text size preference: ${input.textSize}.`,
+      "Keep the notes accurate and limited to the uploaded lesson/source."
+    ].join(" ")
+  });
+  return response;
 }
 
 export async function submitAssignment(assignmentId: string, answers: Record<string, string>) {

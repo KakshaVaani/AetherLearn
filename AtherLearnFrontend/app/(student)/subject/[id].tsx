@@ -8,6 +8,12 @@ import {
   getGeneratedStudentNote
 } from "@/api/generatedNotes";
 import {
+  downloadPdf,
+  generatedNotesPdf,
+  openPdf,
+  uploadedSourcePdf
+} from "@/api/pdfDocuments";
+import {
   studentAccessibilityVisuals,
   studentTextMetrics,
   useStudentPreferences
@@ -167,6 +173,28 @@ function NotePost({ lecture }: NotePostProps) {
     }
   }
 
+  async function openUploadedPdf() {
+    const pdf = uploadedSourcePdf(lecture);
+    await openPdf(pdf);
+  }
+
+  async function downloadUploadedPdf() {
+    const pdf = uploadedSourcePdf(lecture);
+    await downloadPdf(pdf);
+  }
+
+  async function openNotesPdf() {
+    if (!generatedNote) return;
+    const pdf = generatedNotesPdf(lecture.title, generatedNote.text);
+    await openPdf(pdf);
+  }
+
+  async function downloadNotesPdf() {
+    if (!generatedNote) return;
+    const pdf = generatedNotesPdf(lecture.title, generatedNote.text);
+    await downloadPdf(pdf);
+  }
+
   return (
     <Card style={[styles.postCard, visuals.readingCardStyle]}>
       <View style={styles.postHeader}>
@@ -191,6 +219,14 @@ function NotePost({ lecture }: NotePostProps) {
           <Text style={[styles.postMeta, { fontSize: metrics.metaFontSize, lineHeight: metrics.metaLineHeight }]}>
             {lecture.teacherPdf.pageCount} pages - uploaded {lecture.teacherPdf.uploadedAt}
           </Text>
+        </View>
+        <View style={styles.pdfActions}>
+          <Pressable accessibilityRole="button" onPress={openUploadedPdf} style={styles.iconAction}>
+            <Ionicons name="open-outline" size={18} color={colors.primary} />
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={downloadUploadedPdf} style={styles.iconAction}>
+            <Ionicons name="download-outline" size={18} color={colors.primary} />
+          </Pressable>
         </View>
       </View>
 
@@ -217,6 +253,24 @@ function NotePost({ lecture }: NotePostProps) {
           <Text style={[styles.generatedMeta, visuals.metaTextStyle]}>
             Generated {formatDateTime(generatedNote.generatedAt)}
           </Text>
+          <View style={styles.notesActions}>
+            <AppButton
+              title="Open PDF"
+              variant="outline"
+              fullWidth={false}
+              leftIcon={<Ionicons name="open-outline" size={18} color={colors.text} />}
+              onPress={openNotesPdf}
+              style={styles.compactAction}
+            />
+            <AppButton
+              title="Download PDF"
+              variant="outline"
+              fullWidth={false}
+              leftIcon={<Ionicons name="download-outline" size={18} color={colors.text} />}
+              onPress={downloadNotesPdf}
+              style={styles.compactAction}
+            />
+          </View>
           <AppButton
             title="Regenerate Notes"
             variant="outline"
@@ -427,6 +481,20 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2
   },
+  pdfActions: {
+    flexDirection: "row",
+    gap: spacing.xs
+  },
+  iconAction: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: "center",
+    justifyContent: "center"
+  },
   pdfName: {
     color: colors.text,
     fontSize: 15,
@@ -472,6 +540,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: "700"
+  },
+  notesActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
+  },
+  compactAction: {
+    flex: 1,
+    minWidth: 132,
+    paddingHorizontal: spacing.sm
   },
   postActions: {
     flexDirection: "row",
