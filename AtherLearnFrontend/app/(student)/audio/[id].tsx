@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as Speech from "expo-speech";
 import {
   studentAccessibilityVisuals,
   studentTextMetrics,
@@ -18,6 +19,7 @@ import { AccessibilityMode, Lecture } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const speeds = ["0.75x", "1x", "1.25x"];
+type PlaybackState = "idle" | "playing" | "finished" | "error";
 
 export default function AudioLessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,9 +27,72 @@ export default function AudioLessonScreen() {
   const preferences = useStudentPreferences();
   const metrics = studentTextMetrics(preferences.textSize);
   const visuals = studentAccessibilityVisuals(preferences);
-  const [playing, setPlaying] = useState(false);
+  const [playbackState, setPlaybackState] = useState<PlaybackState>("idle");
+  const [message, setMessage] = useState("Ready to play the lesson transcript.");
   const [speed, setSpeed] = useState(preferences.accessibilityMode === "Slow Learner" ? "0.75x" : "1x");
   const transcript = getTranscript(lesson, preferences.accessibilityMode);
+  const playing = playbackState === "playing";
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!preferences.audioSupport) {
+      Speech.stop();
+      setPlaybackState("idle");
+      setMessage("Audio is turned off in Student Settings.");
+    }
+  }, [preferences.audioSupport]);
+
+  function playTranscript() {
+    if (!preferences.audioSupport) return;
+    Speech.stop();
+    setPlaybackState("playing");
+    setMessage("Playing audio explanation...");
+    Speech.speak(transcript, {
+      language: languageCode(preferences.language),
+      rate: speechRate(speed),
+      pitch: 1,
+      onDone: () => {
+        setPlaybackState("finished");
+        setMessage("Audio complete.");
+      },
+      onStopped: () => {
+        setPlaybackState("idle");
+        setMessage("Audio stopped.");
+      },
+      onError: () => {
+        setPlaybackState("error");
+        setMessage("Audio could not play on this device. You can still read the transcript below.");
+      }
+    });
+  }
+
+  function stopTranscript() {
+    Speech.stop();
+    setPlaybackState("idle");
+    setMessage("Audio stopped.");
+  }
+
+  function togglePlayback() {
+    if (playing) {
+      stopTranscript();
+      return;
+    }
+    playTranscript();
+  }
+
+  function changeSpeed(nextSpeed: string) {
+    setSpeed(nextSpeed);
+    if (playing) {
+      Speech.stop();
+      setPlaybackState("idle");
+      setMessage("Speed changed. Press play to restart audio.");
+    }
+  }
 
   return (
     <ScreenContainer style={visuals.screenStyle}>
@@ -38,12 +103,13 @@ export default function AudioLessonScreen() {
           accessibilityRole="button"
           accessibilityLabel={playing ? "Pause audio lesson" : "Play audio lesson"}
           disabled={!preferences.audioSupport}
-          onPress={() => setPlaying((current) => !current)}
-          style={styles.playButton}
+          onPress={togglePlayback}
+          style={[styles.playButton, playing && styles.stopButton]}
         >
-          <Ionicons name={playing ? "pause" : "play"} size={48} color={colors.white} />
+          <Ionicons name={playing ? "stop" : "play"} size={48} color={colors.white} />
         </Pressable>
         <Text style={[styles.lessonTitle, visuals.titleTextStyle]}>{lesson.title}</Text>
+        <Text style={[styles.playerMessage, visuals.metaTextStyle]}>{message}</Text>
         <View style={styles.badgeRow}>
           <AccessibilityBadge mode={preferences.accessibilityMode} />
           <Badge label={preferences.audioSupport ? "Audio enabled" : "Audio disabled in settings"} tone={preferences.audioSupport ? "success" : "warning"} />
@@ -59,7 +125,7 @@ export default function AudioLessonScreen() {
               key={item}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              onPress={() => setSpeed(item)}
+              onPress={() => changeSpeed(item)}
               style={[styles.speedChip, selected && styles.speedChipSelected]}
             >
               <Text style={[styles.speedText, selected && styles.speedTextSelected]}>{item}</Text>
@@ -101,6 +167,23 @@ function getTranscript(lesson: Lecture, mode: AccessibilityMode) {
   }
 }
 
+function speechRate(speed: string) {
+  if (speed === "0.75x") return 0.75;
+  if (speed === "1.25x") return 1.25;
+  return 1;
+}
+
+function languageCode(language: string) {
+  const normalized = language.toLowerCase();
+  if (normalized.includes("hindi")) return "hi-IN";
+  if (normalized.includes("spanish")) return "es-ES";
+  if (normalized.includes("french")) return "fr-FR";
+  if (normalized.includes("arabic")) return "ar";
+  if (normalized.includes("chinese")) return "zh-CN";
+  if (normalized.includes("tamil")) return "ta-IN";
+  return "en-US";
+}
+
 const styles = StyleSheet.create({
   playerCard: {
     alignItems: "center",
@@ -117,6 +200,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.primary
   },
+  stopButton: {
+    backgroundColor: colors.danger
+  },
   lessonTitle: {
     color: colors.text,
     fontSize: 22,
@@ -129,6 +215,13 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: spacing.sm
+  },
+  playerMessage: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+    textAlign: "center"
   },
   speedRow: {
     flexDirection: "row",
