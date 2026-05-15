@@ -1,4 +1,5 @@
 import { StudentPreferences } from "@/api/studentPreferences";
+import { generateStructuredStudentNotes } from "@/api/backend";
 import { AccessibilityMode, Lecture } from "@/types";
 
 export type GeneratedStudentNote = {
@@ -59,19 +60,40 @@ export async function generateStudentNote(
   const key = noteKey(lecture.id, preferences);
   const previous = store[key];
   const version = (previous?.version ?? 0) + 1;
+  const text = await generateNoteText(lecture, preferences, version);
   const note: GeneratedStudentNote = {
     lessonId: lecture.id,
     mode: preferences.accessibilityMode,
     language: preferences.language,
     textSize: preferences.textSize,
     version,
-    text: buildNoteText(lecture, preferences, version),
+    text,
     generatedAt: new Date().toISOString()
   };
 
   store[key] = note;
   writeStore(store);
   return note;
+}
+
+async function generateNoteText(
+  lecture: Lecture,
+  preferences: StudentPreferences,
+  version: number
+) {
+  try {
+    const response = await generateStructuredStudentNotes(lecture.id, {
+      mode: preferences.accessibilityMode,
+      language: preferences.language,
+      textSize: preferences.textSize
+    });
+    if (response.answer.trim()) {
+      return response.answer;
+    }
+  } catch {
+    // Demo/local lesson ids may not exist in backend. Use a structured offline fallback.
+  }
+  return buildNoteText(lecture, preferences, version);
 }
 
 function baseOutput(lecture: Lecture, mode: AccessibilityMode) {
@@ -106,11 +128,28 @@ function buildNoteText(lecture: Lecture, preferences: StudentPreferences, versio
     : "Audio is currently off in settings.";
 
   return [
+    `# ${lecture.title}`,
+    "",
+    "## 1. Big Idea",
     output,
     "",
-    modeLine,
-    `Reading size: ${preferences.textSize}.`,
-    audioLine,
-    focusPrompts[(version - 1) % focusPrompts.length]
+    "## 2. Key Terms",
+    ...lecture.keyVocabulary.map((term) => `- ${term}`),
+    "",
+    "## 3. Step-by-Step Explanation",
+    lecture.diagramDescription,
+    "",
+    "## 4. Personalized Support",
+    `- ${modeLine}`,
+    `- Reading size: ${preferences.textSize}.`,
+    `- ${audioLine}`,
+    "",
+    "## 5. Practice Questions",
+    ...lecture.practiceQuestions.map((question) => `- ${question}`),
+    "",
+    "## 6. Quick Revision",
+    `- ${focusPrompts[(version - 1) % focusPrompts.length]}`,
+    "- Review the key terms once.",
+    "- Try answering one practice question without looking."
   ].join("\n");
 }

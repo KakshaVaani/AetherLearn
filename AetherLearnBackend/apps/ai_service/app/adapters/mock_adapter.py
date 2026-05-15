@@ -64,6 +64,31 @@ class MockAdapter(BaseAIAdapter):
         )
 
     async def ask(self, input: AskInput) -> AskAnswer:
+        lesson = input.lesson_pack
+        topic = lesson.source_understanding.inferred_topic or lesson.title
+        if "notes" in input.question.lower():
+            vocabulary = ", ".join(lesson.student_access_pack.vocabulary[:6])
+            practice = "\n".join(f"- {item}" for item in lesson.student_access_pack.practice_questions[:4])
+            return AskAnswer(
+                answer=(
+                    f"# {lesson.title}\n\n"
+                    f"## 1. Big Idea\n{lesson.student_access_pack.simple_explanation}\n\n"
+                    f"## 2. What To Remember\n"
+                    f"- Topic: {topic}\n"
+                    f"- Subject: {lesson.subject}\n"
+                    f"- Key words: {vocabulary or 'review the lesson vocabulary'}\n\n"
+                    f"## 3. Step-by-Step Notes\n{lesson.student_access_pack.screen_reader_summary}\n\n"
+                    f"## 4. Practice\n{practice or '- Try one teacher-provided practice question.'}\n\n"
+                    "## 5. Quick Revision\n"
+                    "- Read the big idea once.\n"
+                    "- Say one key word aloud.\n"
+                    "- Try one question without looking at the notes."
+                ),
+                simple_answer=lesson.student_access_pack.simple_explanation,
+                confidence=0.8,
+                follow_up_suggestion="Download these notes as a PDF and review the practice section.",
+                source_limited=True,
+            )
         return AskAnswer(
             answer=(
                 f"Using only this lesson, {input.lesson_pack.title} is about "

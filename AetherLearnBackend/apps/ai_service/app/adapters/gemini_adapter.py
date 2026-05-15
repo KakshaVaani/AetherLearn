@@ -77,7 +77,41 @@ class GeminiAdapter(BaseAIAdapter):
         )
 
     async def ask(self, input: AskInput) -> AskAnswer:
-        raise AiRuntimeUnavailableError("Gemini Q&A adapter is not enabled in this deployment")
+        if not self.api_key:
+            raise AiRuntimeUnavailableError("Gemini runtime is not configured")
+
+        prompt = (
+            "You are AtherLearn, an accessibility-first education assistant. "
+            "Use only the supplied lesson pack. Do not invent facts outside it.\n\n"
+            "Create a clear student answer for this request:\n"
+            f"{input.question}\n\n"
+            "Return JSON only with these fields:\n"
+            "{"
+            '"answer": "well-structured markdown answer", '
+            '"simple_answer": "short plain-language version", '
+            '"confidence": 0.0, '
+            '"follow_up_suggestion": "one useful next step", '
+            '"source_limited": true'
+            "}\n\n"
+            f"Student profile: {input.student_profile}\n"
+            f"Lesson pack: {input.lesson_pack.model_dump(mode='json', by_alias=True)}"
+        )
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {"response_mime_type": "application/json"},
+        }
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+        )
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(url, params={"key": self.api_key}, json=payload)
+        if response.status_code >= 400:
+            raise AiRuntimeUnavailableError(
+                "Gemini Q&A request failed", {"status": response.status_code}
+            )
+        data = response.json()
+        text = data["candidates"][0]["content"]["parts"][0]["text"]
+        return AskAnswer.model_validate(extract_json_object(text))
 
     async def improve_lesson(self, input: ImproveLessonInput) -> LessonPack:
         raise AiRuntimeUnavailableError("Gemini improve adapter is not enabled in this deployment")
