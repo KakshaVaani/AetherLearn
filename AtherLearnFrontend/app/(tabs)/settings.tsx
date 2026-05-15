@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { clearSession, getSession } from "@/api/session";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { ScreenContainer } from "@/components/ScreenContainer";
@@ -33,6 +35,15 @@ function SettingsRow({
 export default function SettingsScreen() {
   const [highContrast, setHighContrast] = useState(true);
   const [dyslexiaFont, setDyslexiaFont] = useState(true);
+  const session = getSession();
+  const roleLabel = session?.role
+    ? `${session.role.charAt(0).toUpperCase()}${session.role.slice(1)} account`
+    : "Signed in account";
+
+  function handleLogout() {
+    clearSession();
+    router.replace("/");
+  }
 
   return (
     <ScreenContainer>
@@ -46,8 +57,8 @@ export default function SettingsScreen() {
           <Ionicons name="person-outline" size={30} color={colors.primary} />
         </View>
         <View style={styles.profileText}>
-          <Text style={styles.profileName}>Teacher Meera</Text>
-          <Text style={styles.profileEmail}>meera@school.edu</Text>
+          <Text style={styles.profileName}>{session?.name ?? "AtherLearn user"}</Text>
+          <Text style={styles.profileEmail}>{roleLabel}</Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.muted} />
       </Card>
@@ -86,8 +97,9 @@ export default function SettingsScreen() {
         <SettingsRow icon="download-outline" label="Export and Backup" value="HTML and Markdown ready" />
       </Card>
 
-      <Pressable accessibilityRole="button" style={styles.signoutButton}>
-        <Text style={styles.signoutText}>Reset demo data</Text>
+      <Pressable accessibilityRole="button" onPress={handleLogout} style={styles.signoutButton}>
+        <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+        <Text style={styles.signoutText}>Log Out</Text>
       </Pressable>
     </ScreenContainer>
   );
@@ -172,7 +184,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.card,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.sm
   },
   signoutText: {
     color: colors.danger,

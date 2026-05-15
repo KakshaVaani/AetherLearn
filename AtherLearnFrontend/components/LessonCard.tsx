@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Lecture } from "@/types";
@@ -7,19 +7,22 @@ import { colors, spacing } from "@/constants/theme";
 type LessonCardProps = {
   lesson: Lecture;
   onPress?: () => void;
+  cardStyle?: StyleProp<ViewStyle>;
+  titleStyle?: StyleProp<TextStyle>;
+  metaStyle?: StyleProp<TextStyle>;
 };
 
-export function LessonCard({ lesson, onPress }: LessonCardProps) {
+export function LessonCard({ lesson, onPress, cardStyle, titleStyle, metaStyle }: LessonCardProps) {
   return (
-    <Card onPress={onPress} style={styles.card}>
+    <Card onPress={onPress} style={[styles.card, cardStyle]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
           <Text style={styles.subject}>{lesson.subject}</Text>
-          <Text style={styles.title}>{lesson.title}</Text>
+          <Text style={[styles.title, titleStyle]}>{lesson.title}</Text>
         </View>
         <Badge label={lesson.badge} tone={lesson.badge === "Saved offline" ? "success" : "primary"} />
       </View>
-      <Text style={styles.source}>{lesson.source}</Text>
+      <Text style={[styles.source, metaStyle]}>{lesson.source}</Text>
     </Card>
   );
 }

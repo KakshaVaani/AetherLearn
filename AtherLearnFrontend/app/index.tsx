@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { ApiClientError } from "@/api/client";
 import { demoLogin } from "@/api/backend";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { Role } from "@/types";
@@ -45,8 +46,12 @@ export default function WelcomeScreen() {
     try {
       const user = await demoLogin(role);
       openWorkspace(user.role);
-    } catch {
-      setMessage("Demo login failed. Start the backend and run the seed script first.");
+    } catch (error) {
+      setMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : "Demo login failed. Start the backend and run the seed script first."
+      );
     } finally {
       setDemoRole(null);
     }

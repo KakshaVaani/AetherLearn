@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { clearSession } from "@/api/session";
+import {
+  saveStudentPreferences,
+  studentAccessibilityVisuals,
+  StudentTextSize,
+  useStudentPreferences
+} from "@/api/studentPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
@@ -8,21 +16,38 @@ import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { accessibilityModes } from "@/data/accessibilityProfiles";
-import { currentStudent } from "@/data/users";
 import { AccessibilityMode } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const languages = ["English", "Hindi", "Spanish", "French", "Arabic", "Chinese", "Tamil"];
-const textSizes = ["Regular", "Large", "Extra Large"];
+const textSizes: StudentTextSize[] = ["Regular", "Large", "Extra Large"];
 
 export default function StudentProfileSetupScreen() {
-  const [mode, setMode] = useState<AccessibilityMode>(currentStudent.accessibilityMode ?? "Standard");
-  const [language, setLanguage] = useState(currentStudent.preferredLanguage ?? "English");
-  const [textSize, setTextSize] = useState("Large");
-  const [audioSupport, setAudioSupport] = useState(true);
+  const preferences = useStudentPreferences();
+  const [savedMessage, setSavedMessage] = useState("Changes apply across your student workspace.");
+  const mode = preferences.accessibilityMode;
+  const language = preferences.language;
+  const textSize = preferences.textSize;
+  const audioSupport = preferences.audioSupport;
+  const visuals = studentAccessibilityVisuals(preferences);
+
+  function updatePreferences(next: {
+    accessibilityMode?: AccessibilityMode;
+    language?: string;
+    textSize?: StudentTextSize;
+    audioSupport?: boolean;
+  }) {
+    saveStudentPreferences(next);
+    setSavedMessage("Settings saved and applied.");
+  }
+
+  function handleLogout() {
+    clearSession();
+    router.replace("/");
+  }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header title="Student Settings" subtitle="Tune your learning experience." showBack showSettings={false} />
 
       <SectionHeader title="Learning mode" />
@@ -34,11 +59,18 @@ export default function StudentProfileSetupScreen() {
               key={item}
               accessibilityRole="radio"
               accessibilityState={{ selected }}
-              onPress={() => setMode(item)}
-              style={[styles.modeCard, selected && styles.modeCardSelected]}
+              onPress={() => updatePreferences({ accessibilityMode: item })}
+              style={[
+                styles.modeCard,
+                visuals.cardStyle,
+                selected && styles.modeCardSelected,
+                selected && visuals.selectedOutlineStyle
+              ]}
             >
               <AccessibilityBadge mode={item} />
-              <Text style={[styles.check, selected && styles.checkSelected]}>{selected ? "Selected" : "Choose"}</Text>
+              <Text style={[styles.check, visuals.metaTextStyle, selected && styles.checkSelected]}>
+                {selected ? "Selected" : "Choose"}
+              </Text>
             </Pressable>
           );
         })}
@@ -47,13 +79,13 @@ export default function StudentProfileSetupScreen() {
       {mode === "Multilingual" ? (
         <>
           <SectionHeader title="Target language" subtitle="Gemma 4 will generate multilingual support in this language." />
-          <Card style={styles.selectorCard}>
+          <Card style={[styles.selectorCard, visuals.cardStyle]}>
             {languages.map((item) => (
               <ChoiceRow
                 key={item}
                 label={item}
                 selected={language === item}
-                onPress={() => setLanguage(item)}
+                onPress={() => updatePreferences({ language: item })}
               />
             ))}
           </Card>
@@ -61,31 +93,37 @@ export default function StudentProfileSetupScreen() {
       ) : null}
 
       <SectionHeader title="Text size" />
-      <Card style={styles.selectorCard}>
+      <Card style={[styles.selectorCard, visuals.cardStyle]}>
         {textSizes.map((item) => (
           <ChoiceRow
-            key={item}
-            label={item}
-            selected={textSize === item}
-            onPress={() => setTextSize(item)}
-          />
-        ))}
+          key={item}
+          label={item}
+          selected={textSize === item}
+          onPress={() => updatePreferences({ textSize: item })}
+        />
+      ))}
       </Card>
 
-      <Card style={styles.switchCard}>
+      <Card style={[styles.switchCard, visuals.cardStyle]}>
         <View style={styles.switchText}>
-          <Text style={styles.switchTitle}>Audio support</Text>
-          <Text style={styles.switchSubtitle}>Show audio-first lesson controls where available.</Text>
+          <Text style={[styles.switchTitle, visuals.titleTextStyle]}>Audio support</Text>
+          <Text style={[styles.switchSubtitle, visuals.metaTextStyle]}>Show audio-first lesson controls where available.</Text>
         </View>
         <Switch
           value={audioSupport}
-          onValueChange={setAudioSupport}
+          onValueChange={(value) => updatePreferences({ audioSupport: value })}
           trackColor={{ false: colors.border, true: colors.primarySoft }}
           thumbColor={audioSupport ? colors.primary : colors.muted}
         />
       </Card>
 
-      <AppButton title="Save" onPress={() => router.push("/(student)/dashboard")} />
+      <Text style={styles.savedText}>{savedMessage}</Text>
+      <AppButton title="Back to Dashboard" onPress={() => router.push("/(student)/dashboard")} />
+
+      <Pressable accessibilityRole="button" onPress={handleLogout} style={styles.logoutButton}>
+        <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+        <Text style={styles.logoutText}>Log Out</Text>
+      </Pressable>
     </ScreenContainer>
   );
 }
@@ -190,5 +228,28 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20
+  },
+  savedText: {
+    color: colors.secondary,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "800"
+  },
+  logoutButton: {
+    minHeight: 52,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
+  logoutText: {
+    color: colors.danger,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700"
   }
 });

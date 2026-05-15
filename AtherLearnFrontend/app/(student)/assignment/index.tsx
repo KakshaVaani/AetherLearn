@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { fetchStudentLessons } from "@/api/backend";
+import { studentAccessibilityVisuals, useStudentPreferences } from "@/api/studentPreferences";
 import { AssignmentCard } from "@/components/AssignmentCard";
 import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
@@ -11,6 +12,8 @@ import { Assignment } from "@/types";
 export default function StudentAssignmentsScreen() {
   const [items, setItems] = useState<Assignment[]>(assignments);
   const [connected, setConnected] = useState(false);
+  const preferences = useStudentPreferences();
+  const visuals = studentAccessibilityVisuals(preferences);
 
   useEffect(() => {
     let mounted = true;
@@ -29,7 +32,7 @@ export default function StudentAssignmentsScreen() {
   }, []);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header
         title="Pending Assignments"
         subtitle={connected ? "Synced from backend." : "Personalized work from your teachers."}
@@ -39,6 +42,9 @@ export default function StudentAssignmentsScreen() {
         <AssignmentCard
           key={assignment.id}
           assignment={assignment}
+          cardStyle={visuals.cardStyle}
+          titleStyle={visuals.titleTextStyle}
+          metaStyle={visuals.metaTextStyle}
           onPress={() =>
             router.push({ pathname: "/(student)/assignment/[id]", params: { id: assignment.id } })
           }

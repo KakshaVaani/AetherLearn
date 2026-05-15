@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 import { Card } from "@/components/Card";
 import { Badge } from "@/components/Badge";
 import { Subject } from "@/types";
@@ -7,16 +7,19 @@ import { colors, radii, spacing } from "@/constants/theme";
 type SubjectCardProps = {
   subject: Subject;
   onPress?: () => void;
+  cardStyle?: StyleProp<ViewStyle>;
+  titleStyle?: StyleProp<TextStyle>;
+  metaStyle?: StyleProp<TextStyle>;
 };
 
-export function SubjectCard({ subject, onPress }: SubjectCardProps) {
+export function SubjectCard({ subject, onPress, cardStyle, titleStyle, metaStyle }: SubjectCardProps) {
   return (
-    <Card onPress={onPress} style={styles.card}>
+    <Card onPress={onPress} style={[styles.card, cardStyle]}>
       <View style={[styles.colorBar, { backgroundColor: subject.color }]} />
       <View style={styles.row}>
         <View style={styles.main}>
-          <Text style={styles.name}>{subject.name}</Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.name, titleStyle]}>{subject.name}</Text>
+          <Text style={[styles.meta, metaStyle]}>
             {subject.lessons} lessons · {subject.pendingAssignments} pending
           </Text>
         </View>

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Assignment } from "@/types";
@@ -7,20 +7,23 @@ import { colors, spacing } from "@/constants/theme";
 type AssignmentCardProps = {
   assignment: Assignment;
   onPress?: () => void;
+  cardStyle?: StyleProp<ViewStyle>;
+  titleStyle?: StyleProp<TextStyle>;
+  metaStyle?: StyleProp<TextStyle>;
 };
 
-export function AssignmentCard({ assignment, onPress }: AssignmentCardProps) {
+export function AssignmentCard({ assignment, onPress, cardStyle, titleStyle, metaStyle }: AssignmentCardProps) {
   return (
-    <Card onPress={onPress} style={styles.card}>
+    <Card onPress={onPress} style={[styles.card, cardStyle]}>
       <View style={styles.header}>
         <View style={styles.titleBlock}>
           <Text style={styles.subject}>{assignment.subject}</Text>
-          <Text style={styles.title}>{assignment.title}</Text>
+          <Text style={[styles.title, titleStyle]}>{assignment.title}</Text>
         </View>
         <Badge label={assignment.status} tone={assignment.status === "Published" ? "success" : "warning"} />
       </View>
-      <Text style={styles.meta}>{assignment.linkedLecture}</Text>
-      <Text style={styles.due}>Due {assignment.dueDate}</Text>
+      <Text style={[styles.meta, metaStyle]}>{assignment.linkedLecture}</Text>
+      <Text style={[styles.due, metaStyle]}>Due {assignment.dueDate}</Text>
     </Card>
   );
 }

@@ -3,6 +3,11 @@ import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchStudentLesson } from "@/api/backend";
+import {
+  studentAccessibilityVisuals,
+  studentTextMetrics,
+  useStudentPreferences
+} from "@/api/studentPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -12,8 +17,7 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
 import { lectures } from "@/data/lectures";
-import { currentStudent } from "@/data/users";
-import { Lecture } from "@/types";
+import { AccessibilityMode, Lecture } from "@/types";
 import { colors, spacing } from "@/constants/theme";
 
 export default function StudentLessonDetailScreen() {
@@ -21,9 +25,10 @@ export default function StudentLessonDetailScreen() {
   const fallbackLesson = lectures.find((item) => item.id === id) ?? lectures[0];
   const [lesson, setLesson] = useState<Lecture>(fallbackLesson);
   const [connected, setConnected] = useState(false);
-  const mode = currentStudent.accessibilityMode ?? "Standard";
-  const personalizedNotes =
-    mode === "Dyslexia Friendly" ? lesson.outputs.dyslexiaFriendly : lesson.outputs.standard;
+  const preferences = useStudentPreferences();
+  const metrics = studentTextMetrics(preferences.textSize);
+  const visuals = studentAccessibilityVisuals(preferences);
+  const personalizedNotes = getPersonalizedNotes(lesson, preferences.accessibilityMode);
 
   useEffect(() => {
     if (!id) return;
@@ -43,20 +48,31 @@ export default function StudentLessonDetailScreen() {
   }, [id]);
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header title={lesson.title} subtitle={lesson.subject} showBack />
 
-      <Card style={styles.heroCard}>
-        <AccessibilityBadge mode={mode} />
-        <Text style={styles.notes}>{personalizedNotes}</Text>
+      <Card style={[styles.heroCard, visuals.readingCardStyle]}>
+        <View style={styles.badgeRow}>
+          <AccessibilityBadge mode={preferences.accessibilityMode} />
+          <Badge label={preferences.textSize + " text"} tone="primary" />
+          {preferences.accessibilityMode === "Multilingual" ? (
+            <Badge label={preferences.language} tone="secondary" />
+          ) : null}
+        </View>
+        <Text style={[styles.notes, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+          {personalizedNotes}
+        </Text>
         <Badge label={connected ? "Backend lesson" : "Saved offline"} tone="success" />
       </Card>
 
       <SectionHeader title="Key points" />
-      <Card style={styles.card}>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
         {["Plants make food using sunlight.", "Water enters through roots.", "Leaves release oxygen."].map(
           (point, index) => (
-            <Text key={point} style={styles.point}>
+            <Text
+              key={point}
+              style={[styles.point, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}
+            >
               {index + 1}. {point}
             </Text>
           )
@@ -64,24 +80,36 @@ export default function StudentLessonDetailScreen() {
       </Card>
 
       <SectionHeader title="Diagram description" />
-      <Card style={styles.card}>
-        <Text style={styles.body}>{lesson.diagramDescription}</Text>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
+        <Text style={[styles.body, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
+          {lesson.diagramDescription}
+        </Text>
       </Card>
 
-      <Card style={styles.audioCard} onPress={() => router.push("/(student)/audio/photosynthesis")}>
-        <View style={styles.playButton}>
-          <Ionicons name="play" size={24} color={colors.white} />
-        </View>
-        <View style={styles.audioText}>
-          <Text style={styles.audioTitle}>Audio explanation</Text>
-          <Text style={styles.audioSubtitle}>Listen to a slower, classroom-friendly version.</Text>
-        </View>
-      </Card>
+      {preferences.audioSupport ? (
+        <Card
+          style={styles.audioCard}
+          onPress={() =>
+            router.push({ pathname: "/(student)/audio/[id]", params: { id: lesson.id } })
+          }
+        >
+          <View style={styles.playButton}>
+            <Ionicons name="play" size={24} color={colors.white} />
+          </View>
+          <View style={styles.audioText}>
+            <Text style={styles.audioTitle}>Audio explanation</Text>
+            <Text style={styles.audioSubtitle}>Listen to a slower, classroom-friendly version.</Text>
+          </View>
+        </Card>
+      ) : null}
 
       <SectionHeader title="Practice questions" />
-      <Card style={styles.card}>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
         {lesson.practiceQuestions.map((question, index) => (
-          <Text key={question} style={styles.point}>
+          <Text
+            key={question}
+            style={[styles.point, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}
+          >
             {index + 1}. {question}
           </Text>
         ))}
@@ -104,9 +132,30 @@ export default function StudentLessonDetailScreen() {
   );
 }
 
+function getPersonalizedNotes(lesson: Lecture, mode: AccessibilityMode) {
+  switch (mode) {
+    case "Blind / Low Vision":
+      return lesson.outputs.blindLowVision;
+    case "Dyslexia Friendly":
+      return lesson.outputs.dyslexiaFriendly;
+    case "Multilingual":
+      return lesson.outputs.multilingual;
+    case "Slow Learner":
+      return lesson.outputs.slowLearner;
+    case "Standard":
+    default:
+      return lesson.outputs.standard;
+  }
+}
+
 const styles = StyleSheet.create({
   heroCard: {
     gap: spacing.md
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm
   },
   notes: {
     color: colors.text,

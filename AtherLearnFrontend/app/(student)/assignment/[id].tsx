@@ -2,6 +2,11 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { submitAssignment } from "@/api/backend";
+import {
+  studentAccessibilityVisuals,
+  studentTextMetrics,
+  useStudentPreferences
+} from "@/api/studentPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -10,7 +15,6 @@ import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
-import { currentStudent } from "@/data/users";
 import { colors, radii, spacing } from "@/constants/theme";
 
 export default function StudentAssignmentScreen() {
@@ -20,6 +24,9 @@ export default function StudentAssignmentScreen() {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [syncMessage, setSyncMessage] = useState("Answers sync to backend when the assignment exists there.");
+  const preferences = useStudentPreferences();
+  const metrics = studentTextMetrics(preferences.textSize);
+  const visuals = studentAccessibilityVisuals(preferences);
 
   async function submitAnswer() {
     setSubmitting(true);
@@ -36,26 +43,33 @@ export default function StudentAssignmentScreen() {
   }
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={visuals.screenStyle}>
       <Header title={assignment.title} subtitle={"Due " + assignment.dueDate} showBack />
-      <Card style={styles.profileCard}>
+      <Card style={[styles.profileCard, visuals.cardStyle]}>
         <View style={styles.headerRow}>
           <View style={styles.profileText}>
-            <Text style={styles.profileTitle}>Your version</Text>
-            <AccessibilityBadge mode={currentStudent.accessibilityMode ?? "Standard"} />
+            <Text style={[styles.profileTitle, visuals.titleTextStyle]}>Your version</Text>
+            <View style={styles.badgeRow}>
+              <AccessibilityBadge mode={preferences.accessibilityMode} />
+              <Badge label={preferences.textSize + " text"} tone="primary" />
+            </View>
           </View>
           <Badge label={assignment.answerMode === "mcq" ? "MCQ" : "Text answer"} tone="secondary" />
         </View>
       </Card>
 
       <SectionHeader title="Questions" />
-      <Card style={styles.card}>
+      <Card style={[styles.card, visuals.readingCardStyle]}>
         {assignment.questions.map((question, index) => (
           <View key={question.id} style={styles.questionBlock}>
-            <Text style={styles.question}>
+            <Text style={[styles.question, visuals.bodyTextStyle, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
               {index + 1}. {question.prompt}
             </Text>
-            {question.hint ? <Text style={styles.hint}>{question.hint}</Text> : null}
+            {question.hint ? (
+              <Text style={[styles.hint, visuals.metaTextStyle, { fontSize: metrics.metaFontSize, lineHeight: metrics.metaLineHeight }]}>
+                {question.hint}
+              </Text>
+            ) : null}
             {assignment.answerMode === "mcq" ? (
               <View style={styles.optionsList}>
                 {(question.options ?? []).map((option) => {
@@ -73,7 +87,16 @@ export default function StudentAssignmentScreen() {
                       }
                       style={[styles.optionRow, selected && styles.optionRowSelected]}
                     >
-                      <Text style={[styles.optionText, selected && styles.optionTextSelected]}>{option}</Text>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          visuals.metaTextStyle,
+                          { fontSize: metrics.metaFontSize, lineHeight: metrics.metaLineHeight },
+                          selected && styles.optionTextSelected
+                        ]}
+                      >
+                        {option}
+                      </Text>
                       <Text style={[styles.optionState, selected && styles.optionTextSelected]}>
                         {selected ? "Selected" : "Choose"}
                       </Text>
@@ -92,7 +115,7 @@ export default function StudentAssignmentScreen() {
           <TextInput
             value={answer}
             onChangeText={setAnswer}
-            style={styles.input}
+            style={[styles.input, visuals.bodyTextStyle]}
             placeholder="Type your answer here"
             multiline
           />
@@ -116,6 +139,11 @@ const styles = StyleSheet.create({
   },
   profileText: {
     flex: 1,
+    gap: spacing.sm
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm
   },
   profileTitle: {

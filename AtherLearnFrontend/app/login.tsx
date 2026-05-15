@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { ApiClientError } from "@/api/client";
 import { loginWithPassword, signupWithPassword } from "@/api/backend";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { Role } from "@/types";
@@ -72,14 +73,21 @@ export default function LoginScreen() {
     setMessage("Password reset will be enabled when email delivery is configured.");
   }
 
+  function authErrorMessage(error: unknown, fallback: string) {
+    if (error instanceof ApiClientError) {
+      return error.message;
+    }
+    return fallback;
+  }
+
   async function submitLogin() {
     setLoading(true);
     setMessage("");
     try {
       const user = await loginWithPassword(email, password);
       openWorkspace(user.role);
-    } catch {
-      setMessage("Login failed. Check the backend is running and your details are correct.");
+    } catch (error) {
+      setMessage(authErrorMessage(error, "Login failed. Check your email and password."));
     } finally {
       setLoading(false);
     }
@@ -96,8 +104,8 @@ export default function LoginScreen() {
         role: selectedRole
       });
       openWorkspace(user.role);
-    } catch {
-      setMessage("Signup failed. Check your details or try another email.");
+    } catch (error) {
+      setMessage(authErrorMessage(error, "Signup failed. Check your details or try another email."));
     } finally {
       setLoading(false);
     }
@@ -112,8 +120,7 @@ export default function LoginScreen() {
     <ScreenContainer padded={false} contentStyle={styles.screen}>
       <View style={styles.backgroundBlobTop} />
       <View style={styles.topBar}>
-        <IconButton icon="chevron-back" label="Go back" onPress={() => router.back()} />
-        <IconButton icon="settings-outline" label="Settings" onPress={() => router.push("/(tabs)/settings")} />
+        <IconButton icon="chevron-back" label="Go back" onPress={() => router.replace("/")} />
       </View>
 
       {isSignup ? (
