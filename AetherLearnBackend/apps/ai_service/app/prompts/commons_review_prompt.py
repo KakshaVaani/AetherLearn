@@ -1,0 +1,1 @@
+COMMONS_REVIEW_PROMPT = """Check accessibility completeness, unsafe overclaims, visual description presence, age appropriateness, and reviewer checklist suggestions. Do not auto-approve public publishing."""

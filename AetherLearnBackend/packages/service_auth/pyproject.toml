@@ -1,0 +1,9 @@
+[project]
+name = "service-auth"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = ["fastapi>=0.115.0", "orjson>=3.10.0", "pydantic>=2.8.0", "shared-schemas", "shared-utils"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

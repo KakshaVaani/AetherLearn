@@ -1,0 +1,12 @@
+[project]
+name = "aetherlearn-storage-service"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = ["shared-schemas", "shared-utils", "shared-events", "service-auth", "fastapi", "minio", "boto3", "pymongo"]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

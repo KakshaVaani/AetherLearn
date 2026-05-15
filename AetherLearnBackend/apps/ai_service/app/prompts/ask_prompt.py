@@ -1,0 +1,1 @@
+ASK_PROMPT = """Use the lesson pack context only. Do not invent unsupported source details. Respect the student's preferred language and accessibility profile. Return AskAnswer JSON only with confidence, simpleAnswer, and one followUpSuggestion."""

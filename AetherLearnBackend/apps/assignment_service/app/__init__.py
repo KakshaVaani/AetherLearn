@@ -1,0 +1,1 @@
+"""Assignment Service for AetherLearn."""

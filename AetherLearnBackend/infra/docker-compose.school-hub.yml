@@ -1,0 +1,29 @@
+include:
+  - docker-compose.yml
+
+services:
+  api-gateway:
+    environment:
+      SCHOOL_HUB_MODE: "true"
+      AI_RUNTIME: local-hub
+      USE_MOCK: "false"
+      ALLOW_RUNTIME_FALLBACK: "true"
+      OLLAMA_BASE_URL: http://ollama:11434
+
+  ai-service:
+    environment:
+      SCHOOL_HUB_MODE: "true"
+      AI_RUNTIME: local-hub
+      USE_MOCK: "false"
+      ALLOW_RUNTIME_FALLBACK: "true"
+      OLLAMA_BASE_URL: http://ollama:11434
+    depends_on: [ollama]
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes:
+      - ollama-data:/root/.ollama
+
+volumes:
+  ollama-data:

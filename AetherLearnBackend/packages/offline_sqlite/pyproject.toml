@@ -1,0 +1,13 @@
+[project]
+name = "offline-sqlite"
+version = "1.0.0"
+description = "AetherLearn offline SQLite reference store"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2.8.0",
+  "shared-schemas",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

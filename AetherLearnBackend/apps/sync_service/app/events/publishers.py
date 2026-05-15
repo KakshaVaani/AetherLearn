@@ -1,0 +1,1 @@
+"""Sync event publishers."""
