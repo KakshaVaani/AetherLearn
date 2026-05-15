@@ -1,7 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  generateStudentNote,
+  GeneratedStudentNote,
+  getGeneratedStudentNote
+} from "@/api/generatedNotes";
 import {
   studentAccessibilityVisuals,
   studentTextMetrics,
@@ -18,7 +23,7 @@ import { assignments } from "@/data/assignments";
 import { classrooms } from "@/data/classrooms";
 import { lectures } from "@/data/lectures";
 import { subjects } from "@/data/subjects";
-import { AccessibilityMode, Assignment, Lecture } from "@/types";
+import { Assignment, Lecture } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 type FeedFilter = "All" | "Notes" | "Assignments";
@@ -32,7 +37,6 @@ export default function StudentSubjectDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const subject = subjects.find((item) => item.id === id) ?? subjects[0];
   const [activeFilter, setActiveFilter] = useState<FeedFilter>("All");
-  const [generatedLectureIds, setGeneratedLectureIds] = useState<string[]>([]);
   const preferences = useStudentPreferences();
   const visuals = studentAccessibilityVisuals(preferences);
 
@@ -68,13 +72,6 @@ export default function StudentSubjectDetailScreen() {
     }
     return true;
   });
-
-  function generateNotes(lectureId: string) {
-    // Later: request student-specific notes from FastAPI/Gemma 4 and cache them locally with SQLite.
-    setGeneratedLectureIds((current) =>
-      current.includes(lectureId) ? current : [...current, lectureId]
-    );
-  }
 
   return (
     <ScreenContainer style={visuals.screenStyle}>
@@ -128,8 +125,6 @@ export default function StudentSubjectDetailScreen() {
           <NotePost
             key={item.id}
             lecture={item.lecture}
-            generated={generatedLectureIds.includes(item.lecture.id)}
-            onGenerate={() => generateNotes(item.lecture.id)}
           />
         ) : (
           <AssignmentPost key={item.id} assignment={item.assignment} />
@@ -141,15 +136,36 @@ export default function StudentSubjectDetailScreen() {
 
 type NotePostProps = {
   lecture: Lecture;
-  generated: boolean;
-  onGenerate: () => void;
 };
 
-function NotePost({ lecture, generated, onGenerate }: NotePostProps) {
+function NotePost({ lecture }: NotePostProps) {
   const preferences = useStudentPreferences();
   const visuals = studentAccessibilityVisuals(preferences);
   const metrics = studentTextMetrics(preferences.textSize);
-  const aiNotes = getPersonalizedNotes(lecture, preferences.accessibilityMode);
+  const [generatedNote, setGeneratedNote] = useState<GeneratedStudentNote | null>(() =>
+    getGeneratedStudentNote(lecture.id, preferences)
+  );
+  const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    setGeneratedNote(getGeneratedStudentNote(lecture.id, preferences));
+  }, [
+    lecture.id,
+    preferences.accessibilityMode,
+    preferences.language,
+    preferences.textSize,
+    preferences.audioSupport
+  ]);
+
+  async function handleGenerate() {
+    setGenerating(true);
+    try {
+      const next = await generateStudentNote(lecture, preferences);
+      setGeneratedNote(next);
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   return (
     <Card style={[styles.postCard, visuals.readingCardStyle]}>
@@ -185,26 +201,37 @@ function NotePost({ lecture, generated, onGenerate }: NotePostProps) {
         </Text>
       </View>
 
-      {generated ? (
+      {generatedNote ? (
         <View style={[styles.aiSection, visuals.cardStyle]}>
           <View style={styles.aiHeader}>
             <AccessibilityBadge mode={preferences.accessibilityMode} />
-            <Badge label="AI notes ready" tone="success" />
+            <Badge label={`AI notes v${generatedNote.version}`} tone="success" />
             {preferences.accessibilityMode === "Multilingual" ? (
               <Badge label={preferences.language} tone="secondary" />
             ) : null}
           </View>
           <Text style={[styles.sectionLabel, visuals.titleTextStyle]}>Your AI notes</Text>
           <Text style={[styles.noteBody, { fontSize: metrics.bodyFontSize, lineHeight: metrics.bodyLineHeight }]}>
-            {aiNotes}
+            {generatedNote.text}
           </Text>
+          <Text style={[styles.generatedMeta, visuals.metaTextStyle]}>
+            Generated {formatDateTime(generatedNote.generatedAt)}
+          </Text>
+          <AppButton
+            title="Regenerate Notes"
+            variant="outline"
+            loading={generating}
+            leftIcon={<Ionicons name="refresh-outline" size={20} color={colors.text} />}
+            onPress={handleGenerate}
+          />
         </View>
       ) : (
         <AppButton
           title="Generate AI Notes"
           variant="outline"
+          loading={generating}
           leftIcon={<Ionicons name="sparkles-outline" size={20} color={colors.text} />}
-          onPress={onGenerate}
+          onPress={handleGenerate}
         />
       )}
 
@@ -264,20 +291,13 @@ function AssignmentPost({ assignment }: AssignmentPostProps) {
   );
 }
 
-function getPersonalizedNotes(lecture: Lecture, mode: AccessibilityMode) {
-  switch (mode) {
-    case "Blind / Low Vision":
-      return lecture.outputs.blindLowVision;
-    case "Dyslexia Friendly":
-      return lecture.outputs.dyslexiaFriendly;
-    case "Multilingual":
-      return lecture.outputs.multilingual;
-    case "Slow Learner":
-      return lecture.outputs.slowLearner;
-    case "Standard":
-    default:
-      return lecture.outputs.standard;
-  }
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(value));
 }
 
 function formatDate(value: string) {
@@ -446,6 +466,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm
+  },
+  generatedMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
   },
   postActions: {
     flexDirection: "row",

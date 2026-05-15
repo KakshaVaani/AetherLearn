@@ -16,7 +16,22 @@ type TeacherTab = (typeof tabs)[number];
 
 export default function TeacherPackScreen() {
   const [activeTab, setActiveTab] = useState<TeacherTab>("Objective");
+  const [revision, setRevision] = useState(1);
+  const [regenerating, setRegenerating] = useState(false);
   const pack = featuredLessonPack.teacherPack;
+  const revisionSuffix = revision > 1
+    ? `\n\nRevision ${revision}: Refined for clearer classroom delivery and easier review.`
+    : "";
+
+  async function regeneratePack() {
+    setRegenerating(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      setRevision((current) => current + 1);
+    } finally {
+      setRegenerating(false);
+    }
+  }
 
   return (
     <ScreenContainer>
@@ -48,7 +63,7 @@ export default function TeacherPackScreen() {
               <Ionicons name="flag-outline" size={22} color={colors.danger} />
               <Text style={styles.cardTitle}>Learning objective</Text>
             </View>
-            <Text style={styles.body}>{pack.objective}</Text>
+            <Text style={styles.body}>{pack.objective + revisionSuffix}</Text>
           </Card>
           <Card style={styles.card}>
             <View style={styles.cardHeader}>
@@ -67,14 +82,14 @@ export default function TeacherPackScreen() {
       {activeTab === "Script" ? (
         <Card style={styles.card}>
           <Text style={styles.cardTitle}>Teaching script</Text>
-          <Text style={styles.body}>{pack.teachingScript}</Text>
+          <Text style={styles.body}>{pack.teachingScript + revisionSuffix}</Text>
         </Card>
       ) : null}
 
       {activeTab === "Activity" ? (
         <Card style={styles.card}>
           <Text style={styles.cardTitle}>Classroom activity</Text>
-          <Text style={styles.body}>{pack.classroomActivity}</Text>
+          <Text style={styles.body}>{pack.classroomActivity + revisionSuffix}</Text>
           <Badge label="Low resource" tone="success" />
         </Card>
       ) : null}
@@ -102,8 +117,11 @@ export default function TeacherPackScreen() {
       ) : null}
 
       <Card style={styles.supportCard}>
-        <Text style={styles.cardTitle}>Differentiated support</Text>
-        <Text style={styles.body}>{pack.differentiatedSupport}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Differentiated support</Text>
+          {revision > 1 ? <Badge label={`Revision ${revision}`} tone="primary" /> : null}
+        </View>
+        <Text style={styles.body}>{pack.differentiatedSupport + revisionSuffix}</Text>
       </Card>
 
       <View style={styles.actions}>
@@ -116,7 +134,9 @@ export default function TeacherPackScreen() {
         <AppButton
           title="Regenerate"
           variant="outline"
+          loading={regenerating}
           leftIcon={<Ionicons name="refresh-outline" size={20} color={colors.text} />}
+          onPress={regeneratePack}
           style={styles.actionButton}
         />
         <AppButton
