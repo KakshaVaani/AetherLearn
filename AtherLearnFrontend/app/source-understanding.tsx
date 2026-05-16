@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -9,7 +9,7 @@ import { LessonSourcePreview } from "@/components/LessonSourcePreview";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
-import { featuredLessonPack } from "@/data/lessonPacks";
+import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
 
 function Chip({ label, tone = "neutral" }: { label: string; tone?: "primary" | "success" | "neutral" }) {
@@ -27,12 +27,27 @@ function Chip({ label, tone = "neutral" }: { label: string; tone?: "primary" | "
 }
 
 export default function SourceUnderstandingScreen() {
-  const source = featuredLessonPack.sourceCard;
+  const params = useLocalSearchParams<{
+    lessonId?: string;
+    classroomId?: string;
+    title?: string;
+    grade?: string;
+    subject?: string;
+  }>();
+  const { lesson, connected } = useLessonPackReview(params.lessonId);
+  const source = lesson.sourceCard;
+  const reviewParams = {
+    lessonId: params.lessonId ?? lesson.id,
+    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
+    title: params.title ?? lesson.title,
+    grade: params.grade ?? lesson.grade,
+    subject: params.subject ?? lesson.subject
+  };
 
   return (
     <ScreenContainer>
-      <Header title="Source Understanding" subtitle="Confirm what the AI read before generation." showBack />
-      <ReviewTabs active="source" />
+      <Header title="Source Pack" subtitle={lesson.title} showBack />
+      <ReviewTabs active="source" params={reviewParams} />
 
       <LessonSourcePreview compact />
 
@@ -41,6 +56,9 @@ export default function SourceUnderstandingScreen() {
           <View>
             <Text style={styles.label}>Detected Topic</Text>
             <Text style={styles.topic}>{source.topic}</Text>
+            <Text style={styles.meta}>
+              {lesson.grade} - {lesson.subject} - {connected ? "Backend draft" : "Demo preview"}
+            </Text>
           </View>
           <Badge label={`${source.confidence}% confidence`} tone="success" />
         </View>
@@ -75,7 +93,7 @@ export default function SourceUnderstandingScreen() {
         <AppButton
           title="Confirm"
           leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
-          onPress={() => router.push("/teacher-pack")}
+          onPress={() => router.push({ pathname: "/teacher-pack", params: reviewParams })}
           style={styles.actionButton}
         />
       </View>
@@ -105,6 +123,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 27,
     fontWeight: "900"
+  },
+  meta: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+    marginTop: spacing.xs
   },
   chipGrid: {
     flexDirection: "row",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -8,17 +8,32 @@ import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { featuredLessonPack } from "@/data/lessonPacks";
+import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const tabs = ["Objective", "Script", "Activity", "Worksheet", "Answers"] as const;
 type TeacherTab = (typeof tabs)[number];
 
 export default function TeacherPackScreen() {
+  const params = useLocalSearchParams<{
+    lessonId?: string;
+    classroomId?: string;
+    title?: string;
+    grade?: string;
+    subject?: string;
+  }>();
   const [activeTab, setActiveTab] = useState<TeacherTab>("Objective");
   const [revision, setRevision] = useState(1);
   const [regenerating, setRegenerating] = useState(false);
-  const pack = featuredLessonPack.teacherPack;
+  const { lesson } = useLessonPackReview(params.lessonId);
+  const pack = lesson.teacherPack;
+  const reviewParams = {
+    lessonId: params.lessonId ?? lesson.id,
+    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
+    title: params.title ?? lesson.title,
+    grade: params.grade ?? lesson.grade,
+    subject: params.subject ?? lesson.subject
+  };
   const revisionSuffix = revision > 1
     ? `\n\nRevision ${revision}: Refined for clearer classroom delivery and easier review.`
     : "";
@@ -35,8 +50,8 @@ export default function TeacherPackScreen() {
 
   return (
     <ScreenContainer>
-      <Header title="Teacher Pack" subtitle={featuredLessonPack.title} showBack />
-      <ReviewTabs active="teacher" />
+      <Header title="Teacher Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <ReviewTabs active="teacher" params={reviewParams} />
 
       <View style={styles.tabRow}>
         {tabs.map((tab) => {
@@ -143,7 +158,7 @@ export default function TeacherPackScreen() {
           title="Student Pack"
           variant="success"
           leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
-          onPress={() => router.push("/student-pack")}
+          onPress={() => router.push({ pathname: "/student-pack", params: reviewParams })}
           style={styles.actionButton}
         />
       </View>

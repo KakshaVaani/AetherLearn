@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { ApiClientError } from "@/api/client";
+import {
+  assignLessonToClass,
+  fetchTeacherDashboard,
+  generateAssignmentDraftFromLesson
+} from "@/api/backend";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -9,19 +15,30 @@ import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
-import { assignments } from "@/data/assignments";
 import { accessibilityModes } from "@/data/accessibilityProfiles";
-import { classrooms } from "@/data/classrooms";
-import { lectures } from "@/data/lectures";
-import { subjects } from "@/data/subjects";
-import { AccessibilityMode } from "@/types";
+import { classrooms as demoClassrooms } from "@/data/classrooms";
+import { lessonPacks } from "@/data/lessonPacks";
+import { AccessibilityMode, AssignmentQuestion, Classroom, LessonPack } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
+type AssignmentDraft = {
+  title: string;
+  instructions: string;
+  dueAt: string;
+  answerMode: "text" | "mcq";
+  versions: AccessibilityMode[];
+  questions: AssignmentQuestion[];
+};
+
 export default function CreateAssignmentScreen() {
-  const [selectedClassroom, setSelectedClassroom] = useState(classrooms[0].title);
-  const [selectedSubject, setSelectedSubject] = useState("Science");
-  const [selectedLecture, setSelectedLecture] = useState(lectures[0].title);
-  const [prompt, setPrompt] = useState("Create 5 questions on photosynthesis.");
+  const params = useLocalSearchParams<{ classroomId?: string; lessonId?: string }>();
+  const [availableClassrooms, setAvailableClassrooms] = useState<Classroom[]>(demoClassrooms);
+  const [availableLessons, setAvailableLessons] = useState<LessonPack[]>(lessonPacks);
+  const [selectedClassroomId, setSelectedClassroomId] = useState(params.classroomId ?? demoClassrooms[0].id);
+  const [selectedClassSubjectId, setSelectedClassSubjectId] = useState(
+    demoClassrooms[0].classSubjects?.[0]?.id ?? ""
+  );
+  const [selectedLessonId, setSelectedLessonId] = useState(params.lessonId ?? lessonPacks[0].id);
   const [versions, setVersions] = useState<AccessibilityMode[]>([
     "Standard",
     "Blind / Low Vision",
@@ -29,7 +46,74 @@ export default function CreateAssignmentScreen() {
     "Multilingual",
     "Slow Learner"
   ]);
-  const [generated, setGenerated] = useState(false);
+  const [draft, setDraft] = useState<AssignmentDraft | null>(null);
+  const [assigned, setAssigned] = useState(false);
+  const [assignedAssignmentId, setAssignedAssignmentId] = useState<string | null>(null);
+  const [message, setMessage] = useState("Using local demo classes until backend data is available.");
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchTeacherDashboard()
+      .then((data) => {
+        if (!mounted) return;
+        if (data.classes.length > 0) {
+          setAvailableClassrooms(data.classes);
+          const preferredClassroom = params.classroomId && data.classes.some((item) => item.id === params.classroomId)
+            ? params.classroomId
+            : data.classes[0].id;
+          setSelectedClassroomId(preferredClassroom);
+        }
+        if (data.lessons.length > 0) {
+          setAvailableLessons(data.lessons);
+          if (params.lessonId && data.lessons.some((item) => item.id === params.lessonId)) {
+            setSelectedLessonId(params.lessonId);
+          }
+        }
+        setConnected(true);
+        setMessage("Connected to backend. Assignment publishes only to the selected class.");
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setConnected(false);
+        setMessage("Backend unavailable. Showing local demo data.");
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [params.classroomId, params.lessonId]);
+
+  const selectedClassroom = useMemo(
+    () => availableClassrooms.find((item) => item.id === selectedClassroomId) ?? availableClassrooms[0],
+    [availableClassrooms, selectedClassroomId]
+  );
+  const classSubjects = selectedClassroom.classSubjects?.length
+    ? selectedClassroom.classSubjects
+    : selectedClassroom.subjects.map((subject) => ({ id: subject, subject }));
+  const selectedClassSubject = classSubjects.find((item) => item.id === selectedClassSubjectId) ?? classSubjects[0];
+  const selectedSubject = selectedClassSubject?.subject ?? selectedClassroom.subjects[0] ?? "General";
+  const filteredLessons = availableLessons.filter((lesson) => {
+    if (lesson.classroomId) return lesson.classroomId === selectedClassroom.id;
+    const gradeMatches = !selectedClassroom.grade || lesson.grade === selectedClassroom.grade;
+    const subjectMatches = lesson.subject === selectedSubject;
+    return gradeMatches && subjectMatches;
+  });
+  const lessonsForPicker = filteredLessons.length > 0 || connected ? filteredLessons : availableLessons;
+  const selectedLesson = lessonsForPicker.find((lesson) => lesson.id === selectedLessonId) ?? lessonsForPicker[0];
+
+  useEffect(() => {
+    const firstSubjectId = classSubjects[0]?.id ?? "";
+    if (!classSubjects.some((item) => item.id === selectedClassSubjectId)) {
+      setSelectedClassSubjectId(firstSubjectId);
+    }
+  }, [classSubjects, selectedClassSubjectId]);
+
+  useEffect(() => {
+    if (selectedLesson && !lessonsForPicker.some((lesson) => lesson.id === selectedLessonId)) {
+      setSelectedLessonId(selectedLesson.id);
+    }
+  }, [lessonsForPicker, selectedLesson, selectedLessonId]);
 
   function toggleVersion(mode: AccessibilityMode) {
     setVersions((current) =>
@@ -37,9 +121,126 @@ export default function CreateAssignmentScreen() {
     );
   }
 
-  function generateAssignment() {
-    // Later: send selected classroom, subject, lectures, prompt, and version targets to FastAPI.
-    setGenerated(true);
+  function selectClassroom(classroom: Classroom) {
+    setSelectedClassroomId(classroom.id);
+    setSelectedClassSubjectId(classroom.classSubjects?.[0]?.id ?? classroom.subjects[0] ?? "");
+    setDraft(null);
+    setAssigned(false);
+    setAssignedAssignmentId(null);
+  }
+
+  async function generateAssignment() {
+    if (!selectedLesson) {
+      setMessage("Select a lesson before generating an assignment.");
+      return;
+    }
+    setLoading(true);
+    setMessage("");
+    try {
+      const generated = await generateAssignmentDraftFromLesson({
+        lessonId: selectedLesson.id,
+        classroomId: selectedClassroom.id,
+        preferredVersions: versions
+      });
+      const generatedQuestions = generated.questions.filter((item) => item.prompt.trim().length > 0);
+      const fallbackQuestions = (
+        selectedLesson.studentAccessPack.practiceQuestions.length
+          ? selectedLesson.studentAccessPack.practiceQuestions
+          : selectedLesson.teacherPack.worksheet
+      ).map((prompt, index) => ({
+        id: `q${index + 1}`,
+        prompt,
+        hint: index === 0 ? "Use the lesson pack before answering." : undefined
+      }));
+      const questions = generatedQuestions.length
+        ? generatedQuestions
+        : (fallbackQuestions.length
+            ? fallbackQuestions
+            : [{ id: "q1", prompt: "Write what you understood from this lesson." }]);
+
+      setDraft({
+        title: generated.title || `${selectedLesson.title} Assignment`,
+        instructions: generated.instructions || "Complete the lesson pack and answer the questions.",
+        dueAt: "",
+        answerMode: generated.answerMode === "mcq" ? "mcq" : "text",
+        versions: generated.versions.length ? generated.versions : versions,
+        questions
+      });
+      if (generated.versions.length) {
+        setVersions(generated.versions);
+      }
+      setAssigned(false);
+      setAssignedAssignmentId(null);
+      setMessage("Assignment draft generated by Gemma. Review and edit before assigning.");
+    } catch (error) {
+      setDraft(null);
+      setAssigned(false);
+      setAssignedAssignmentId(null);
+      setMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : "Could not reach Gemma assignment generation. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function updateDraft(patch: Partial<AssignmentDraft>) {
+    setDraft((current) => (current ? { ...current, ...patch } : current));
+    setAssigned(false);
+    setAssignedAssignmentId(null);
+  }
+
+  function updateDraftQuestion(questionId: string, prompt: string) {
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            questions: current.questions.map((question) =>
+              question.id === questionId ? { ...question, prompt } : question
+            )
+          }
+        : current
+    );
+    setAssigned(false);
+    setAssignedAssignmentId(null);
+  }
+
+  async function assignDraftToClass() {
+    if (!selectedLesson || !draft) return;
+    setLoading(true);
+    setMessage("");
+    try {
+      const result = await assignLessonToClass({
+        lessonId: selectedLesson.id,
+        classroomId: selectedClassroom.id,
+        title: draft.title.trim() || `${selectedLesson.title} Assignment`,
+        instructions: draft.instructions.trim() || undefined,
+        dueAt: draft.dueAt.trim() || undefined,
+        answerMode: draft.answerMode,
+        versions: draft.versions,
+        questions: draft.questions.filter((question) => question.prompt.trim().length > 0)
+      });
+      setAssignedAssignmentId(result[0]?.id ?? null);
+      setAssigned(true);
+      setMessage(`${draft.title || selectedLesson.title} assigned to ${selectedClassroom.title}.`);
+    } catch (error) {
+      setAssigned(false);
+      setAssignedAssignmentId(null);
+      if (error instanceof ApiClientError && error.status === 401) {
+        setMessage("Session expired. Please log in again.");
+        router.replace({ pathname: "/login", params: { mode: "login", role: "teacher" } });
+        return;
+      }
+      setMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : "Could not assign this lesson. Check the selected class and lesson."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -50,86 +251,164 @@ export default function CreateAssignmentScreen() {
       <Card style={styles.formCard}>
         <Text style={styles.label}>Select classroom</Text>
         <View style={styles.selectorColumn}>
-          {classrooms.map((classroom) => (
+          {availableClassrooms.map((classroom) => (
             <ChoiceChip
               key={classroom.id}
-              label={classroom.title}
-              selected={selectedClassroom === classroom.title}
-              onPress={() => setSelectedClassroom(classroom.title)}
+              label={`${classroom.title}${classroom.grade ? ` - ${classroom.grade}` : ""}`}
+              selected={selectedClassroom.id === classroom.id}
+              onPress={() => selectClassroom(classroom)}
             />
           ))}
         </View>
 
         <Text style={styles.label}>Select subject</Text>
         <View style={styles.selectorRow}>
-          {subjects.slice(0, 3).map((subject) => (
+          {classSubjects.map((subject) => (
             <ChoiceChip
               key={subject.id}
-              label={subject.name}
-              selected={selectedSubject === subject.name}
-              onPress={() => setSelectedSubject(subject.name)}
+              label={subject.subject}
+              selected={selectedClassSubject?.id === subject.id}
+              onPress={() => {
+                setSelectedClassSubjectId(subject.id);
+                setDraft(null);
+                setAssigned(false);
+                setAssignedAssignmentId(null);
+              }}
             />
           ))}
         </View>
 
-        <Text style={styles.label}>Select lectures</Text>
+        <Text style={styles.gradeLine}>Grade scope: {selectedClassroom.grade ?? selectedClassroom.title}</Text>
+
+        <Text style={styles.label}>Select lesson</Text>
         <View style={styles.selectorColumn}>
-          {lectures.map((lecture) => (
+          {lessonsForPicker.map((lesson) => (
             <ChoiceChip
-              key={lecture.id}
-              label={lecture.title}
-              selected={selectedLecture === lecture.title}
-              onPress={() => setSelectedLecture(lecture.title)}
+              key={lesson.id}
+              label={`${lesson.title} - ${lesson.grade} - ${lesson.subject}`}
+              selected={selectedLesson?.id === lesson.id}
+              onPress={() => {
+                setSelectedLessonId(lesson.id);
+                setDraft(null);
+                setAssigned(false);
+                setAssignedAssignmentId(null);
+              }}
             />
           ))}
         </View>
-
-        <Text style={styles.label}>Prompt</Text>
-        <TextInput
-          value={prompt}
-          onChangeText={setPrompt}
-          style={[styles.input, styles.textArea]}
-          placeholder="Create 5 questions on photosynthesis."
-          multiline
-        />
+        {filteredLessons.length === 0 ? (
+          <Text style={styles.warningText}>
+            {lessonsForPicker.length === 0
+              ? "No lesson match for this class yet. Create notes for this class first."
+              : "No exact lesson match for this class yet. Demo lessons are shown as fallback."}
+          </Text>
+        ) : null}
       </Card>
 
-      <SectionHeader title="Student versions" subtitle="Choose which personalized variants to generate." />
-      <View style={styles.versionGrid}>
-        {accessibilityModes.map((mode) => {
-          const selected = versions.includes(mode);
-          return (
-            <Pressable
-              key={mode}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: selected }}
-              onPress={() => toggleVersion(mode)}
-              style={[styles.versionCard, selected && styles.versionCardSelected]}
-            >
-              <AccessibilityBadge mode={mode} />
-              <Ionicons
-                name={selected ? "checkmark-circle" : "ellipse-outline"}
-                size={22}
-                color={selected ? colors.primary : colors.muted}
-              />
-            </Pressable>
-          );
-        })}
-      </View>
-
       <AppButton
-        title="Generate Assignment"
+        title={draft ? "Regenerate Assignment" : "Generate Assignment"}
         leftIcon={<Ionicons name="sparkles-outline" size={20} color={colors.white} />}
+        disabled={!selectedLesson || loading}
+        loading={loading}
         onPress={generateAssignment}
       />
 
-      {generated ? (
+      {draft ? (
+        <>
+          <SectionHeader title="Edit assignment" subtitle="Students see this after you assign it to the class." />
+          <Card style={styles.formCard}>
+            <Text style={styles.label}>Assignment title</Text>
+            <TextInput
+              value={draft.title}
+              onChangeText={(value) => updateDraft({ title: value })}
+              style={styles.input}
+              placeholder="Assignment title"
+            />
+
+            <Text style={styles.label}>Instructions</Text>
+            <TextInput
+              value={draft.instructions}
+              onChangeText={(value) => updateDraft({ instructions: value })}
+              style={[styles.input, styles.textArea]}
+              placeholder="Instructions for students"
+              multiline
+            />
+
+            <Text style={styles.label}>Due date</Text>
+            <TextInput
+              value={draft.dueAt}
+              onChangeText={(value) => updateDraft({ dueAt: value })}
+              style={styles.input}
+              placeholder="Optional ISO date or teacher note"
+            />
+
+            <Text style={styles.label}>Questions</Text>
+            {draft.questions.map((question, index) => (
+              <View key={question.id} style={styles.questionEditor}>
+                <Text style={styles.questionLabel}>Question {index + 1}</Text>
+                <TextInput
+                  value={question.prompt}
+                  onChangeText={(value) => updateDraftQuestion(question.id, value)}
+                  style={[styles.input, styles.questionInput]}
+                  multiline
+                />
+              </View>
+            ))}
+          </Card>
+
+          <SectionHeader title="Student versions" subtitle="Choose which personalized variants to publish." />
+          <View style={styles.versionGrid}>
+            {accessibilityModes.map((mode) => {
+              const selected = versions.includes(mode);
+              return (
+                <Pressable
+                  key={mode}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: selected }}
+                  onPress={() => {
+                    toggleVersion(mode);
+                    updateDraft({
+                      versions: selected
+                        ? versions.filter((item) => item !== mode)
+                        : [...versions, mode]
+                    });
+                  }}
+                  style={[styles.versionCard, selected && styles.versionCardSelected]}
+                >
+                  <AccessibilityBadge mode={mode} />
+                  <Ionicons
+                    name={selected ? "checkmark-circle" : "ellipse-outline"}
+                    size={22}
+                    color={selected ? colors.primary : colors.muted}
+                  />
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <AppButton
+            title="Assign to Class"
+            leftIcon={<Ionicons name="send-outline" size={20} color={colors.white} />}
+            disabled={!selectedLesson || loading || draft.questions.every((question) => !question.prompt.trim())}
+            loading={loading}
+            onPress={assignDraftToClass}
+          />
+        </>
+      ) : null}
+
+      {message ? (
+        <Text style={[styles.message, connected && assigned ? styles.successText : styles.warningText]}>{message}</Text>
+      ) : null}
+
+      {assigned ? (
         <Card style={styles.previewCard}>
           <View style={styles.previewHeader}>
-            <Text style={styles.previewTitle}>Generated assignment preview</Text>
-            <Badge label={`${versions.length} versions`} tone="secondary" />
+            <Text style={styles.previewTitle}>Assignment published to class</Text>
+            <Badge label={`${draft?.versions.length ?? versions.length} versions`} tone="secondary" />
           </View>
-          {assignments[0].questions.map((question, index) => (
+          <Text style={styles.previewMeta}>{selectedClassroom.title} - {selectedSubject}</Text>
+          <Text style={styles.previewMeta}>Lesson: {selectedLesson?.title}</Text>
+          {(draft?.questions ?? []).map((question, index) => (
             <Text key={question.id} style={styles.question}>
               {index + 1}. {question.prompt}
             </Text>
@@ -137,7 +416,11 @@ export default function CreateAssignmentScreen() {
           <AppButton
             title="Open Assignment Detail"
             variant="outline"
-            onPress={() => router.push("/(teacher)/assignment/photosynthesis-quiz")}
+            onPress={() =>
+              assignedAssignmentId
+                ? router.push({ pathname: "/(teacher)/assignment/[id]", params: { id: assignedAssignmentId } })
+                : router.push("/(teacher)/assignment")
+            }
           />
         </Card>
       ) : null}
@@ -261,5 +544,45 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 23,
     fontWeight: "600"
+  },
+  questionEditor: {
+    gap: spacing.sm
+  },
+  questionLabel: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "800"
+  },
+  questionInput: {
+    minHeight: 72,
+    paddingTop: spacing.md,
+    textAlignVertical: "top"
+  },
+  gradeLine: {
+    color: colors.secondary,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  warningText: {
+    color: colors.warning,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  successText: {
+    color: colors.success
+  },
+  message: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  previewMeta: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700"
   }
 });

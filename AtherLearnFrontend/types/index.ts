@@ -40,12 +40,22 @@ export type Subject = {
 
 export type AccessibilityBreakdown = Record<AccessibilityMode, number>;
 
+export type ClassSubject = {
+  id: string;
+  subject: string;
+  teacherId?: string;
+};
+
 export type Classroom = {
   id: string;
   title: string;
+  grade?: string;
+  section?: string | null;
+  schoolId?: string;
   classCode: string;
   students: number;
   subjects: string[];
+  classSubjects?: ClassSubject[];
   accessibilityProfiles: number;
   accessibilityBreakdown: AccessibilityBreakdown;
 };
@@ -167,6 +177,8 @@ export type SafetyFlags = {
 export type LessonPack = {
   id: string;
   title: string;
+  classroomId?: string | null;
+  classSubjectId?: string | null;
   grade: string;
   subject: string;
   language: string;

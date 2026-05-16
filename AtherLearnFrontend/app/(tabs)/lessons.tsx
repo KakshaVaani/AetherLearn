@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { fetchTeacherLessons } from "@/api/backend";
+import { ApiClientError } from "@/api/client";
+import { deleteTeacherLesson, fetchTeacherLessons } from "@/api/backend";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { LessonThumbnail } from "@/components/LessonThumbnail";
@@ -15,7 +16,7 @@ import { colors, radii, spacing } from "@/constants/theme";
 type FilterKey = "grade" | "subject" | "status";
 
 const filterLabels: Record<FilterKey, string> = {
-  grade: "Class",
+  grade: "Grade",
   subject: "Subject",
   status: "Status"
 };
@@ -26,9 +27,19 @@ function statusTone(status: LessonStatus) {
   return "neutral" as const;
 }
 
+function gradeFilterValue(grade: string) {
+  const number = grade.match(/\d+/);
+  if (number) return number[0];
+  const cleaned = grade.replace(/grade|class/gi, "").trim();
+  return cleaned || grade.trim();
+}
+
 export default function LessonsScreen() {
   const [lessons, setLessons] = useState<LessonPack[]>(lessonPacks);
   const [connected, setConnected] = useState(false);
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
+  const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"success" | "warning">("success");
   const [search, setSearch] = useState("");
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
   const [selectedGrade, setSelectedGrade] = useState("All");
@@ -37,7 +48,7 @@ export default function LessonsScreen() {
 
   const filterOptions = useMemo(
     () => ({
-      grade: ["All", ...Array.from(new Set(lessons.map((lesson) => lesson.grade)))],
+      grade: ["All", ...Array.from(new Set(lessons.map((lesson) => gradeFilterValue(lesson.grade))))],
       subject: ["All", ...Array.from(new Set(lessons.map((lesson) => lesson.subject)))],
       status: ["All", "Draft", "Needs Review", "Approved", "Exported"] as Array<LessonStatus | "All">
     }),
@@ -50,7 +61,7 @@ export default function LessonsScreen() {
         const matchesSearch = `${lesson.title} ${lesson.subject} ${lesson.grade} ${lesson.learnerNeed}`
           .toLowerCase()
           .includes(search.toLowerCase());
-        const matchesGrade = selectedGrade === "All" || lesson.grade === selectedGrade;
+        const matchesGrade = selectedGrade === "All" || gradeFilterValue(lesson.grade) === selectedGrade;
         const matchesSubject = selectedSubject === "All" || lesson.subject === selectedSubject;
         const matchesStatus = selectedStatus === "All" || lesson.status === selectedStatus;
 
@@ -86,6 +97,54 @@ export default function LessonsScreen() {
     if (key === "subject") setSelectedSubject(value);
     if (key === "status") setSelectedStatus(value as LessonStatus | "All");
     setOpenFilter(null);
+  }
+
+  async function confirmDeleteLesson(title: string) {
+    const maybeWindow = globalThis as typeof globalThis & { confirm?: (message: string) => boolean };
+    if (typeof maybeWindow.confirm === "function") {
+      return maybeWindow.confirm(`Delete "${title}"? This action cannot be undone.`);
+    }
+    return new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "Delete lesson?",
+        `Delete "${title}"? This action cannot be undone.`,
+        [
+          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+          { text: "Delete", style: "destructive", onPress: () => resolve(true) }
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) }
+      );
+    });
+  }
+
+  async function handleDeleteLesson(lesson: LessonPack) {
+    if (deletingLessonId) return;
+    const confirmed = await confirmDeleteLesson(lesson.title);
+    if (!confirmed) return;
+
+    setDeletingLessonId(lesson.id);
+    setMessage("");
+    try {
+      if (connected) {
+        await deleteTeacherLesson(lesson.id);
+      }
+      setLessons((current) => current.filter((item) => item.id !== lesson.id));
+      setMessageTone("success");
+      setMessage(
+        connected
+          ? `Deleted "${lesson.title}".`
+          : `Deleted "${lesson.title}" from local demo data.`
+      );
+    } catch (error) {
+      setMessageTone("warning");
+      setMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : "Could not delete this lesson. Please try again."
+      );
+    } finally {
+      setDeletingLessonId(null);
+    }
   }
 
   return (
@@ -151,9 +210,30 @@ export default function LessonsScreen() {
         })}
       </View>
 
+      {message ? (
+        <Text style={[styles.message, messageTone === "success" ? styles.successText : styles.warningText]}>
+          {message}
+        </Text>
+      ) : null}
+
       <SectionHeader title="Lessons" />
       {visibleLessons.map((lesson) => (
-        <Card key={lesson.id} onPress={() => router.push("/source-understanding")} style={styles.lessonCard}>
+        <Card
+          key={lesson.id}
+          onPress={() =>
+            router.push({
+              pathname: "/source-understanding",
+              params: {
+                lessonId: lesson.id,
+                classroomId: lesson.classroomId ?? undefined,
+                title: lesson.title,
+                grade: lesson.grade,
+                subject: lesson.subject
+              }
+            })
+          }
+          style={styles.lessonCard}
+        >
           <LessonThumbnail lesson={lesson} size="medium" />
           <View style={styles.lessonText}>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
@@ -169,7 +249,22 @@ export default function LessonsScreen() {
               <Badge label={lesson.status} tone={statusTone(lesson.status)} />
             </View>
           </View>
-          <Ionicons name="ellipsis-vertical" size={18} color={colors.muted} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Delete ${lesson.title}`}
+            disabled={deletingLessonId === lesson.id}
+            onPress={(event) => {
+              event.stopPropagation();
+              void handleDeleteLesson(lesson);
+            }}
+            style={styles.deleteButton}
+          >
+            <Ionicons
+              name={deletingLessonId === lesson.id ? "hourglass-outline" : "trash-outline"}
+              size={18}
+              color={deletingLessonId === lesson.id ? colors.muted : colors.danger}
+            />
+          </Pressable>
         </Card>
       ))}
     </ScreenContainer>
@@ -292,6 +387,13 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.md
   },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    alignItems: "center",
+    justifyContent: "center"
+  },
   lessonText: {
     flex: 1,
     gap: spacing.xs
@@ -311,5 +413,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs
+  },
+  message: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  successText: {
+    color: colors.success
+  },
+  warningText: {
+    color: colors.warning
   }
 });

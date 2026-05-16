@@ -24,6 +24,12 @@ class AssignmentService:
                     "status": "assigned",
                     "dueAt": payload.due_at,
                     "instructions": payload.instructions,
+                    "title": payload.title,
+                    "answerMode": payload.answer_mode,
+                    "versions": payload.versions,
+                    "questions": [
+                        question.model_dump(by_alias=True) for question in payload.questions
+                    ],
                 }
             )
             created.append(Assignment.model_validate(item))

@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 from service_auth import UserContext
 from shared_schemas import AskInput, JoinClassRequest, SubmitAssignmentRequest
+from shared_utils.errors import ForbiddenError
 from shared_utils.response import success_response
 
 from ..dependencies import clients, request_id, student_context
@@ -12,6 +13,25 @@ router = APIRouter(prefix="/api/student", tags=["student"])
 
 def _classroom_ids(classes: list[dict]) -> str:
     return ",".join(str(item["id"]) for item in classes if item.get("id"))
+
+
+async def _student_lesson_access(c: dict, ctx: UserContext, lesson_id: str, req_id: str):
+    classes = await c["school"].request(
+        "GET",
+        f"/internal/student/{ctx.user_id}/classes",
+        request_id=req_id,
+        user_context=ctx,
+    )
+    access = await c["assignment"].request(
+        "GET",
+        f"/internal/student/{ctx.user_id}/lessons/{lesson_id}/access",
+        params={"classroomIds": _classroom_ids(classes)},
+        request_id=req_id,
+        user_context=ctx,
+    )
+    if not access.get("eligible"):
+        raise ForbiddenError("Lesson is not assigned to this student")
+    return access
 
 
 @router.get("/dashboard")
@@ -94,19 +114,7 @@ async def lessons(request: Request, ctx: UserContext = Depends(student_context))
 async def lesson(request: Request, lesson_id: str, ctx: UserContext = Depends(student_context)):
     c = clients()
     req_id = request_id(request)
-    classes = await c["school"].request(
-        "GET",
-        f"/internal/student/{ctx.user_id}/classes",
-        request_id=req_id,
-        user_context=ctx,
-    )
-    access = await c["assignment"].request(
-        "GET",
-        f"/internal/student/{ctx.user_id}/lessons/{lesson_id}/access",
-        params={"classroomIds": _classroom_ids(classes)},
-        request_id=req_id,
-        user_context=ctx,
-    )
+    access = await _student_lesson_access(c, ctx, lesson_id, req_id)
     lesson_pack = await c["lesson"].request(
         "GET", f"/internal/lessons/{lesson_id}", request_id=req_id, user_context=ctx
     )
@@ -119,6 +127,7 @@ async def ask(
 ):
     c = clients()
     req_id = request_id(request)
+    await _student_lesson_access(c, ctx, lesson_id, req_id)
     lesson_pack = await c["lesson"].request(
         "GET", f"/internal/lessons/{lesson_id}", request_id=req_id, user_context=ctx
     )
@@ -147,11 +156,14 @@ async def ask(
 async def progress(
     request: Request, lesson_id: str, payload: dict, ctx: UserContext = Depends(student_context)
 ):
-    data = await clients()["assignment"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _student_lesson_access(c, ctx, lesson_id, req_id)
+    data = await c["assignment"].request(
         "PATCH",
         f"/internal/student/{ctx.user_id}/lessons/{lesson_id}/progress",
         json=payload,
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -161,11 +173,14 @@ async def progress(
 async def save_offline(
     request: Request, lesson_id: str, ctx: UserContext = Depends(student_context)
 ):
-    data = await clients()["assignment"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _student_lesson_access(c, ctx, lesson_id, req_id)
+    data = await c["assignment"].request(
         "PATCH",
         f"/internal/student/{ctx.user_id}/lessons/{lesson_id}/progress",
         json={"downloaded": True},
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -178,11 +193,20 @@ async def submit_assignment(
     payload: SubmitAssignmentRequest,
     ctx: UserContext = Depends(student_context),
 ):
-    data = await clients()["assignment"].request(
+    c = clients()
+    req_id = request_id(request)
+    classes = await c["school"].request(
+        "GET",
+        f"/internal/student/{ctx.user_id}/classes",
+        request_id=req_id,
+        user_context=ctx,
+    )
+    data = await c["assignment"].request(
         "POST",
         f"/internal/student/{ctx.user_id}/assignments/{assignment_id}/submit",
+        params={"classroomIds": _classroom_ids(classes)},
         json=payload.model_dump(by_alias=True),
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)

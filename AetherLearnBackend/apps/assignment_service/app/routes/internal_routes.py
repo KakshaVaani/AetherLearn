@@ -122,6 +122,7 @@ async def submit_assignment(
     student_id: str,
     assignment_id: str,
     payload: SubmitAssignmentRequest,
+    classroomIds: str | None = None,
 ):
     await require_service(request)
     _, progress_svc, assignments, *_ = services(request)
@@ -130,6 +131,7 @@ async def submit_assignment(
         assignment_id=assignment_id,
         assignments=assignments,
         payload=payload,
+        classroom_ids=classroom_ids_from_param(classroomIds),
     )
 
 

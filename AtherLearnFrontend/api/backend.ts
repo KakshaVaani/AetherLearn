@@ -6,7 +6,7 @@ import {
   backendLessonToLessonPack,
   backendLessonToLecture
 } from "@/api/adapters";
-import { Assignment, Classroom, LessonPack, Lecture, Role } from "@/types";
+import { AccessibilityMode, Assignment, AssignmentQuestion, Classroom, LessonPack, Lecture, Role } from "@/types";
 
 type LoginResponse = {
   user: {
@@ -44,6 +44,19 @@ type AskLessonResponse = {
   confidence?: number;
   followUpSuggestion?: string;
   sourceLimited?: boolean;
+};
+
+type AssignmentDraftResponse = {
+  title: string;
+  instructions: string;
+  answerMode?: "text" | "mcq";
+  versions?: string[];
+  questions?: Array<{
+    id: string;
+    prompt: string;
+    hint?: string;
+    options?: string[];
+  }>;
 };
 
 export async function demoLogin(role: Role) {
@@ -107,9 +120,93 @@ export async function fetchTeacherDashboard() {
   };
 }
 
+export async function fetchTeacherClassrooms(): Promise<Classroom[]> {
+  const response = await apiJson<unknown[]>("/api/teacher/classes");
+  return response.map((item) => backendClassroomToClassroom(item as never));
+}
+
 export async function fetchTeacherLessons(): Promise<LessonPack[]> {
   const response = await apiJson<unknown[]>("/api/teacher/lessons");
   return response.map((item) => backendLessonToLessonPack(item as never));
+}
+
+export async function deleteTeacherLesson(lessonId: string) {
+  return apiJson(`/api/teacher/lessons/${lessonId}`, "DELETE");
+}
+
+export async function generateLessonFromText(input: {
+  title: string;
+  text: string;
+  classroomId: string;
+  classSubjectId?: string;
+  subject: string;
+  gradeBand: string;
+  language?: string;
+}) {
+  const session = getSession();
+  const response = await apiJson<unknown>("/api/teacher/lessons/from-text", "POST", {
+    text: input.text,
+    teacherId: session?.userId ?? "teacher-demo",
+    settings: {
+      title: input.title,
+      classroomId: input.classroomId,
+      classSubjectId: input.classSubjectId,
+      subject: input.subject,
+      gradeBand: input.gradeBand,
+      language: input.language ?? "en"
+    }
+  });
+  return backendLessonToLessonPack(response as never);
+}
+
+export async function assignLessonToClass(input: {
+  lessonId: string;
+  classroomId: string;
+  instructions?: string;
+  dueAt?: string;
+  title?: string;
+  answerMode?: "mcq" | "text";
+  versions?: AccessibilityMode[];
+  questions?: AssignmentQuestion[];
+}) {
+  const response = await apiJson<unknown[]>(`/api/teacher/lessons/${input.lessonId}/assign`, "POST", {
+    lessonId: input.lessonId,
+    classroomId: input.classroomId,
+    instructions: input.instructions,
+    dueAt: input.dueAt,
+    title: input.title,
+    answerMode: input.answerMode,
+    versions: input.versions,
+    questions: input.questions
+  });
+  return response.map((item) => backendAssignmentToAssignment(item as never));
+}
+
+export async function generateAssignmentDraftFromLesson(input: {
+  lessonId: string;
+  classroomId?: string;
+  preferredVersions?: AccessibilityMode[];
+}) {
+  const response = await apiJson<AssignmentDraftResponse>(
+    `/api/teacher/lessons/${input.lessonId}/generate-assignment-draft`,
+    "POST",
+    {
+      classroomId: input.classroomId,
+      preferredVersions: input.preferredVersions
+    }
+  );
+  return {
+    title: response.title,
+    instructions: response.instructions,
+    answerMode: response.answerMode === "mcq" ? "mcq" : "text",
+    versions: ((response.versions ?? []) as AccessibilityMode[]),
+    questions: (response.questions ?? []).map((question, index) => ({
+      id: question.id || `q${index + 1}`,
+      prompt: question.prompt || "",
+      hint: question.hint,
+      options: question.options
+    }))
+  };
 }
 
 export async function generateDemoLessonFromText() {

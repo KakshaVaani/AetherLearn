@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { fetchTeacherDashboard } from "@/api/backend";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -8,11 +10,30 @@ import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
+import { Assignment } from "@/types";
 import { colors, spacing } from "@/constants/theme";
 
 export default function AssignmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const assignment = assignments.find((item) => item.id === id) ?? assignments[0];
+  const [items, setItems] = useState<Assignment[]>(assignments);
+  const [connected, setConnected] = useState(false);
+  const assignment = items.find((item) => item.id === id) ?? assignments.find((item) => item.id === id) ?? items[0];
+
+  useEffect(() => {
+    let mounted = true;
+    fetchTeacherDashboard()
+      .then((data) => {
+        if (!mounted) return;
+        if (data.assignments.length > 0) setItems(data.assignments);
+        setConnected(true);
+      })
+      .catch(() => {
+        if (mounted) setConnected(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <ScreenContainer>
@@ -25,6 +46,7 @@ export default function AssignmentDetailScreen() {
         </View>
         <Text style={styles.meta}>Linked lecture: {assignment.linkedLecture}</Text>
         <Text style={styles.meta}>Due date: {assignment.dueDate}</Text>
+        <Text style={styles.meta}>{connected ? "Synced from backend" : "Local demo assignment"}</Text>
       </Card>
 
       <SectionHeader title="Different versions" />

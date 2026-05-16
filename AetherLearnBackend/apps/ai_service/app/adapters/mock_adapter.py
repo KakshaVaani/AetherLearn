@@ -8,6 +8,8 @@ from shared_schemas import (
     AskInput,
     ConfidenceNotes,
     GemmaTrace,
+    GenerateAssignmentDraftInput,
+    GenerateAssignmentDraftOutput,
     GenerateFromTextInput,
     ImageTraceMetadata,
     ImproveLessonInput,
@@ -102,6 +104,39 @@ class MockAdapter(BaseAIAdapter):
             confidence=0.82,
             follow_up_suggestion="Would you like one practice question with a hint?",
             source_limited=True,
+        )
+
+    async def generate_assignment_draft(
+        self, input: GenerateAssignmentDraftInput
+    ) -> GenerateAssignmentDraftOutput:
+        lesson = input.lesson_pack
+        base_questions = (
+            lesson.student_access_pack.practice_questions
+            or lesson.teacher_pack.assessment_questions
+            or lesson.teacher_pack.worksheet
+            or ["Write what you learned from this lesson in your own words."]
+        )
+        versions = input.preferred_versions or [
+            "Standard",
+            "Blind / Low Vision",
+            "Dyslexia Friendly",
+            "Multilingual",
+            "Slow Learner",
+        ]
+        return GenerateAssignmentDraftOutput(
+            title=f"{lesson.title} Assignment",
+            instructions="Read the lesson notes and answer every question in complete sentences.",
+            answer_mode="text",
+            versions=versions,
+            questions=[
+                {
+                    "id": f"q{index + 1}",
+                    "prompt": question,
+                    "hint": "Use the lesson pack details to support your answer.",
+                    "options": [],
+                }
+                for index, question in enumerate(base_questions[:6])
+            ],
         )
 
     async def improve_lesson(self, input: ImproveLessonInput) -> LessonPack:

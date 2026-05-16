@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -7,7 +7,7 @@ import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { featuredLessonPack } from "@/data/lessonPacks";
+import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
 
 function TrustRow({
@@ -33,13 +33,28 @@ function TrustRow({
 }
 
 export default function TrustPackScreen() {
-  const trust = featuredLessonPack.trustPack;
+  const params = useLocalSearchParams<{
+    lessonId?: string;
+    classroomId?: string;
+    title?: string;
+    grade?: string;
+    subject?: string;
+  }>();
+  const { lesson } = useLessonPackReview(params.lessonId);
+  const trust = lesson.trustPack;
+  const reviewParams = {
+    lessonId: params.lessonId ?? lesson.id,
+    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
+    title: params.title ?? lesson.title,
+    grade: params.grade ?? lesson.grade,
+    subject: params.subject ?? lesson.subject
+  };
   const warningCount = trust.accessibilityWarnings.length;
 
   return (
     <ScreenContainer>
-      <Header title="Trust Pack" subtitle="Transparent runtime and review status." showBack />
-      <ReviewTabs active="trust" />
+      <Header title="Trust Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <ReviewTabs active="trust" params={reviewParams} />
 
       <Card style={styles.card}>
         <TrustRow icon="cloud-outline" label="Runtime Mode" value={trust.runtimeMode} tone="primary" />
@@ -87,7 +102,7 @@ export default function TrustPackScreen() {
           title="Save to Library"
           variant="success"
           leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
-          onPress={() => router.push("/lessons")}
+          onPress={() => router.push("/(teacher)/lessons")}
           style={styles.actionButton}
         />
       </View>

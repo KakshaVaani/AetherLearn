@@ -70,7 +70,12 @@ async def patch_school(request: Request, school_id: str, payload: dict):
 async def teacher_classes(request: Request, teacher_id: str):
     await require_service(request)
     _, classrooms, subjects, _ = repos(request)
-    return await ClassroomService(classrooms, subjects).list_for_teacher(teacher_id)
+    classes = await ClassroomService(classrooms, subjects).list_for_teacher(teacher_id)
+    return [
+        classroom.model_dump(mode="json", by_alias=True)
+        | {"subjects": await subjects.list_for_class(classroom.id)}
+        for classroom in classes
+    ]
 
 
 @router.post("/teacher/{teacher_id}/classes")
@@ -84,7 +89,10 @@ async def create_class(request: Request, teacher_id: str, payload: CreateClassro
 async def get_class(request: Request, classroom_id: str):
     await require_service(request)
     _, classrooms, subjects, _ = repos(request)
-    return await ClassroomService(classrooms, subjects).get(classroom_id)
+    classroom = await ClassroomService(classrooms, subjects).get(classroom_id)
+    return classroom.model_dump(mode="json", by_alias=True) | {
+        "subjects": await subjects.list_for_class(classroom.id)
+    }
 
 
 @router.patch("/classes/{classroom_id}")

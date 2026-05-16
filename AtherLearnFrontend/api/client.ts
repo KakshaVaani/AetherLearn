@@ -1,4 +1,4 @@
-import { authHeader } from "@/api/session";
+import { authHeader, clearSession, getSession, saveSession } from "@/api/session";
 
 type ApiSuccess<T> = {
   ok: true;
@@ -32,9 +32,61 @@ export class ApiClientError extends Error {
   }
 }
 
+type RefreshData = {
+  user: {
+    id: string;
+    name: string;
+    role: "teacher" | "student";
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+};
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function refreshSessionToken(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+
+  const session = getSession();
+  if (!session?.refreshToken) return false;
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ refreshToken: session.refreshToken })
+      });
+      const payload = (await response.json().catch(() => null)) as ApiSuccess<RefreshData> | ApiError | null;
+      if (!response.ok || !payload?.ok) {
+        return false;
+      }
+      saveSession({
+        accessToken: payload.data.tokens.accessToken,
+        refreshToken: payload.data.tokens.refreshToken,
+        role: payload.data.user.role,
+        userId: payload.data.user.id,
+        name: payload.data.user.name
+      });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+
+  return refreshInFlight;
+}
+
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit & { authenticated?: boolean } = {}
+  options: RequestInit & { authenticated?: boolean } = {},
+  allowRefresh = true
 ) {
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined;
@@ -64,6 +116,15 @@ export async function apiRequest<T>(
     payload = (await response.json()) as ApiSuccess<T> | ApiError;
   } catch {
     throw new ApiClientError("Backend returned an unreadable response.", "INVALID_RESPONSE", response.status);
+  }
+
+  if ((!response.ok || !payload.ok) && response.status === 401 && options.authenticated !== false && allowRefresh) {
+    const refreshed = await refreshSessionToken();
+    if (refreshed) {
+      return apiRequest<T>(path, options, false);
+    }
+    clearSession();
+    throw new ApiClientError("Session expired. Please log in again.", "UNAUTHORIZED", 401);
   }
 
   if (!response.ok || !payload.ok) {

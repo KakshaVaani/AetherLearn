@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchTeacherLessons } from "@/api/backend";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -9,6 +10,7 @@ import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { featuredLecture } from "@/data/lectures";
+import { LessonPack } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const outputTabs = [
@@ -22,12 +24,44 @@ const outputTabs = [
 type OutputKey = (typeof outputTabs)[number]["key"];
 
 export default function LectureAnalysisResultScreen() {
+  const params = useLocalSearchParams<{
+    lessonId?: string;
+    title?: string;
+    grade?: string;
+    subject?: string;
+    classroomId?: string;
+  }>();
   const [activeTab, setActiveTab] = useState<OutputKey>("standard");
+  const [lesson, setLesson] = useState<LessonPack | null>(null);
   const active = outputTabs.find((tab) => tab.key === activeTab) ?? outputTabs[0];
+  const title = lesson?.title ?? params.title ?? featuredLecture.title;
+  const grade = lesson?.grade ?? params.grade;
+  const subject = lesson?.subject ?? params.subject ?? featuredLecture.subject;
+  const status = lesson?.status ?? featuredLecture.status;
+  const activeBody = lesson ? lessonOutput(lesson, activeTab) : featuredLecture.outputs[activeTab];
+  const diagramDescription = lesson?.studentAccessPack.visualDescription ?? featuredLecture.diagramDescription;
+  const keyVocabulary = lesson?.studentAccessPack.vocabulary.map((item) => item.term) ?? featuredLecture.keyVocabulary;
+  const practiceQuestions = lesson?.studentAccessPack.practiceQuestions ?? featuredLecture.practiceQuestions;
+
+  useEffect(() => {
+    if (!params.lessonId) return;
+    let mounted = true;
+    fetchTeacherLessons()
+      .then((items) => {
+        if (!mounted) return;
+        setLesson(items.find((item) => item.id === params.lessonId) ?? null);
+      })
+      .catch(() => {
+        if (mounted) setLesson(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [params.lessonId]);
 
   return (
     <ScreenContainer>
-      <Header title="Lecture Result" subtitle="Gemma 4 generated accessible learning drafts." showBack />
+      <Header title="Lecture Result" subtitle="Generated private draft. Assign it to publish." showBack />
 
       <Card style={styles.summaryCard}>
         <View style={styles.summaryHeader}>
@@ -35,11 +69,14 @@ export default function LectureAnalysisResultScreen() {
             <Ionicons name="sparkles-outline" size={24} color={colors.primary} />
           </View>
           <View style={styles.summaryText}>
-            <Text style={styles.title}>{featuredLecture.title}</Text>
-            <Text style={styles.source}>{featuredLecture.sourceType}</Text>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.source}>{subject}{grade ? ` - ${grade}` : ""}</Text>
           </View>
         </View>
-        <Badge label={featuredLecture.status} tone="success" />
+        <View style={styles.badges}>
+          <Badge label={status} tone={status === "Needs Review" ? "warning" : "success"} />
+          <Badge label="Private draft" tone="secondary" />
+        </View>
       </Card>
 
       <SectionHeader title="Generated notes" subtitle="Review each personalized version before sharing." />
@@ -62,18 +99,18 @@ export default function LectureAnalysisResultScreen() {
 
       <Card style={styles.notesCard}>
         <Text style={styles.notesTitle}>{active.label}</Text>
-        <Text style={styles.notesBody}>{featuredLecture.outputs[activeTab]}</Text>
+        <Text style={styles.notesBody}>{activeBody}</Text>
       </Card>
 
       <Card style={styles.detailCard}>
         <Text style={styles.detailTitle}>Diagram description</Text>
-        <Text style={styles.detailBody}>{featuredLecture.diagramDescription}</Text>
+        <Text style={styles.detailBody}>{diagramDescription}</Text>
       </Card>
 
       <Card style={styles.detailCard}>
         <Text style={styles.detailTitle}>Key vocabulary</Text>
         <View style={styles.badges}>
-          {featuredLecture.keyVocabulary.map((word) => (
+          {keyVocabulary.map((word) => (
             <Badge key={word} label={word} tone="primary" />
           ))}
         </View>
@@ -81,7 +118,7 @@ export default function LectureAnalysisResultScreen() {
 
       <Card style={styles.detailCard}>
         <Text style={styles.detailTitle}>Practice questions</Text>
-        {featuredLecture.practiceQuestions.map((question, index) => (
+        {practiceQuestions.map((question, index) => (
           <Text key={question} style={styles.question}>
             {index + 1}. {question}
           </Text>
@@ -94,15 +131,34 @@ export default function LectureAnalysisResultScreen() {
       </Card>
 
       <View style={styles.actions}>
-        <AppButton title="Share with Class" onPress={() => router.push("/(teacher)/dashboard")} />
         <AppButton
-          title="Create Assignment"
-          variant="outline"
-          onPress={() => router.push("/(teacher)/create-assignment")}
+          title="Assign to Class"
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/create-assignment",
+              params: {
+                lessonId: lesson?.id ?? params.lessonId,
+                classroomId: lesson?.classroomId ?? params.classroomId
+              }
+            })
+          }
         />
+        <AppButton title="Back to Dashboard" variant="outline" onPress={() => router.push("/(teacher)/dashboard")} />
       </View>
     </ScreenContainer>
   );
+}
+
+function lessonOutput(lesson: LessonPack, key: OutputKey) {
+  if (key === "standard") return lesson.studentAccessPack.screenReaderSummary;
+  if (key === "blindLowVision") {
+    return lesson.studentAccessPack.visualDescription || lesson.studentAccessPack.audioStudyScript;
+  }
+  if (key === "dyslexiaFriendly") {
+    return lesson.studentAccessPack.steps.join("\n") || lesson.studentAccessPack.screenReaderSummary;
+  }
+  if (key === "multilingual") return lesson.studentAccessPack.audioStudyScript;
+  return lesson.studentAccessPack.steps.join("\n") || lesson.studentAccessPack.screenReaderSummary;
 }
 
 const styles = StyleSheet.create({

@@ -23,6 +23,19 @@ from shared_utils.errors import NotFoundError
 from ..repository.lesson_access_code_repository import LessonAccessCodeRepository
 from ..repository.lesson_repository import LessonRepository
 
+LESSON_SCOPE_FIELDS = (
+    "createdBy",
+    "createdByRole",
+    "schoolId",
+    "classroomId",
+    "classSubjectId",
+    "language",
+    "subject",
+    "gradeBand",
+    "tags",
+    "visibility",
+)
+
 
 def draft_pack(data: dict) -> LessonPack:
     lesson_id = data["id"]
@@ -131,6 +144,10 @@ class LessonService:
         data = pack.model_dump(mode="json", by_alias=True)
         data["id"] = lesson_id
         data["status"] = LessonStatus.GENERATED
+        for field in LESSON_SCOPE_FIELDS:
+            value = existing.get(field)
+            if value is not None:
+                data[field] = value
         updated = await self.lessons.update(lesson_id, data)
         return LessonPack.model_validate(updated)
 

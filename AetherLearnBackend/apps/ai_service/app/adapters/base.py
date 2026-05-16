@@ -6,6 +6,8 @@ from shared_schemas import (
     AnalyzeImageInput,
     AskAnswer,
     AskInput,
+    GenerateAssignmentDraftInput,
+    GenerateAssignmentDraftOutput,
     GenerateFromTextInput,
     ImproveLessonInput,
     LessonPack,
@@ -25,6 +27,11 @@ class BaseAIAdapter(ABC):
 
     @abstractmethod
     async def ask(self, input: AskInput) -> AskAnswer: ...
+
+    @abstractmethod
+    async def generate_assignment_draft(
+        self, input: GenerateAssignmentDraftInput
+    ) -> GenerateAssignmentDraftOutput: ...
 
     @abstractmethod
     async def generate_from_text(self, input: GenerateFromTextInput) -> LessonPack: ...

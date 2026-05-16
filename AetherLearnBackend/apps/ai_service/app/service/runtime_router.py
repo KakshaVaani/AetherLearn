@@ -3,9 +3,11 @@ from __future__ import annotations
 from shared_schemas import (
     AnalyzeImageInput,
     AskInput,
+    GenerateAssignmentDraftInput,
     GenerateFromTextInput,
     ImproveLessonInput,
     LessonPack,
+    RuntimeMode,
     SchemaStatus,
     TraceWarning,
     TranslateLessonInput,
@@ -20,6 +22,23 @@ class RuntimeRouter:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.mock = MockAdapter()
+
+    def _assert_required_generation_model(self, selected) -> None:
+        if not self.settings.enforce_gemma_model:
+            return
+        runtime = getattr(selected, "runtime", None)
+        model = str(getattr(selected, "model", ""))
+        allowed_runtimes = {RuntimeMode.OLLAMA, RuntimeMode.LOCAL_HUB}
+        if runtime not in allowed_runtimes:
+            raise AiRuntimeUnavailableError(
+                "AI runtime must be ollama/local-hub for generation",
+                {"runtime": str(runtime), "model": model},
+            )
+        if model != self.settings.required_gemma_model:
+            raise AiRuntimeUnavailableError(
+                "AI model mismatch for generation",
+                {"expected": self.settings.required_gemma_model, "actual": model},
+            )
 
     async def adapter(self):
         runtime = self.settings.ai_runtime
@@ -53,6 +72,7 @@ class RuntimeRouter:
 
     async def analyze_image(self, input: AnalyzeImageInput) -> LessonPack:
         selected = await self.adapter()
+        self._assert_required_generation_model(selected)
         try:
             return await selected.analyze_image(input)
         except Exception as exc:
@@ -75,6 +95,7 @@ class RuntimeRouter:
 
     async def generate_from_text(self, input: GenerateFromTextInput) -> LessonPack:
         selected = await self.adapter()
+        self._assert_required_generation_model(selected)
         try:
             return await selected.generate_from_text(input)
         except Exception:
@@ -87,12 +108,23 @@ class RuntimeRouter:
 
     async def ask(self, input: AskInput):
         selected = await self.adapter()
+        self._assert_required_generation_model(selected)
         try:
             return await selected.ask(input)
         except Exception:
             if not self.settings.allow_runtime_fallback:
                 raise
             return await self.mock.ask(input)
+
+    async def generate_assignment_draft(self, input: GenerateAssignmentDraftInput):
+        selected = await self.adapter()
+        self._assert_required_generation_model(selected)
+        try:
+            return await selected.generate_assignment_draft(input)
+        except Exception:
+            if not self.settings.allow_runtime_fallback:
+                raise
+            return await self.mock.generate_assignment_draft(input)
 
     async def improve_lesson(self, input: ImproveLessonInput):
         return await (await self.adapter()).improve_lesson(input)

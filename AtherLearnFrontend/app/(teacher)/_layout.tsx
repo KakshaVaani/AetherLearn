@@ -35,12 +35,17 @@ export default function TeacherTabsLayout() {
       />
       <Tabs.Screen
         name="classrooms/index"
-        options={{ title: "Classrooms", tabBarIcon: tabIcon("people-outline") }}
+        options={{ title: "Classes", tabBarIcon: tabIcon("people-outline") }}
       />
       <Tabs.Screen
-        name="insights"
-        options={{ title: "Insights", tabBarIcon: tabIcon("analytics-outline") }}
+        name="lessons"
+        options={{ title: "Lessons", tabBarIcon: tabIcon("reader-outline") }}
       />
+      <Tabs.Screen
+        name="settings"
+        options={{ title: "Settings", tabBarIcon: tabIcon("settings-outline") }}
+      />
+      <Tabs.Screen name="insights" options={{ href: null }} />
       <Tabs.Screen name="classrooms/[id]" options={{ href: null }} />
       <Tabs.Screen name="upload" options={{ href: null }} />
       <Tabs.Screen name="assignment/index" options={{ href: null }} />

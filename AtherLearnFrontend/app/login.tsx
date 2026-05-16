@@ -54,7 +54,7 @@ export default function LoginScreen() {
 
   function openWorkspace(role: Role) {
     if (role === "teacher") {
-      router.replace("/home");
+      router.replace("/(teacher)/dashboard");
       return;
     }
     router.replace("/(student)/dashboard");

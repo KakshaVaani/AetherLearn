@@ -22,6 +22,7 @@ class ProgressService:
         assignment_id: str,
         assignments: AssignmentRepository,
         payload: SubmitAssignmentRequest,
+        classroom_ids: list[str] | None = None,
     ) -> dict:
         assignment = await assignments.get(assignment_id)
         if not assignment:
@@ -29,6 +30,10 @@ class ProgressService:
         assigned_student_id = assignment.get("studentId")
         if assigned_student_id is not None and assigned_student_id != student_id:
             raise ForbiddenError("Assignment is not assigned to this student")
+        assigned_classroom_id = assignment.get("classroomId")
+        if assigned_student_id is None and assigned_classroom_id:
+            if assigned_classroom_id not in set(classroom_ids or []):
+                raise ForbiddenError("Assignment is not assigned to this student's class")
         patch = {
             "assignmentId": assignment_id,
             "classroomId": assignment.get("classroomId"),

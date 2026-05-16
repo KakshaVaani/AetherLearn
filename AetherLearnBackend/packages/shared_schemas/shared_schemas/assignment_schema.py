@@ -6,12 +6,23 @@ from .base import AetherBase, Timestamped
 from .lesson_pack_schema import LessonPack
 
 
+class AssignmentQuestion(AetherBase):
+    id: str
+    prompt: str
+    hint: str | None = None
+    options: list[str] = Field(default_factory=list)
+
+
 class CreateAssignmentRequest(AetherBase):
     lesson_id: str
     classroom_id: str | None = None
     student_ids: list[str] = Field(default_factory=list)
     due_at: str | None = None
     instructions: str | None = None
+    title: str | None = None
+    answer_mode: str = "text"
+    versions: list[str] = Field(default_factory=list)
+    questions: list[AssignmentQuestion] = Field(default_factory=list)
 
 
 class BulkAssignmentRequest(AetherBase):
@@ -26,6 +37,11 @@ class Assignment(Timestamped):
     classroom_id: str | None = None
     status: str = "assigned"
     due_at: str | None = None
+    instructions: str | None = None
+    title: str | None = None
+    answer_mode: str = "text"
+    versions: list[str] = Field(default_factory=list)
+    questions: list[AssignmentQuestion] = Field(default_factory=list)
     homework_access_code: str | None = None
 
 

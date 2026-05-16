@@ -49,7 +49,13 @@ services:
       EXPORT_SERVICE_URL: http://export-service:8009
       NOTIFICATION_SERVICE_URL: http://notification-service:8010
       STORAGE_SERVICE_URL: http://storage-service:8011
-      USE_MOCK: "true"
+      USE_MOCK: "false"
+      AI_RUNTIME: ollama
+      ALLOW_RUNTIME_FALLBACK: "false"
+      OLLAMA_MODEL: gemma4:e4b
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      ENFORCE_GEMMA_MODEL: "true"
+      REQUIRED_GEMMA_MODEL: gemma4:e4b
     ports: ["8000:8000"]
     depends_on: [auth-service, school-service, lesson-service, ai-service, assignment-service]
 

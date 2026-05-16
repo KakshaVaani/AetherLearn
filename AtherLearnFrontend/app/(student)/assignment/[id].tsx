@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { submitAssignment } from "@/api/backend";
+import { fetchStudentLessons, submitAssignment } from "@/api/backend";
 import {
   studentAccessibilityVisuals,
   studentTextMetrics,
@@ -15,11 +15,14 @@ import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
+import { Assignment } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 export default function StudentAssignmentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const assignment = assignments.find((item) => item.id === id) ?? assignments[0];
+  const [items, setItems] = useState<Assignment[]>(assignments);
+  const [connected, setConnected] = useState(false);
+  const assignment = items.find((item) => item.id === id) ?? assignments.find((item) => item.id === id) ?? items[0];
   const [answer, setAnswer] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -28,11 +31,30 @@ export default function StudentAssignmentScreen() {
   const metrics = studentTextMetrics(preferences.textSize);
   const visuals = studentAccessibilityVisuals(preferences);
 
+  useEffect(() => {
+    let mounted = true;
+    fetchStudentLessons()
+      .then((synced) => {
+        if (!mounted) return;
+        if (synced.length > 0) setItems(synced);
+        setConnected(true);
+      })
+      .catch(() => {
+        if (mounted) setConnected(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   async function submitAnswer() {
     setSubmitting(true);
     setSyncMessage("Submitting to backend...");
     try {
-      await submitAssignment(assignment.id, selectedOptions);
+      await submitAssignment(
+        assignment.id,
+        assignment.answerMode === "text" ? { answer } : selectedOptions
+      );
       setSyncMessage("Submitted to backend.");
     } catch {
       setSyncMessage("Backend submission skipped; saved as demo attempt.");
@@ -57,6 +79,9 @@ export default function StudentAssignmentScreen() {
           <Badge label={assignment.answerMode === "mcq" ? "MCQ" : "Text answer"} tone="secondary" />
         </View>
       </Card>
+      <Text style={styles.syncText}>
+        {connected ? "Assignment synced from backend." : "Showing local demo assignment."}
+      </Text>
 
       <SectionHeader title="Questions" />
       <Card style={[styles.card, visuals.readingCardStyle]}>

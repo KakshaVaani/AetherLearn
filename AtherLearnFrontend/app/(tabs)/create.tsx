@@ -20,13 +20,22 @@ export default function CreateScreen() {
     setLoading(true);
     setMessage("Generating with backend...");
     try {
-      await generateDemoLessonFromText();
+      const lesson = await generateDemoLessonFromText();
       setMessage("Backend lesson generated. Opening review flow.");
+      router.push({
+        pathname: "/source-understanding",
+        params: {
+          lessonId: lesson.id,
+          title: lesson.title,
+          grade: lesson.grade,
+          subject: lesson.subject
+        }
+      });
     } catch {
       setMessage("Backend unavailable, opening fixture review flow.");
+      router.push("/source-understanding");
     } finally {
       setLoading(false);
-      router.push("/source-understanding");
     }
   }
 

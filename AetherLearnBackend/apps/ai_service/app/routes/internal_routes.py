@@ -5,6 +5,7 @@ from service_auth.service_tokens import verify_internal_request_from_headers
 from shared_schemas import (
     AnalyzeImageInput,
     AskInput,
+    GenerateAssignmentDraftInput,
     GenerateFromTextInput,
     ImproveLessonInput,
     LessonPack,
@@ -43,6 +44,12 @@ async def ask(request: Request, payload: AskInput):
 async def generate_from_text(request: Request, payload: GenerateFromTextInput):
     await require_service(request)
     return await service().generate_from_text(payload)
+
+
+@router.post("/generate-assignment-draft")
+async def generate_assignment_draft(request: Request, payload: GenerateAssignmentDraftInput):
+    await require_service(request)
+    return await service().generate_assignment_draft(payload)
 
 
 @router.post("/improve-lesson")

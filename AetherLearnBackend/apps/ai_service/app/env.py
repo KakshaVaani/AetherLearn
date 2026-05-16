@@ -9,6 +9,8 @@ class Settings(BaseServiceSettings):
     service_name: str = "ai-service"
     service_port: int = 8004
     database_name: str = "aetherlearn_ai"
+    enforce_gemma_model: bool = True
+    required_gemma_model: str = "gemma4:e4b"
 
 
 @lru_cache

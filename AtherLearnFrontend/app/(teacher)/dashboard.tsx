@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchTeacherDashboard } from "@/api/backend";
 import { getSession } from "@/api/session";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
@@ -12,21 +14,48 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { StatCard } from "@/components/StatCard";
 import { classrooms } from "@/data/classrooms";
 import { featuredLecture } from "@/data/lectures";
+import { Classroom, LessonPack, Assignment } from "@/types";
 import { colors, spacing } from "@/constants/theme";
 
 export default function TeacherDashboardScreen() {
+  const [dashboardClasses, setDashboardClasses] = useState<Classroom[]>(classrooms);
+  const [dashboardLessons, setDashboardLessons] = useState<LessonPack[]>([]);
+  const [dashboardAssignments, setDashboardAssignments] = useState<Assignment[]>([]);
+  const [connected, setConnected] = useState(false);
   const session = getSession();
   const firstName = session?.name?.trim().split(/\s+/)[0] || "Teacher";
+
+  useEffect(() => {
+    let mounted = true;
+    fetchTeacherDashboard()
+      .then((data) => {
+        if (!mounted) return;
+        if (data.classes.length > 0) setDashboardClasses(data.classes);
+        setDashboardLessons(data.lessons);
+        setDashboardAssignments(data.assignments);
+        setConnected(true);
+      })
+      .catch(() => {
+        if (mounted) setConnected(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <ScreenContainer>
       <Header title={`Good morning, ${firstName}`} subtitle="Your classroom access layer is ready." />
 
       <View style={styles.statGrid}>
-        <StatCard value="3" label="Classrooms" accent={colors.primary} />
-        <StatCard value="5" label="Subjects" accent={colors.secondary} />
-        <StatCard value="12" label="Lectures Uploaded" accent={colors.success} />
-        <StatCard value="24" label="Pending Submissions" accent={colors.warning} />
+        <StatCard value={String(dashboardClasses.length)} label="Classrooms" accent={colors.primary} />
+        <StatCard
+          value={String(new Set(dashboardClasses.flatMap((item) => item.subjects)).size)}
+          label="Subjects"
+          accent={colors.secondary}
+        />
+        <StatCard value={String(dashboardLessons.length || 12)} label="Lectures Uploaded" accent={colors.success} />
+        <StatCard value={String(dashboardAssignments.length || 24)} label="Assignments" accent={colors.warning} />
       </View>
 
       <View style={styles.actions}>
@@ -44,7 +73,7 @@ export default function TeacherDashboardScreen() {
       </View>
 
       <SectionHeader title="Recent classrooms" subtitle="Jump back into active classroom spaces." />
-      {classrooms.slice(0, 2).map((classroom) => (
+      {dashboardClasses.slice(0, 2).map((classroom) => (
         <ClassroomCard
           key={classroom.id}
           classroom={classroom}
@@ -66,6 +95,7 @@ export default function TeacherDashboardScreen() {
           </View>
         </View>
         <View style={styles.badges}>
+          <Badge label={connected ? "Backend synced" : "Local demo"} tone={connected ? "success" : "warning"} />
           <Badge label="5 learner versions" tone="secondary" />
           <Badge label="Teacher review needed" tone="warning" />
         </View>

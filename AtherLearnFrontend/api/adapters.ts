@@ -1,8 +1,20 @@
-import { Assignment, Classroom, LessonPack, Lecture, RuntimeMode, User } from "@/types";
+import {
+  AccessibilityMode,
+  Assignment,
+  AssignmentQuestion,
+  ClassSubject,
+  Classroom,
+  LessonPack,
+  Lecture,
+  RuntimeMode,
+  User
+} from "@/types";
 
 type BackendLessonPack = {
   id: string;
   title: string;
+  classroomId?: string | null;
+  classSubjectId?: string | null;
   subject?: string;
   gradeBand?: string;
   language?: string;
@@ -61,14 +73,29 @@ type BackendAssignment = {
   status?: string;
   dueAt?: string | null;
   instructions?: string | null;
+  title?: string | null;
+  answerMode?: "mcq" | "text" | string | null;
+  versions?: string[] | null;
+  questions?: Array<{
+    id?: string;
+    prompt?: string;
+    hint?: string | null;
+    options?: string[] | null;
+  }> | null;
 };
 
 type BackendClassroom = {
   id: string;
+  schoolId?: string;
   name?: string;
   grade?: string;
   section?: string | null;
   joinCode?: string | null;
+  subjects?: Array<{
+    id?: string;
+    subject?: string;
+    teacherId?: string;
+  }>;
 };
 
 function runtimeMode(runtime?: string): RuntimeMode {
@@ -84,6 +111,11 @@ function lessonStatus(status?: string): LessonPack["status"] {
   return "Draft";
 }
 
+function gradeLabel(value?: string) {
+  if (!value) return "Mixed";
+  return value.trim().replace(/^class\s+/i, "Grade ");
+}
+
 export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
   const source = pack.sourceUnderstanding;
   const teacher = pack.teacherPack;
@@ -97,7 +129,9 @@ export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
   return {
     id: pack.id,
     title: pack.title,
-    grade: pack.gradeBand ?? "Mixed",
+    classroomId: pack.classroomId ?? null,
+    classSubjectId: pack.classSubjectId ?? null,
+    grade: gradeLabel(pack.gradeBand),
     subject: pack.subject ?? "General",
     language: pack.language ?? "en",
     learnerNeed: pack.accessibility?.screenReaderReady ? "Accessible" : "Teacher Review",
@@ -186,35 +220,62 @@ export function backendLessonToLecture(pack: BackendLessonPack): Lecture {
 }
 
 export function backendAssignmentToAssignment(assignment: BackendAssignment): Assignment {
+  const questions: AssignmentQuestion[] = (assignment.questions ?? [])
+    .filter((question) => Boolean(question.prompt))
+    .map((question, index) => ({
+      id: question.id ?? `q${index + 1}`,
+      prompt: question.prompt ?? "",
+      hint: question.hint ?? undefined,
+      options: question.options ?? undefined
+    }));
+  const versions = (assignment.versions?.filter(Boolean) ?? []) as AccessibilityMode[];
+
   return {
     id: assignment.id,
-    title: assignment.instructions || `Lesson ${assignment.lessonId}`,
+    title: assignment.title || assignment.instructions || `Lesson ${assignment.lessonId}`,
     classroom: assignment.classroomId ?? "Assigned classroom",
     subject: "Classwork",
     linkedLecture: assignment.lessonId,
     postedAt: "Synced from backend",
     dueDate: assignment.dueAt ?? "No due date",
-    answerMode: "mcq",
-    versions: ["Standard", "Dyslexia Friendly", "Blind / Low Vision"],
-    questions: [
-      {
-        id: "q1",
-        prompt: "Mark this lesson as completed after studying the accessible pack.",
-        options: ["Completed", "Need help", "Ask teacher"]
-      }
-    ],
+    answerMode: assignment.answerMode === "mcq" ? "mcq" : "text",
+    versions: versions.length ? versions : ["Standard", "Dyslexia Friendly", "Blind / Low Vision"],
+    questions: questions.length
+      ? questions
+      : [
+          {
+            id: "q1",
+            prompt: "Mark this lesson as completed after studying the accessible pack.",
+            options: ["Completed", "Need help", "Ask teacher"]
+          }
+        ],
     status: assignment.status === "assigned" ? "Published" : "Draft"
   };
 }
 
 export function backendClassroomToClassroom(classroom: BackendClassroom): Classroom {
   const title = [classroom.name, classroom.grade, classroom.section].filter(Boolean).join(" ");
+  const classSubjects: ClassSubject[] = (classroom.subjects ?? [])
+    .filter((item) => Boolean(item.subject))
+    .map((item) => ({
+      id: item.id ?? item.subject ?? "subject",
+      subject: item.subject ?? "Subject",
+      teacherId: item.teacherId
+    }));
+  const subjectNames = classSubjects.length
+    ? classSubjects.map((item) => item.subject)
+    : ["Synced"];
+
   return {
     id: classroom.id,
     title: title || "Classroom",
+    grade: classroom.grade,
+    section: classroom.section,
+    schoolId: classroom.schoolId,
     classCode: classroom.joinCode ?? "SYNCED",
     students: 0,
-    subjects: ["Synced"],
+    subjects: subjectNames,
+    classSubjects,
     accessibilityProfiles: 0,
     accessibilityBreakdown: {
       Standard: 0,

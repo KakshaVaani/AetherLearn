@@ -3,19 +3,28 @@ import { router } from "expo-router";
 import { colors, radii, spacing } from "@/constants/theme";
 
 type ReviewTabKey = "source" | "teacher" | "student" | "trust";
+type ReviewRoute = "/source-understanding" | "/teacher-pack" | "/student-pack" | "/trust-pack";
+type ReviewParams = {
+  lessonId?: string;
+  classroomId?: string;
+  title?: string;
+  grade?: string;
+  subject?: string;
+};
 
 type ReviewTabsProps = {
   active: ReviewTabKey;
+  params?: ReviewParams;
 };
 
-const tabs: { key: ReviewTabKey; label: string; route: string }[] = [
-  { key: "source", label: "Source", route: "/source-understanding" },
-  { key: "teacher", label: "Teacher", route: "/teacher-pack" },
-  { key: "student", label: "Student", route: "/student-pack" },
-  { key: "trust", label: "Trust", route: "/trust-pack" }
+const tabs: { key: ReviewTabKey; label: string; route: ReviewRoute }[] = [
+  { key: "source", label: "Source Pack", route: "/source-understanding" },
+  { key: "teacher", label: "Teacher Pack", route: "/teacher-pack" },
+  { key: "student", label: "Student Pack", route: "/student-pack" },
+  { key: "trust", label: "Trust Pack", route: "/trust-pack" }
 ];
 
-export function ReviewTabs({ active }: ReviewTabsProps) {
+export function ReviewTabs({ active, params }: ReviewTabsProps) {
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {tabs.map((tab) => {
@@ -26,7 +35,7 @@ export function ReviewTabs({ active }: ReviewTabsProps) {
             key={tab.key}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            onPress={() => router.push(tab.route)}
+            onPress={() => router.push({ pathname: tab.route, params })}
             style={[styles.tab, selected && styles.tabSelected]}
           >
             <Text style={[styles.text, selected && styles.textSelected]}>{tab.label}</Text>
@@ -44,7 +53,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    minHeight: 42,
+    minHeight: 48,
     borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -59,7 +68,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: colors.muted,
-    fontSize: 13,
+    fontSize: 11,
     lineHeight: 18,
     fontWeight: "800",
     textAlign: "center"

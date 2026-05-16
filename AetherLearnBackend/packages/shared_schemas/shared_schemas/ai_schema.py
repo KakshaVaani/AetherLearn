@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from .assignment_schema import AssignmentQuestion
 from .base import AetherBase, JsonDict
 from .lesson_pack_schema import LessonPack
 
@@ -33,6 +34,22 @@ class AskAnswer(AetherBase):
     confidence: float = Field(ge=0.0, le=1.0)
     follow_up_suggestion: str
     source_limited: bool = True
+
+
+class GenerateAssignmentDraftInput(AetherBase):
+    lesson_pack: LessonPack
+    classroom_name: str | None = None
+    grade: str | None = None
+    subject: str | None = None
+    preferred_versions: list[str] = Field(default_factory=list)
+
+
+class GenerateAssignmentDraftOutput(AetherBase):
+    title: str
+    instructions: str
+    answer_mode: str = "text"
+    versions: list[str] = Field(default_factory=list)
+    questions: list[AssignmentQuestion] = Field(default_factory=list)
 
 
 class ImproveLessonInput(AetherBase):

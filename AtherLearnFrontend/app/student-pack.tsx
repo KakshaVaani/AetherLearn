@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
-import { featuredLessonPack } from "@/data/lessonPacks";
+import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const sections = [
@@ -21,9 +21,24 @@ const sections = [
 type StudentSection = (typeof sections)[number];
 
 export default function StudentPackScreen() {
+  const params = useLocalSearchParams<{
+    lessonId?: string;
+    classroomId?: string;
+    title?: string;
+    grade?: string;
+    subject?: string;
+  }>();
   const [playing, setPlaying] = useState(false);
   const [openSection, setOpenSection] = useState<StudentSection>("Summary");
-  const pack = featuredLessonPack.studentAccessPack;
+  const { lesson } = useLessonPackReview(params.lessonId);
+  const pack = lesson.studentAccessPack;
+  const reviewParams = {
+    lessonId: params.lessonId ?? lesson.id,
+    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
+    title: params.title ?? lesson.title,
+    grade: params.grade ?? lesson.grade,
+    subject: params.subject ?? lesson.subject
+  };
 
   function sectionBody(section: StudentSection) {
     if (section === "Summary") return pack.screenReaderSummary;
@@ -39,8 +54,8 @@ export default function StudentPackScreen() {
 
   return (
     <ScreenContainer>
-      <Header title="Student Access Pack" subtitle="Audio-first and screen-reader-friendly." showBack />
-      <ReviewTabs active="student" />
+      <Header title="Student Access Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <ReviewTabs active="student" params={reviewParams} />
 
       <Card style={styles.playerCard}>
         <Pressable
@@ -89,7 +104,7 @@ export default function StudentPackScreen() {
         <AppButton
           title="Trust Pack"
           leftIcon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.white} />}
-          onPress={() => router.push("/trust-pack")}
+          onPress={() => router.push({ pathname: "/trust-pack", params: reviewParams })}
           style={styles.actionButton}
         />
       </View>

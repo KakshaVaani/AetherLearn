@@ -20,6 +20,12 @@ export function ClassroomCard({ classroom, onPress }: ClassroomCardProps) {
         <Badge label={`${classroom.accessibilityProfiles} profiles`} tone="secondary" />
       </View>
       <View style={styles.metaRow}>
+        {classroom.grade ? (
+          <>
+            <Text style={styles.meta}>{classroom.grade}</Text>
+            <Text style={styles.dot}>.</Text>
+          </>
+        ) : null}
         <Text style={styles.meta}>{classroom.students} students</Text>
         <Text style={styles.dot}>.</Text>
         <Text style={styles.meta}>{classroom.subjects.join(", ")}</Text>

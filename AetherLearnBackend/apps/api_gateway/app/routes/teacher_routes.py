@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import base64
 import json
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
+from pydantic import Field
 from service_auth import UserContext
-from shared_schemas import CreateAssignmentRequest, CreateClassroomRequest, GenerateFromTextInput
+from shared_schemas import AssignmentQuestion, CreateClassroomRequest, GenerateFromTextInput
+from shared_schemas.base import AetherBase
+from shared_utils.errors import ForbiddenError, ValidationAppError
 from shared_utils.image import validate_image_upload
 from shared_utils.response import success_response
 
@@ -13,6 +17,121 @@ from ..dependencies import clients, request_id, teacher_context
 from ..env import get_settings
 
 router = APIRouter(prefix="/api/teacher", tags=["teacher"])
+
+
+class AssignLessonRequest(AetherBase):
+    classroom_id: str | None = None
+    student_ids: list[str] = Field(default_factory=list)
+    due_at: str | None = None
+    instructions: str | None = None
+    title: str | None = None
+    answer_mode: str = "text"
+    versions: list[str] = Field(default_factory=list)
+    questions: list[AssignmentQuestion] = Field(default_factory=list)
+
+
+class GenerateAssignmentDraftRequest(AetherBase):
+    classroom_id: str | None = None
+    preferred_versions: list[str] = Field(default_factory=list)
+
+
+def _teacher_can_manage_classroom(ctx: UserContext, classroom: dict[str, Any]) -> bool:
+    if ctx.user_id in {str(item) for item in classroom.get("teacherIds", [])}:
+        return True
+    if ctx.role == "school_admin":
+        school_id = classroom.get("schoolId")
+        return school_id == ctx.active_school_id or school_id in ctx.school_ids
+    return False
+
+
+async def _teacher_classroom(
+    c: dict[str, Any],
+    classroom_id: str,
+    ctx: UserContext,
+    req_id: str,
+) -> dict[str, Any]:
+    classroom = await c["school"].request(
+        "GET", f"/internal/classes/{classroom_id}", request_id=req_id, user_context=ctx
+    )
+    if not _teacher_can_manage_classroom(ctx, classroom):
+        raise ForbiddenError("Teacher is not assigned to this class")
+    return classroom
+
+
+async def _validate_class_subject(
+    c: dict[str, Any],
+    *,
+    classroom_id: str,
+    class_subject_id: str,
+    ctx: UserContext,
+    req_id: str,
+) -> dict[str, Any]:
+    subjects = await c["school"].request(
+        "GET",
+        f"/internal/classes/{classroom_id}/subjects",
+        request_id=req_id,
+        user_context=ctx,
+    )
+    for subject in subjects:
+        if subject.get("id") == class_subject_id:
+            if subject.get("teacherId") not in {ctx.user_id, None} and ctx.role != "school_admin":
+                raise ForbiddenError("Teacher is not assigned to this class subject")
+            return subject
+    raise ValidationAppError("Class subject does not belong to this class")
+
+
+async def _scoped_lesson_settings(
+    c: dict[str, Any],
+    *,
+    settings: dict[str, Any],
+    classroom_id: str | None,
+    class_subject_id: str | None,
+    ctx: UserContext,
+    req_id: str,
+) -> dict[str, Any]:
+    scoped = dict(settings)
+    classroom_id = classroom_id or scoped.get("classroomId")
+    class_subject_id = class_subject_id or scoped.get("classSubjectId")
+    if not classroom_id:
+        return scoped
+
+    classroom = await _teacher_classroom(c, str(classroom_id), ctx, req_id)
+    scoped["classroomId"] = classroom["id"]
+    scoped["schoolId"] = classroom.get("schoolId")
+    scoped.setdefault("gradeBand", classroom.get("grade"))
+
+    if class_subject_id:
+        subject = await _validate_class_subject(
+            c,
+            classroom_id=classroom["id"],
+            class_subject_id=str(class_subject_id),
+            ctx=ctx,
+            req_id=req_id,
+        )
+        scoped["classSubjectId"] = subject["id"]
+        scoped.setdefault("subject", subject.get("subject"))
+
+    return scoped
+
+
+async def _teacher_lesson(
+    c: dict[str, Any], lesson_id: str, ctx: UserContext, req_id: str
+) -> dict[str, Any]:
+    lesson = await c["lesson"].request(
+        "GET", f"/internal/lessons/{lesson_id}", request_id=req_id, user_context=ctx
+    )
+    if lesson.get("createdBy") != ctx.user_id and ctx.role not in {"school_admin", "platform_admin"}:
+        raise ForbiddenError("Lesson owner required")
+    return lesson
+
+
+def _assignment_target_classroom(
+    lesson: dict[str, Any], requested_classroom_id: str | None
+) -> str | None:
+    lesson_classroom_id = lesson.get("classroomId")
+    if lesson_classroom_id and requested_classroom_id and requested_classroom_id != lesson_classroom_id:
+        raise ValidationAppError("Lesson can only be assigned to its own class")
+    return requested_classroom_id or lesson_classroom_id
 
 
 async def _generate_lesson_background(
@@ -93,9 +212,8 @@ async def create_class(
 async def get_class(
     request: Request, classroom_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["school"].request(
-        "GET", f"/internal/classes/{classroom_id}", request_id=request_id(request), user_context=ctx
-    )
+    c = clients()
+    data = await _teacher_classroom(c, classroom_id, ctx, request_id(request))
     return success_response(data, request)
 
 
@@ -103,10 +221,13 @@ async def get_class(
 async def join_code(
     request: Request, classroom_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["school"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_classroom(c, classroom_id, ctx, req_id)
+    data = await c["school"].request(
         "POST",
         f"/internal/classes/{classroom_id}/join-code",
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -116,10 +237,13 @@ async def join_code(
 async def class_students(
     request: Request, classroom_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["school"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_classroom(c, classroom_id, ctx, req_id)
+    data = await c["school"].request(
         "GET",
         f"/internal/classes/{classroom_id}/students",
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -129,10 +253,13 @@ async def class_students(
 async def class_progress(
     request: Request, classroom_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["assignment"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_classroom(c, classroom_id, ctx, req_id)
+    data = await c["assignment"].request(
         "GET",
         f"/internal/classes/{classroom_id}/progress",
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -153,20 +280,22 @@ async def analyze_lesson(
     content = await image.read()
     validate_image_upload(content, image.content_type or "", get_settings().max_image_mb)
     parsed_settings = json.loads(settings or "{}")
-    parsed_settings |= {"classSubjectId": classSubjectId, "classroomId": classroomId}
     c = clients()
     req_id = request_id(request)
+    parsed_settings = await _scoped_lesson_settings(
+        c,
+        settings=parsed_settings,
+        classroom_id=classroomId,
+        class_subject_id=classSubjectId,
+        ctx=ctx,
+        req_id=req_id,
+    )
     draft = await c["lesson"].request(
         "POST",
         "/internal/lessons/create-draft",
         request_id=req_id,
         user_context=ctx,
-        json=parsed_settings
-        | {
-            "classSubjectId": classSubjectId,
-            "classroomId": classroomId,
-            "saveSourceImage": saveSourceImage,
-        },
+        json=parsed_settings | {"saveSourceImage": saveSourceImage},
     )
     generation = await c["lesson"].request(
         "POST",
@@ -193,12 +322,20 @@ async def from_text(
 ):
     c = clients()
     req_id = request_id(request)
+    scoped_settings = await _scoped_lesson_settings(
+        c,
+        settings=payload.settings,
+        classroom_id=None,
+        class_subject_id=None,
+        ctx=ctx,
+        req_id=req_id,
+    )
     draft = await c["lesson"].request(
         "POST",
         "/internal/lessons/create-draft",
         request_id=req_id,
         user_context=ctx,
-        json=payload.settings | {"createdBy": ctx.user_id, "createdByRole": ctx.role},
+        json=scoped_settings | {"createdBy": ctx.user_id, "createdByRole": ctx.role},
     )
     pack = await c["ai"].request(
         "POST",
@@ -206,7 +343,7 @@ async def from_text(
         request_id=req_id,
         user_context=ctx,
         json=payload.model_dump(by_alias=True)
-        | {"teacherId": ctx.user_id, "lessonId": draft["id"]},
+        | {"settings": scoped_settings, "teacherId": ctx.user_id, "lessonId": draft["id"]},
     )
     data = await c["lesson"].request(
         "POST",
@@ -231,9 +368,8 @@ async def lessons(request: Request, ctx: UserContext = Depends(teacher_context))
 
 @router.get("/lessons/{lesson_id}")
 async def lesson(request: Request, lesson_id: str, ctx: UserContext = Depends(teacher_context)):
-    data = await clients()["lesson"].request(
-        "GET", f"/internal/lessons/{lesson_id}", request_id=request_id(request), user_context=ctx
-    )
+    c = clients()
+    data = await _teacher_lesson(c, lesson_id, ctx, request_id(request))
     return success_response(data, request)
 
 
@@ -241,10 +377,13 @@ async def lesson(request: Request, lesson_id: str, ctx: UserContext = Depends(te
 async def generation_status(
     request: Request, lesson_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["lesson"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_lesson(c, lesson_id, ctx, req_id)
+    data = await c["lesson"].request(
         "GET",
         f"/internal/lessons/{lesson_id}/generation-status",
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -254,11 +393,14 @@ async def generation_status(
 async def patch_lesson(
     request: Request, lesson_id: str, payload: dict, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["lesson"].request(
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_lesson(c, lesson_id, ctx, req_id)
+    data = await c["lesson"].request(
         "PATCH",
         f"/internal/lessons/{lesson_id}",
         json=payload,
-        request_id=request_id(request),
+        request_id=req_id,
         user_context=ctx,
     )
     return success_response(data, request)
@@ -268,8 +410,11 @@ async def patch_lesson(
 async def delete_lesson(
     request: Request, lesson_id: str, ctx: UserContext = Depends(teacher_context)
 ):
-    data = await clients()["lesson"].request(
-        "DELETE", f"/internal/lessons/{lesson_id}", request_id=request_id(request), user_context=ctx
+    c = clients()
+    req_id = request_id(request)
+    await _teacher_lesson(c, lesson_id, ctx, req_id)
+    data = await c["lesson"].request(
+        "DELETE", f"/internal/lessons/{lesson_id}", request_id=req_id, user_context=ctx
     )
     return success_response(data, request)
 
@@ -278,14 +423,52 @@ async def delete_lesson(
 async def assign_lesson(
     request: Request,
     lesson_id: str,
-    payload: CreateAssignmentRequest,
+    payload: AssignLessonRequest,
     ctx: UserContext = Depends(teacher_context),
 ):
-    body = payload.model_dump(by_alias=True) | {"lessonId": lesson_id}
-    data = await clients()["assignment"].request(
-        "POST", "/internal/assignments", json=body, request_id=request_id(request), user_context=ctx
+    c = clients()
+    req_id = request_id(request)
+    lesson = await _teacher_lesson(c, lesson_id, ctx, req_id)
+    requested_classroom_id = payload.classroom_id
+    target_classroom_id = _assignment_target_classroom(lesson, requested_classroom_id)
+    if target_classroom_id:
+        await _teacher_classroom(c, target_classroom_id, ctx, req_id)
+    body = payload.model_dump(by_alias=True) | {"lessonId": lesson_id, "classroomId": target_classroom_id}
+    data = await c["assignment"].request(
+        "POST", "/internal/assignments", json=body, request_id=req_id, user_context=ctx
     )
     return success_response(data, request)
+
+
+@router.post("/lessons/{lesson_id}/generate-assignment-draft")
+async def generate_assignment_draft(
+    request: Request,
+    lesson_id: str,
+    payload: GenerateAssignmentDraftRequest,
+    ctx: UserContext = Depends(teacher_context),
+):
+    c = clients()
+    req_id = request_id(request)
+    lesson = await _teacher_lesson(c, lesson_id, ctx, req_id)
+    target_classroom_id = _assignment_target_classroom(lesson, payload.classroom_id)
+    classroom = None
+    if target_classroom_id:
+        classroom = await _teacher_classroom(c, target_classroom_id, ctx, req_id)
+
+    draft = await c["ai"].request(
+        "POST",
+        "/internal/ai/generate-assignment-draft",
+        request_id=req_id,
+        user_context=ctx,
+        json={
+            "lessonPack": lesson,
+            "classroomName": classroom.get("name") if classroom else None,
+            "grade": classroom.get("grade") if classroom else lesson.get("gradeBand"),
+            "subject": lesson.get("subject"),
+            "preferredVersions": payload.preferred_versions,
+        },
+    )
+    return success_response(draft, request)
 
 
 @router.post("/lessons/{lesson_id}/share-school")

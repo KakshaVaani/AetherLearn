@@ -4,6 +4,8 @@ export const lessonPacks: LessonPack[] = [
   {
     id: "photosynthesis",
     title: "Photosynthesis in Plants",
+    classroomId: "grade-7-inclusive",
+    classSubjectId: "grade-7-inclusive-science",
     grade: "Grade 7",
     subject: "Science",
     language: "English",
@@ -99,6 +101,8 @@ export const lessonPacks: LessonPack[] = [
   {
     id: "linear-equations",
     title: "Linear Equations",
+    classroomId: "grade-8-a",
+    classSubjectId: "grade-8-a-math",
     grade: "Grade 8",
     subject: "Mathematics",
     language: "Hindi",
@@ -164,7 +168,9 @@ export const lessonPacks: LessonPack[] = [
   {
     id: "water-cycle",
     title: "Water Cycle",
-    grade: "Grade 6",
+    classroomId: "grade-7-inclusive",
+    classSubjectId: "grade-7-inclusive-science",
+    grade: "Grade 7",
     subject: "Science",
     language: "English",
     learnerNeed: "Dyslexia Friendly",

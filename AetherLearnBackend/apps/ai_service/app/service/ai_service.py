@@ -3,6 +3,7 @@ from __future__ import annotations
 from shared_schemas import (
     AnalyzeImageInput,
     AskInput,
+    GenerateAssignmentDraftInput,
     GenerateFromTextInput,
     ImproveLessonInput,
     TranslateLessonInput,
@@ -23,6 +24,9 @@ class AiService:
 
     async def ask(self, payload: AskInput):
         return await self.router.ask(payload)
+
+    async def generate_assignment_draft(self, payload: GenerateAssignmentDraftInput):
+        return await self.router.generate_assignment_draft(payload)
 
     async def improve_lesson(self, payload: ImproveLessonInput):
         return await self.router.improve_lesson(payload)
