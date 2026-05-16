@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useStudentCopy } from "@/api/studentCopy";
 import { colors } from "@/constants/theme";
 
 type TabIconName = keyof typeof Ionicons.glyphMap;
@@ -11,6 +12,8 @@ function tabIcon(name: TabIconName) {
 }
 
 export default function StudentTabsLayout() {
+  const copy = useStudentCopy();
+
   return (
     <Tabs
       screenOptions={{
@@ -31,17 +34,24 @@ export default function StudentTabsLayout() {
     >
       <Tabs.Screen
         name="dashboard"
-        options={{ title: "Dashboard", tabBarIcon: tabIcon("home-outline") }}
+        options={{ title: copy.dashboard, tabBarIcon: tabIcon("home-outline") }}
       />
       <Tabs.Screen
         name="subjects"
-        options={{ title: "Subjects", tabBarIcon: tabIcon("library-outline") }}
+        options={{ title: copy.subjects, tabBarIcon: tabIcon("library-outline") }}
       />
       <Tabs.Screen
         name="assignment/index"
-        options={{ title: "Pending Assignments", tabBarIcon: tabIcon("clipboard-outline") }}
+        options={{ title: copy.assignments, tabBarIcon: tabIcon("clipboard-outline") }}
       />
+      <Tabs.Screen
+        name="ask-doubt"
+        options={{ title: copy.askDoubt, tabBarIcon: tabIcon("chatbubble-ellipses-outline") }}
+      />
+      <Tabs.Screen name="onboarding" options={{ href: null }} />
       <Tabs.Screen name="subject/[id]" options={{ href: null }} />
+      <Tabs.Screen name="chapter/[id]" options={{ href: null }} />
+      <Tabs.Screen name="topic/[id]" options={{ href: null }} />
       <Tabs.Screen name="lesson/index" options={{ href: null }} />
       <Tabs.Screen name="lesson/[id]" options={{ href: null }} />
       <Tabs.Screen name="assignment/[id]" options={{ href: null }} />

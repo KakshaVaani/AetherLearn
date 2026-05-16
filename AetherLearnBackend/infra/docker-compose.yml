@@ -33,7 +33,7 @@ services:
       context: ..
       dockerfile: infra/docker/Dockerfile.gateway
     command: /app/.venv/bin/uvicorn apps.api_gateway.app.main:app --host 0.0.0.0 --port 8000
-    env_file: ../.env.example
+    env_file: ../.env
     environment: &service-env
       MONGODB_URI: mongodb://mongodb:27017
       REDIS_URL: redis://redis:6379/0
@@ -50,11 +50,11 @@ services:
       NOTIFICATION_SERVICE_URL: http://notification-service:8010
       STORAGE_SERVICE_URL: http://storage-service:8011
       USE_MOCK: "false"
-      AI_RUNTIME: ollama
-      ALLOW_RUNTIME_FALLBACK: "false"
+      AI_RUNTIME: gemini
+      ALLOW_RUNTIME_FALLBACK: "true"
       OLLAMA_MODEL: gemma4:e4b
       OLLAMA_BASE_URL: http://host.docker.internal:11434
-      ENFORCE_GEMMA_MODEL: "true"
+      ENFORCE_GEMMA_MODEL: "false"
       REQUIRED_GEMMA_MODEL: gemma4:e4b
     ports: ["8000:8000"]
     depends_on: [auth-service, school-service, lesson-service, ai-service, assignment-service]
@@ -62,7 +62,7 @@ services:
   auth-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.auth_service.app.main:app --host 0.0.0.0 --port 8001
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8001:8001"]
     depends_on: [mongodb, nats, redis]
@@ -70,7 +70,7 @@ services:
   school-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.school_service.app.main:app --host 0.0.0.0 --port 8002
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8002:8002"]
     depends_on: [mongodb, nats]
@@ -78,7 +78,7 @@ services:
   lesson-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.lesson_service.app.main:app --host 0.0.0.0 --port 8003
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8003:8003"]
     depends_on: [mongodb, nats]
@@ -86,7 +86,7 @@ services:
   ai-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.ai_service.app.main:app --host 0.0.0.0 --port 8004
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8004:8004"]
     depends_on: [mongodb, nats]
@@ -94,7 +94,7 @@ services:
   assignment-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.assignment_service.app.main:app --host 0.0.0.0 --port 8005
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8005:8005"]
     depends_on: [mongodb, nats]
@@ -102,7 +102,7 @@ services:
   commons-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.commons_service.app.main:app --host 0.0.0.0 --port 8006
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8006:8006"]
     depends_on: [mongodb, nats]
@@ -110,7 +110,7 @@ services:
   review-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.review_service.app.main:app --host 0.0.0.0 --port 8007
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8007:8007"]
     depends_on: [mongodb, nats]
@@ -118,7 +118,7 @@ services:
   sync-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.sync_service.app.main:app --host 0.0.0.0 --port 8008
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8008:8008"]
     depends_on: [mongodb, nats]
@@ -126,7 +126,7 @@ services:
   export-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.export_service.app.main:app --host 0.0.0.0 --port 8009
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8009:8009"]
     depends_on: [mongodb, nats]
@@ -134,7 +134,7 @@ services:
   notification-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.notification_service.app.main:app --host 0.0.0.0 --port 8010
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8010:8010"]
     depends_on: [mongodb, nats]
@@ -142,14 +142,14 @@ services:
   storage-service:
     build: { context: .., dockerfile: infra/docker/Dockerfile.service }
     command: /app/.venv/bin/uvicorn apps.storage_service.app.main:app --host 0.0.0.0 --port 8011
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     ports: ["8011:8011"]
     depends_on: [mongodb, minio]
 
   worker:
     build: { context: .., dockerfile: infra/docker/Dockerfile.worker }
-    env_file: ../.env.example
+    env_file: ../.env
     environment: *service-env
     depends_on: [mongodb, nats, redis]
 

@@ -41,9 +41,12 @@ type StudentLessonResponse = {
 type AskLessonResponse = {
   answer: string;
   simpleAnswer?: string;
+  simple_answer?: string;
   confidence?: number;
   followUpSuggestion?: string;
+  follow_up_suggestion?: string;
   sourceLimited?: boolean;
+  source_limited?: boolean;
 };
 
 type AssignmentDraftResponse = {
@@ -73,6 +76,18 @@ export async function demoLogin(role: Role) {
 
 export async function loginWithPassword(email: string, password: string) {
   const response = await apiJson<LoginResponse>("/api/auth/login", "POST", { email, password }, false);
+  saveSession({
+    accessToken: response.tokens.accessToken,
+    refreshToken: response.tokens.refreshToken,
+    role: response.user.role,
+    userId: response.user.id,
+    name: response.user.name
+  });
+  return response.user;
+}
+
+export async function loginWithGoogleIdToken(idToken: string, role: Role) {
+  const response = await apiJson<LoginResponse>("/api/auth/google", "POST", { idToken, role }, false);
   saveSession({
     accessToken: response.tokens.accessToken,
     refreshToken: response.tokens.refreshToken,
@@ -263,6 +278,32 @@ export async function generateStructuredStudentNotes(lessonId: string, input: {
   return response;
 }
 
+export async function askStudentDoubt(input: {
+  lecture: Lecture;
+  question: string;
+  studentProfile: {
+    accessibilityMode: string;
+    language: string;
+    textSize: string;
+    audioSupport: boolean;
+  };
+}) {
+  return apiJson<AskLessonResponse>("/api/student/ask-doubt", "POST", {
+    question: input.question,
+    studentProfile: input.studentProfile,
+    lessonPack: lectureToAskLessonPack(input.lecture, input.studentProfile.language)
+  });
+}
+
+export async function saveStudentAcademicProfileRemote(input: {
+  school: string;
+  className: string;
+  subjects: string[];
+  completed: boolean;
+}) {
+  return apiJson("/api/student/profile", "PATCH", input);
+}
+
 export async function submitAssignment(assignmentId: string, answers: Record<string, string>) {
   const total = Object.keys(answers).length;
   return apiJson(`/api/student/assignments/${assignmentId}/submit`, "POST", {
@@ -280,3 +321,116 @@ export type ConnectedTeacherData = {
   lessons: LessonPack[];
   assignments: Assignment[];
 };
+
+function lectureToAskLessonPack(lecture: Lecture, language: string) {
+  const now = new Date().toISOString();
+  const textContext = [
+    lecture.teacherNotes,
+    lecture.diagramDescription,
+    lecture.outputs.standard,
+    lecture.outputs.blindLowVision,
+    lecture.outputs.dyslexiaFriendly,
+    lecture.outputs.multilingual,
+    lecture.outputs.slowLearner,
+    ...lecture.practiceQuestions
+  ].filter(Boolean);
+
+  return {
+    id: lecture.id,
+    createdAt: now,
+    updatedAt: now,
+    schemaVersion: "lesson-pack-v1",
+    title: lecture.title,
+    sourceUnderstanding: {
+      title: lecture.title,
+      observedText: textContext,
+      observedObjects: lecture.diagramDescription ? [lecture.diagramDescription] : [],
+      inferredTopic: lecture.title,
+      unclearAreas: [],
+      sourceLanguage: "en"
+    },
+    teacherPack: {
+      lessonObjective: `Understand ${lecture.title}.`,
+      teacherExplanation: lecture.teacherNotes,
+      boardPlan: [
+        "Introduce the topic.",
+        "Explain the key idea.",
+        "Connect it with an example.",
+        "Check understanding with practice."
+      ],
+      lowResourceActivity: "Ask the student to explain the idea using one real-life example.",
+      worksheet: lecture.practiceQuestions,
+      quiz: lecture.practiceQuestions,
+      answerKey: [],
+      assessmentQuestions: lecture.practiceQuestions,
+      homework: "Revise the notes and answer one practice question.",
+      differentiatedExplanations: Object.values(lecture.outputs),
+      localLanguageSupport: lecture.outputs.multilingual,
+      teacherReviewChecklist: ["Check that the answer remains within the uploaded lesson context."]
+    },
+    studentAccessPack: {
+      listenFirstAudioScript: lecture.outputs.slowLearner || lecture.outputs.standard,
+      screenReaderSummary: lecture.outputs.standard,
+      visualDescription: lecture.diagramDescription,
+      simpleExplanation: lecture.outputs.dyslexiaFriendly || lecture.outputs.standard,
+      localLanguageExplanation: lecture.outputs.multilingual,
+      vocabulary: lecture.keyVocabulary,
+      practiceQuestions: lecture.practiceQuestions,
+      hintsAnswers: [],
+      revisionChecklist: [
+        "Read the main idea.",
+        "Review the key vocabulary.",
+        "Try one practice question."
+      ],
+      independenceTips: ["Ask a doubt when one step is unclear."],
+      qnaContext: textContext.join("\n")
+    },
+    confidenceNotes: {
+      overallConfidence: 0.86,
+      notes: ["Built from teacher uploaded lesson notes and accessible student versions."],
+      teacherReviewWarnings: []
+    },
+    trace: {
+      runtime: "mock",
+      model: "frontend-context",
+      localOnly: false,
+      hostedApiUsed: true,
+      latencyMs: 0,
+      schemaStatus: "passed",
+      fallbackUsed: false,
+      promptVersion: "ask-doubt-v1",
+      toolCalls: [],
+      imageMetadata: {
+        sourceImageStored: false,
+        qualityWarnings: []
+      },
+      warnings: [],
+      confidenceNotes: [],
+      unclearSourceAreas: [],
+      teacherReviewRequired: false,
+      generatedAt: now
+    },
+    accessibility: {
+      audioFirstReady: true,
+      screenReaderReady: true,
+      simpleLanguageReady: true,
+      localLanguageReady: Boolean(lecture.outputs.multilingual),
+      estimatedListeningMinutes: 3
+    },
+    sharing: {
+      license: "CC BY-NC-SA 4.0",
+      verifiedEducator: false
+    },
+    visibility: "class",
+    status: "generated",
+    version: 1,
+    sourceImageMetadata: {},
+    createdBy: "teacher-demo",
+    createdByRole: "teacher",
+    language,
+    subject: lecture.subject,
+    gradeBand: "Grade 8",
+    tags: [lecture.subject.toLowerCase(), lecture.title.toLowerCase()],
+    searchText: `${lecture.title} ${lecture.subject} ${lecture.keyVocabulary.join(" ")}`
+  };
+}

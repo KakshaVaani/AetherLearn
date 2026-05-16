@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from time import perf_counter
+from typing import Any
 
 import httpx
 from shared_schemas import (
@@ -207,6 +208,11 @@ class GeminiAdapter(BaseAIAdapter):
             "Use only the supplied lesson pack. Do not invent facts outside it.\n\n"
             "Create a clear student answer for this request:\n"
             f"{input.question}\n\n"
+            "The answer must be complete enough for a student to learn from it directly. "
+            "Include a short direct answer, a step-by-step explanation, a simple real-life example "
+            "when relevant, key points to remember, and one practice check. "
+            "Use clean markdown headings and bullets. Do not include hidden reasoning, draft checks, "
+            "JSON field descriptions, or comments about this prompt in the student-facing answer.\n\n"
             "Return JSON only with these fields:\n"
             "{"
             '"answer": "well-structured markdown answer", '
@@ -233,7 +239,11 @@ class GeminiAdapter(BaseAIAdapter):
             )
         data = response.json()
         text = data["candidates"][0]["content"]["parts"][0]["text"]
-        return AskAnswer.model_validate(extract_json_object(text))
+        try:
+            raw_answer = extract_json_object(text)
+        except AiSchemaInvalidError:
+            raw_answer = {"answer": _clean_raw_ask_text(text)}
+        return AskAnswer.model_validate(_normalize_ask_answer(raw_answer))
 
     async def generate_assignment_draft(
         self, input: GenerateAssignmentDraftInput
@@ -307,3 +317,87 @@ class GeminiAdapter(BaseAIAdapter):
         raise AiRuntimeUnavailableError(
             "Gemini translation adapter is not enabled in this deployment"
         )
+
+
+def _normalize_ask_answer(raw: dict[str, Any]) -> dict[str, Any]:
+    answer = _clean_raw_ask_text(
+        str(raw.get("answer") or raw.get("text") or raw.get("response") or "").strip()
+    )
+    simple = str(
+        raw.get("simple_answer")
+        or raw.get("simpleAnswer")
+        or raw.get("summary")
+        or answer
+    ).strip()
+    follow_up = str(
+        raw.get("follow_up_suggestion")
+        or raw.get("followUpSuggestion")
+        or raw.get("next_step")
+        or raw.get("nextStep")
+        or "Review the answer, then try one practice question from the lesson."
+    ).strip()
+    try:
+        confidence = float(raw.get("confidence", 0.82))
+    except (TypeError, ValueError):
+        confidence = 0.82
+    confidence = max(0.0, min(1.0, confidence))
+
+    return {
+        "answer": answer or simple or "I could not generate a complete answer from the model response.",
+        "simple_answer": simple or answer,
+        "confidence": confidence,
+        "follow_up_suggestion": follow_up,
+        "source_limited": bool(raw.get("source_limited", raw.get("sourceLimited", True))),
+    }
+
+
+def _clean_raw_ask_text(text: str) -> str:
+    cleaned = text.strip()
+    if not cleaned:
+        return cleaned
+
+    preferred_markers = [
+        "# Understanding",
+        "# What is",
+        "### Direct Explanation",
+        "**Direct Answer**",
+        "*   *Direct Answer:*",
+    ]
+    marker_positions = [cleaned.rfind(marker) for marker in preferred_markers]
+    marker_positions = [position for position in marker_positions if position >= 0]
+    if marker_positions:
+        cleaned = cleaned[max(marker_positions):].strip()
+
+    blocked_fragments = [
+        "AtherLearn (accessibility-first education assistant)",
+        "`answer`",
+        "`simple_answer`",
+        "`confidence`",
+        "`follow_up_suggestion`",
+        "`source_limited`",
+        "(Self-Correction",
+        "(Final check",
+        "Final check:",
+        "Self-Correction",
+        "Refining the Markdown",
+        "Wait, the prompt says",
+        "JSON format ready",
+        "Check:",
+        "*Check:",
+        "Did I invent facts",
+        "Is it valid JSON",
+    ]
+    kept_lines: list[str] = []
+    for line in cleaned.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            kept_lines.append("")
+            continue
+        if any(fragment in stripped for fragment in blocked_fragments):
+            continue
+        kept_lines.append(line.rstrip())
+
+    cleaned = "\n".join(kept_lines).strip()
+    while "\n\n\n" in cleaned:
+        cleaned = cleaned.replace("\n\n\n", "\n\n")
+    return cleaned
