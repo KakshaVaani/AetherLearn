@@ -15,6 +15,7 @@ type ReviewParams = {
 type ReviewTabsProps = {
   active: ReviewTabKey;
   params?: ReviewParams;
+  onBeforeNavigate?: () => void;
 };
 
 const tabs: { key: ReviewTabKey; label: string; route: ReviewRoute }[] = [
@@ -24,7 +25,7 @@ const tabs: { key: ReviewTabKey; label: string; route: ReviewRoute }[] = [
   { key: "trust", label: "Trust Pack", route: "/trust-pack" }
 ];
 
-export function ReviewTabs({ active, params }: ReviewTabsProps) {
+export function ReviewTabs({ active, params, onBeforeNavigate }: ReviewTabsProps) {
   return (
     <View style={styles.row} accessibilityRole="tablist">
       {tabs.map((tab) => {
@@ -35,7 +36,11 @@ export function ReviewTabs({ active, params }: ReviewTabsProps) {
             key={tab.key}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            onPress={() => router.push({ pathname: tab.route, params })}
+            onPress={() => {
+              if (selected) return;
+              onBeforeNavigate?.();
+              router.push({ pathname: tab.route, params });
+            }}
             style={[styles.tab, selected && styles.tabSelected]}
           >
             <Text style={[styles.text, selected && styles.textSelected]}>{tab.label}</Text>

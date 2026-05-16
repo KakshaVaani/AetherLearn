@@ -9,6 +9,7 @@ import {
   RuntimeMode,
   User
 } from "@/types";
+import { normalizeAssignmentAnswerMode } from "@/utils/assignmentModes";
 
 type BackendLessonPack = {
   id: string;
@@ -43,11 +44,11 @@ type BackendLessonPack = {
     differentiatedExplanations?: string[];
     teacherReviewChecklist?: string[];
   };
-  studentAccessPack?: {
-    listenFirstAudioScript?: string;
-    screenReaderSummary?: string;
-    visualDescription?: string;
-    simpleExplanation?: string;
+    studentAccessPack?: {
+      listenFirstAudioScript?: string;
+      screenReaderSummary?: string;
+      visualDescription?: string;
+      simpleExplanation?: string;
     vocabulary?: string[];
     practiceQuestions?: string[];
     hintsAnswers?: string[];
@@ -74,7 +75,7 @@ type BackendAssignment = {
   dueAt?: string | null;
   instructions?: string | null;
   title?: string | null;
-  answerMode?: "mcq" | "text" | string | null;
+  answerMode?: string | null;
   versions?: string[] | null;
   questions?: Array<{
     id?: string;
@@ -167,6 +168,7 @@ export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
       screenReaderSummary: student?.screenReaderSummary ?? "",
       audioStudyScript: student?.listenFirstAudioScript ?? student?.simpleExplanation ?? "",
       visualDescription: student?.visualDescription ?? "",
+      stepByStepExplanation: student?.simpleExplanation ?? student?.screenReaderSummary ?? "",
       vocabulary: (student?.vocabulary ?? []).map((term) => ({ term, meaning: "Review in lesson context." })),
       steps: student?.revisionChecklist ?? [],
       practiceQuestions: student?.practiceQuestions ?? [],
@@ -211,9 +213,9 @@ export function backendLessonToLecture(pack: BackendLessonPack): Lecture {
     outputs: {
       standard: lesson.studentAccessPack.screenReaderSummary,
       blindLowVision: lesson.studentAccessPack.visualDescription || lesson.studentAccessPack.audioStudyScript,
-      dyslexiaFriendly: lesson.studentAccessPack.steps.join("\n") || lesson.studentAccessPack.screenReaderSummary,
+      dyslexiaFriendly: lesson.studentAccessPack.stepByStepExplanation || lesson.studentAccessPack.screenReaderSummary,
       multilingual: lesson.studentAccessPack.audioStudyScript,
-      slowLearner: lesson.studentAccessPack.steps.join("\n")
+      slowLearner: lesson.studentAccessPack.stepByStepExplanation || lesson.studentAccessPack.screenReaderSummary
     },
     badge: "Cloud generated"
   };
@@ -238,7 +240,7 @@ export function backendAssignmentToAssignment(assignment: BackendAssignment): As
     linkedLecture: assignment.lessonId,
     postedAt: "Synced from backend",
     dueDate: assignment.dueAt ?? "No due date",
-    answerMode: assignment.answerMode === "mcq" ? "mcq" : "text",
+    answerMode: normalizeAssignmentAnswerMode(assignment.answerMode),
     versions: versions.length ? versions : ["Standard", "Dyslexia Friendly", "Blind / Low Vision"],
     questions: questions.length
       ? questions

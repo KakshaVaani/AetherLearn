@@ -18,17 +18,43 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { accessibilityModes } from "@/data/accessibilityProfiles";
 import { classrooms as demoClassrooms } from "@/data/classrooms";
 import { lessonPacks } from "@/data/lessonPacks";
-import { AccessibilityMode, AssignmentQuestion, Classroom, LessonPack } from "@/types";
+import { AccessibilityMode, AssignmentAnswerMode, AssignmentQuestion, Classroom, LessonPack } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
+import { assignmentAnswerModeLabel, assignmentAnswerModeOptions } from "@/utils/assignmentModes";
 
 type AssignmentDraft = {
   title: string;
   instructions: string;
   dueAt: string;
-  answerMode: "text" | "mcq";
+  answerMode: AssignmentAnswerMode;
   versions: AccessibilityMode[];
   questions: AssignmentQuestion[];
 };
+
+const genericMcqOptions = new Set([
+  "Answer from the lesson notes",
+  "A detail not stated in the lesson",
+  "A guess outside the lesson source",
+  "I need to review again"
+]);
+
+function mcqOptionsFor(question: AssignmentQuestion) {
+  const options = (question.options ?? []).filter((option) => !genericMcqOptions.has(option.trim()));
+  return [...options, "", "", "", ""].slice(0, 4);
+}
+
+function prepareQuestionForMode(question: AssignmentQuestion, mode: AssignmentAnswerMode): AssignmentQuestion {
+  if (mode === "mcq") {
+    return {
+      ...question,
+      options: mcqOptionsFor(question)
+    };
+  }
+  return {
+    ...question,
+    options: []
+  };
+}
 
 export default function CreateAssignmentScreen() {
   const params = useLocalSearchParams<{ classroomId?: string; lessonId?: string }>();
@@ -47,6 +73,7 @@ export default function CreateAssignmentScreen() {
     "Slow Learner"
   ]);
   const [draft, setDraft] = useState<AssignmentDraft | null>(null);
+  const [questionType, setQuestionType] = useState<AssignmentAnswerMode>("short_answer");
   const [assigned, setAssigned] = useState(false);
   const [assignedAssignmentId, setAssignedAssignmentId] = useState<string | null>(null);
   const [message, setMessage] = useState("Using local demo classes until backend data is available.");
@@ -129,6 +156,21 @@ export default function CreateAssignmentScreen() {
     setAssignedAssignmentId(null);
   }
 
+  function selectQuestionType(mode: AssignmentAnswerMode) {
+    setQuestionType(mode);
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            answerMode: mode,
+            questions: current.questions.map((question) => prepareQuestionForMode(question, mode))
+          }
+        : current
+    );
+    setAssigned(false);
+    setAssignedAssignmentId(null);
+  }
+
   async function generateAssignment() {
     if (!selectedLesson) {
       setMessage("Select a lesson before generating an assignment.");
@@ -140,7 +182,8 @@ export default function CreateAssignmentScreen() {
       const generated = await generateAssignmentDraftFromLesson({
         lessonId: selectedLesson.id,
         classroomId: selectedClassroom.id,
-        preferredVersions: versions
+        preferredVersions: versions,
+        questionType
       });
       const generatedQuestions = generated.questions.filter((item) => item.prompt.trim().length > 0);
       const fallbackQuestions = (
@@ -162,9 +205,9 @@ export default function CreateAssignmentScreen() {
         title: generated.title || `${selectedLesson.title} Assignment`,
         instructions: generated.instructions || "Complete the lesson pack and answer the questions.",
         dueAt: "",
-        answerMode: generated.answerMode === "mcq" ? "mcq" : "text",
+        answerMode: questionType,
         versions: generated.versions.length ? generated.versions : versions,
-        questions
+        questions: questions.map((question) => prepareQuestionForMode(question, questionType))
       });
       if (generated.versions.length) {
         setVersions(generated.versions);
@@ -207,6 +250,28 @@ export default function CreateAssignmentScreen() {
     setAssignedAssignmentId(null);
   }
 
+  function updateDraftQuestionOption(questionId: string, optionIndex: number, value: string) {
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            questions: current.questions.map((question) =>
+              question.id === questionId
+                ? {
+                    ...question,
+                    options: mcqOptionsFor(question).map((option, index) =>
+                      index === optionIndex ? value : option
+                    )
+                  }
+                : question
+            )
+          }
+        : current
+    );
+    setAssigned(false);
+    setAssignedAssignmentId(null);
+  }
+
   async function assignDraftToClass() {
     if (!selectedLesson || !draft) return;
     setLoading(true);
@@ -220,7 +285,16 @@ export default function CreateAssignmentScreen() {
         dueAt: draft.dueAt.trim() || undefined,
         answerMode: draft.answerMode,
         versions: draft.versions,
-        questions: draft.questions.filter((question) => question.prompt.trim().length > 0)
+        questions: draft.questions
+          .filter((question) => question.prompt.trim().length > 0)
+          .map((question) => ({
+            ...question,
+            prompt: question.prompt.trim(),
+            options:
+              draft.answerMode === "mcq"
+                ? mcqOptionsFor(question).map((option) => option.trim()).filter(Boolean)
+                : []
+          }))
       });
       setAssignedAssignmentId(result[0]?.id ?? null);
       setAssigned(true);
@@ -242,6 +316,11 @@ export default function CreateAssignmentScreen() {
       setLoading(false);
     }
   }
+
+  const publishableQuestions = draft?.questions.filter((question) => question.prompt.trim().length > 0) ?? [];
+  const needsMcqOptions =
+    draft?.answerMode === "mcq" &&
+    publishableQuestions.some((question) => mcqOptionsFor(question).filter((option) => option.trim()).length < 2);
 
   return (
     <ScreenContainer>
@@ -303,6 +382,18 @@ export default function CreateAssignmentScreen() {
               : "No exact lesson match for this class yet. Demo lessons are shown as fallback."}
           </Text>
         ) : null}
+
+        <Text style={styles.label}>Question type</Text>
+        <View style={styles.selectorRow}>
+          {assignmentAnswerModeOptions.map((option) => (
+            <ChoiceChip
+              key={option.value}
+              label={option.label}
+              selected={questionType === option.value}
+              onPress={() => selectQuestionType(option.value)}
+            />
+          ))}
+        </View>
       </Card>
 
       <AppButton
@@ -342,6 +433,18 @@ export default function CreateAssignmentScreen() {
               placeholder="Optional ISO date or teacher note"
             />
 
+            <Text style={styles.label}>Question type</Text>
+            <View style={styles.selectorRow}>
+              {assignmentAnswerModeOptions.map((option) => (
+                <ChoiceChip
+                  key={option.value}
+                  label={option.label}
+                  selected={draft.answerMode === option.value}
+                  onPress={() => selectQuestionType(option.value)}
+                />
+              ))}
+            </View>
+
             <Text style={styles.label}>Questions</Text>
             {draft.questions.map((question, index) => (
               <View key={question.id} style={styles.questionEditor}>
@@ -352,8 +455,24 @@ export default function CreateAssignmentScreen() {
                   style={[styles.input, styles.questionInput]}
                   multiline
                 />
+                {draft.answerMode === "mcq" ? (
+                  <View style={styles.optionEditorList}>
+                    {mcqOptionsFor(question).map((option, optionIndex) => (
+                      <TextInput
+                        key={`${question.id}-option-${optionIndex}`}
+                        value={option}
+                        onChangeText={(value) => updateDraftQuestionOption(question.id, optionIndex, value)}
+                        style={styles.input}
+                        placeholder={`Option ${optionIndex + 1}`}
+                      />
+                    ))}
+                  </View>
+                ) : null}
               </View>
             ))}
+            {needsMcqOptions ? (
+              <Text style={styles.warningText}>Add at least two options for each MCQ before assigning.</Text>
+            ) : null}
           </Card>
 
           <SectionHeader title="Student versions" subtitle="Choose which personalized variants to publish." />
@@ -389,7 +508,7 @@ export default function CreateAssignmentScreen() {
           <AppButton
             title="Assign to Class"
             leftIcon={<Ionicons name="send-outline" size={20} color={colors.white} />}
-            disabled={!selectedLesson || loading || draft.questions.every((question) => !question.prompt.trim())}
+            disabled={!selectedLesson || loading || publishableQuestions.length === 0 || needsMcqOptions}
             loading={loading}
             onPress={assignDraftToClass}
           />
@@ -406,6 +525,7 @@ export default function CreateAssignmentScreen() {
             <Text style={styles.previewTitle}>Assignment published to class</Text>
             <Badge label={`${draft?.versions.length ?? versions.length} versions`} tone="secondary" />
           </View>
+          <Badge label={assignmentAnswerModeLabel(draft?.answerMode ?? questionType)} tone="primary" />
           <Text style={styles.previewMeta}>{selectedClassroom.title} - {selectedSubject}</Text>
           <Text style={styles.previewMeta}>Lesson: {selectedLesson?.title}</Text>
           {(draft?.questions ?? []).map((question, index) => (
@@ -546,6 +666,9 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   questionEditor: {
+    gap: spacing.sm
+  },
+  optionEditorList: {
     gap: spacing.sm
   },
   questionLabel: {

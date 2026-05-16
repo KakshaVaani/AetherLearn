@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 import { askStudentDoubt } from "@/api/backend";
@@ -38,6 +39,15 @@ export default function AskDoubtScreen() {
       Speech.stop();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        Speech.stop();
+        setSpeaking(false);
+      };
+    }, [])
+  );
 
   async function submitQuestion() {
     if (!question.trim()) return;

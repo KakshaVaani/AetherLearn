@@ -63,6 +63,8 @@ export const lessonPacks: LessonPack[] = [
         "First, imagine a green plant. Sunlight reaches the leaves. Water moves from the soil into the roots. Carbon dioxide enters the leaves from the air. Inside the leaves, the plant makes glucose, which is food for the plant. Oxygen leaves the plant and goes into the air.",
       visualDescription:
         "The diagram shows a plant in the center. A sun is above the plant. An arrow from the sun points toward the leaves for sunlight. Water moves from the soil into the roots. Carbon dioxide enters the leaves, and oxygen moves out into the air.",
+      stepByStepExplanation:
+        "First, roots absorb water from the soil. Next, leaves take in carbon dioxide from the air. Sunlight gives the leaves energy. The plant uses these inputs to make glucose, which is food for the plant. Oxygen is released back into the air.",
       vocabulary: [
         { term: "Photosynthesis", meaning: "The process plants use to make food." },
         { term: "Glucose", meaning: "Sugar made by the plant for energy." },
@@ -142,6 +144,8 @@ export const lessonPacks: LessonPack[] = [
         "For 2x plus 3 equals 7, first remove plus 3 by subtracting 3 from both sides. Then 2x equals 4. Divide both sides by 2. The value of x is 2.",
       visualDescription:
         "The worksheet shows the equation 2x plus 3 equals 7. Below it, the solution shows that x equals 2.",
+      stepByStepExplanation:
+        "To solve a linear equation, keep both sides balanced. For 2x + 3 = 7, subtract 3 from both sides so 2x = 4. Then divide both sides by 2. The answer is x = 2, and checking it in the original equation confirms it works.",
       vocabulary: [
         { term: "Equation", meaning: "A statement where two sides are equal." },
         { term: "Variable", meaning: "A letter that stands for an unknown number." }
@@ -208,6 +212,8 @@ export const lessonPacks: LessonPack[] = [
         "The sun heats water in rivers and lakes. Some water becomes vapor and rises. The vapor cools and forms clouds. When the clouds become heavy, water falls as rain.",
       visualDescription:
         "The diagram shows water at the bottom, a sun above it, a cloud near the top, and arrows showing water moving up and rain moving down.",
+      stepByStepExplanation:
+        "The sun heats water in rivers, lakes, and oceans. Some water changes into vapor and rises into the air. Higher up, the vapor cools and forms clouds. When clouds become heavy, water falls as rain and returns to Earth.",
       vocabulary: [
         { term: "Evaporation", meaning: "Water changes into vapor." },
         { term: "Condensation", meaning: "Vapor cools and becomes tiny drops." },

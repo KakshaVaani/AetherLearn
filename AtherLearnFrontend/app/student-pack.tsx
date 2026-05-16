@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
@@ -8,6 +8,7 @@ import { Header } from "@/components/Header";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
+import { speakWithDeviceTts, stopDeviceTts, TtsStatus } from "@/utils/tts";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const sections = [
@@ -28,10 +29,14 @@ export default function StudentPackScreen() {
     grade?: string;
     subject?: string;
   }>();
-  const [playing, setPlaying] = useState(false);
+  const [playbackState, setPlaybackState] = useState<TtsStatus>("ready");
+  const [audioMessage, setAudioMessage] = useState("Ready to play device TTS.");
   const [openSection, setOpenSection] = useState<StudentSection>("Summary");
   const { lesson } = useLessonPackReview(params.lessonId);
   const pack = lesson.studentAccessPack;
+  const transcript = pack.audioStudyScript.trim() || pack.screenReaderSummary.trim();
+  const canPlayAudio = transcript.length > 0;
+  const playing = playbackState === "playing" || playbackState === "loading_voices";
   const reviewParams = {
     lessonId: params.lessonId ?? lesson.id,
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
@@ -47,28 +52,88 @@ export default function StudentPackScreen() {
       return pack.vocabulary.map((item) => `${item.term}: ${item.meaning}`).join("\n");
     }
     if (section === "Step-by-Step Explanation") {
-      return pack.steps.map((item, index) => `${index + 1}. ${item}`).join("\n");
+      return pack.stepByStepExplanation || pack.screenReaderSummary;
     }
     return pack.practiceQuestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
+  }
+
+  useEffect(() => {
+    return () => {
+      stopDeviceTts();
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        stopDeviceTts();
+        setPlaybackState("stopped");
+        setAudioMessage("Audio stopped.");
+      };
+    }, [])
+  );
+
+  useEffect(() => {
+    stopDeviceTts();
+    setPlaybackState("ready");
+    setAudioMessage("Ready to play device TTS.");
+  }, [lesson.id]);
+
+  function stopAudio(message = "Audio stopped.") {
+    stopDeviceTts();
+    setPlaybackState("stopped");
+    setAudioMessage(message);
+  }
+
+  function updateAudioStatus(status: TtsStatus) {
+    setPlaybackState(status);
+    setAudioMessage(audioStatusMessage(status));
+  }
+
+  function playAudio() {
+    if (!canPlayAudio) {
+      setPlaybackState("error");
+      setAudioMessage("No audio text is available for this pack.");
+      return;
+    }
+    void speakWithDeviceTts(transcript, {
+      language: languageCode(lesson.language),
+      rate: 0.82,
+      pitch: 1,
+      onStatus: updateAudioStatus,
+      onError: (message) => {
+        setPlaybackState("error");
+        setAudioMessage(message);
+      }
+    });
+  }
+
+  function toggleAudio() {
+    if (playing) {
+      stopAudio();
+      return;
+    }
+    playAudio();
   }
 
   return (
     <ScreenContainer>
       <Header title="Student Access Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
-      <ReviewTabs active="student" params={reviewParams} />
+      <ReviewTabs active="student" params={reviewParams} onBeforeNavigate={() => stopAudio()} />
 
       <Card style={styles.playerCard}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={playing ? "Pause audio explanation" : "Play audio explanation"}
-          onPress={() => setPlaying((current) => !current)}
-          style={styles.playButton}
+          accessibilityLabel={playing ? "Stop audio explanation" : "Play audio explanation"}
+          disabled={!canPlayAudio}
+          onPress={toggleAudio}
+          style={[styles.playButton, playing && styles.stopButton, !canPlayAudio && styles.disabledPlayButton]}
         >
-          <Ionicons name={playing ? "pause" : "play" } size={36} color={colors.white} />
+          <Ionicons name={playing ? "stop" : "play"} size={36} color={colors.white} />
         </Pressable>
         <View style={styles.playerText}>
           <Text style={styles.playerTitle}>Audio explanation</Text>
-          <Text style={styles.playerMeta}>08:45 - device TTS ready</Text>
+          <Text style={styles.playerMeta}>{canPlayAudio ? audioMessage : "No audio text available."}</Text>
         </View>
       </Card>
 
@@ -104,12 +169,35 @@ export default function StudentPackScreen() {
         <AppButton
           title="Trust Pack"
           leftIcon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.white} />}
-          onPress={() => router.push({ pathname: "/trust-pack", params: reviewParams })}
+          onPress={() => {
+            stopAudio();
+            router.push({ pathname: "/trust-pack", params: reviewParams });
+          }}
           style={styles.actionButton}
         />
       </View>
     </ScreenContainer>
   );
+}
+
+function audioStatusMessage(status: TtsStatus) {
+  if (status === "loading_voices") return "Loading device voices...";
+  if (status === "playing") return "Playing audio explanation...";
+  if (status === "stopped") return "Audio stopped.";
+  if (status === "finished") return "Audio complete.";
+  if (status === "error") return "Audio could not play on this device.";
+  return "Ready to play device TTS.";
+}
+
+function languageCode(language: string) {
+  const normalized = language.toLowerCase();
+  if (normalized.includes("hindi")) return "hi-IN";
+  if (normalized.includes("spanish")) return "es-ES";
+  if (normalized.includes("french")) return "fr-FR";
+  if (normalized.includes("arabic")) return "ar";
+  if (normalized.includes("chinese")) return "zh-CN";
+  if (normalized.includes("tamil")) return "ta-IN";
+  return "en-US";
 }
 
 const styles = StyleSheet.create({
@@ -126,6 +214,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.primary
+  },
+  stopButton: {
+    backgroundColor: colors.danger
+  },
+  disabledPlayButton: {
+    opacity: 0.5
   },
   playerText: {
     flex: 1,

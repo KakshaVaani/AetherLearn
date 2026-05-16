@@ -27,6 +27,7 @@ export default function TeacherPackScreen() {
   const [regenerating, setRegenerating] = useState(false);
   const { lesson } = useLessonPackReview(params.lessonId);
   const pack = lesson.teacherPack;
+  const learnerSupport = learnerSupportItems(pack.differentiatedSupport);
   const reviewParams = {
     lessonId: params.lessonId ?? lesson.id,
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
@@ -72,33 +73,35 @@ export default function TeacherPackScreen() {
       </View>
 
       {activeTab === "Objective" ? (
-        <>
-          <Card style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Ionicons name="flag-outline" size={22} color={colors.danger} />
-              <Text style={styles.cardTitle}>Learning objective</Text>
-            </View>
-            <Text style={styles.body}>{pack.objective + revisionSuffix}</Text>
-          </Card>
-          <Card style={styles.card}>
-            <View style={styles.cardHeader}>
-              <Ionicons name="checkmark-done-outline" size={22} color={colors.success} />
-              <Text style={styles.cardTitle}>Success criteria</Text>
-            </View>
-            {pack.keyConcepts.map((item) => (
-              <Text key={item} style={styles.point}>
-                - {item}
-              </Text>
-            ))}
-          </Card>
-        </>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Ionicons name="flag-outline" size={22} color={colors.danger} />
+            <Text style={styles.cardTitle}>Learning objective</Text>
+          </View>
+          <Text style={styles.body}>{pack.objective + revisionSuffix}</Text>
+        </Card>
       ) : null}
 
       {activeTab === "Script" ? (
-        <Card style={styles.card}>
-          <Text style={styles.cardTitle}>Teaching script</Text>
-          <Text style={styles.body}>{pack.teachingScript + revisionSuffix}</Text>
-        </Card>
+        <>
+          <Card style={styles.card}>
+            <Text style={styles.cardTitle}>Teaching script</Text>
+            <Text style={styles.body}>{pack.teachingScript + revisionSuffix}</Text>
+          </Card>
+          {pack.keyConcepts.length ? (
+            <Card style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Ionicons name="list-outline" size={22} color={colors.primary} />
+                <Text style={styles.cardTitle}>Board plan</Text>
+              </View>
+              {pack.keyConcepts.map((item) => (
+                <Text key={item} style={styles.point}>
+                  - {item}
+                </Text>
+              ))}
+            </Card>
+          ) : null}
+        </>
       ) : null}
 
       {activeTab === "Activity" ? (
@@ -133,10 +136,18 @@ export default function TeacherPackScreen() {
 
       <Card style={styles.supportCard}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Differentiated support</Text>
+          <Text style={styles.cardTitle}>Learner support</Text>
           {revision > 1 ? <Badge label={`Revision ${revision}`} tone="primary" /> : null}
         </View>
-        <Text style={styles.body}>{pack.differentiatedSupport + revisionSuffix}</Text>
+        <View style={styles.supportList}>
+          {learnerSupport.map((item) => (
+            <View key={item.label} style={styles.supportItem}>
+              <Text style={styles.supportLabel}>{item.label}</Text>
+              <Text style={styles.supportText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+        {revision > 1 ? <Text style={styles.supportNote}>{revisionSuffix.trim()}</Text> : null}
       </Card>
 
       <View style={styles.actions}>
@@ -164,6 +175,65 @@ export default function TeacherPackScreen() {
       </View>
     </ScreenContainer>
   );
+}
+
+function learnerSupportItems(raw: string) {
+  const labels = ["Support", "Core", "Challenge"] as const;
+  const cleaned = cleanSupportText(raw);
+  const matches = [...cleaned.matchAll(/\b(Support|Core|Challenge)\s*(?:\([^)]*\))?\s*:/gi)];
+  const byLabel = new Map<string, string>();
+
+  matches.forEach((match, index) => {
+    const next = matches[index + 1];
+    const label = titleCaseLabel(match[1]);
+    const start = match.index ?? 0;
+    const end = next?.index ?? cleaned.length;
+    byLabel.set(label, stripSupportLabel(cleaned.slice(start, end), label));
+  });
+
+  const fallbackLines = cleaned
+    .split(/\n+/)
+    .map((line) => stripSupportLabel(line.trim()))
+    .filter(Boolean);
+
+  return labels.map((label, index) => ({
+    label,
+    text: byLabel.get(label) || fallbackLines[index] || fallbackSupportText(label)
+  }));
+}
+
+function titleCaseLabel(value: string) {
+  const normalized = value.toLowerCase();
+  if (normalized === "support") return "Support";
+  if (normalized === "core") return "Core";
+  return "Challenge";
+}
+
+function cleanSupportText(raw: string) {
+  return raw
+    .replace(/\\text\{([^}]*)\}/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*\*/g, "")
+    .replace(/\$/g, "")
+    .replace(/\\([A-Za-z]+)/g, "$1")
+    .replace(/_\{?([^}\s]+)\}?/g, "$1")
+    .replace(/[{}]/g, "")
+    .replace(/\s+o\s+/g, " to ")
+    .replace(/[ \t]+/g, " ")
+    .trim();
+}
+
+function stripSupportLabel(raw: string, label?: string) {
+  const labels = label ? label : "Support|Core|Challenge";
+  return cleanSupportText(raw)
+    .replace(new RegExp(`^(?:${labels})\\s*(?:\\([^)]*\\))?\\s*:\\s*`, "i"), "")
+    .trim();
+}
+
+function fallbackSupportText(label: "Support" | "Core" | "Challenge") {
+  if (label === "Support") return "Use simpler language, read key terms aloud, and let students answer with a labelled example.";
+  if (label === "Core") return "Ask students to explain the main idea using lesson vocabulary and one accurate example.";
+  return "Ask students to connect the idea to a new example and explain why it applies.";
 }
 
 const styles = StyleSheet.create({
@@ -223,6 +293,35 @@ const styles = StyleSheet.create({
   supportCard: {
     gap: spacing.md,
     backgroundColor: colors.surface
+  },
+  supportList: {
+    gap: spacing.sm
+  },
+  supportItem: {
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.card,
+    padding: spacing.md
+  },
+  supportLabel: {
+    color: colors.primaryDark,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900"
+  },
+  supportText: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 23,
+    fontWeight: "600"
+  },
+  supportNote: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "700"
   },
   actions: {
     flexDirection: "row",

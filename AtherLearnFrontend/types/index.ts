@@ -18,6 +18,8 @@ export type AccessibilityMode =
   | "Multilingual"
   | "Slow Learner";
 
+export type AssignmentAnswerMode = "mcq" | "short_answer" | "long_answer";
+
 export type SyncBadge = "Saved offline" | "Sync pending" | "Cloud generated" | "Local mode ready";
 
 export type User = {
@@ -106,7 +108,7 @@ export type Assignment = {
   linkedLecture: string;
   postedAt: string;
   dueDate: string;
-  answerMode: "mcq" | "text";
+  answerMode: AssignmentAnswerMode;
   versions: AccessibilityMode[];
   questions: AssignmentQuestion[];
   status: "Draft" | "Published";
@@ -152,6 +154,7 @@ export type StudentAccessPack = {
   screenReaderSummary: string;
   audioStudyScript: string;
   visualDescription: string;
+  stepByStepExplanation: string;
   vocabulary: { term: string; meaning: string }[];
   steps: string[];
   practiceQuestions: string[];

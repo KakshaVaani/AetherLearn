@@ -3,6 +3,7 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Assignment } from "@/types";
 import { colors, spacing } from "@/constants/theme";
+import { assignmentAnswerModeLabel } from "@/utils/assignmentModes";
 
 type AssignmentCardProps = {
   assignment: Assignment;
@@ -20,7 +21,10 @@ export function AssignmentCard({ assignment, onPress, cardStyle, titleStyle, met
           <Text style={styles.subject}>{assignment.subject}</Text>
           <Text style={[styles.title, titleStyle]}>{assignment.title}</Text>
         </View>
-        <Badge label={assignment.status} tone={assignment.status === "Published" ? "success" : "warning"} />
+        <View style={styles.badges}>
+          <Badge label={assignmentAnswerModeLabel(assignment.answerMode)} tone="secondary" />
+          <Badge label={assignment.status} tone={assignment.status === "Published" ? "success" : "warning"} />
+        </View>
       </View>
       <Text style={[styles.meta, metaStyle]}>{assignment.linkedLecture}</Text>
       <Text style={[styles.due, metaStyle]}>Due {assignment.dueDate}</Text>
@@ -40,6 +44,10 @@ const styles = StyleSheet.create({
   titleBlock: {
     flex: 1,
     gap: 2
+  },
+  badges: {
+    alignItems: "flex-end",
+    gap: spacing.xs
   },
   subject: {
     color: colors.secondary,

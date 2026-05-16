@@ -6,7 +6,17 @@ import {
   backendLessonToLessonPack,
   backendLessonToLecture
 } from "@/api/adapters";
-import { AccessibilityMode, Assignment, AssignmentQuestion, Classroom, LessonPack, Lecture, Role } from "@/types";
+import {
+  AccessibilityMode,
+  Assignment,
+  AssignmentAnswerMode,
+  AssignmentQuestion,
+  Classroom,
+  LessonPack,
+  Lecture,
+  Role
+} from "@/types";
+import { normalizeAssignmentAnswerMode } from "@/utils/assignmentModes";
 
 type LoginResponse = {
   user: {
@@ -52,7 +62,7 @@ type AskLessonResponse = {
 type AssignmentDraftResponse = {
   title: string;
   instructions: string;
-  answerMode?: "text" | "mcq";
+  answerMode?: string;
   versions?: string[];
   questions?: Array<{
     id: string;
@@ -180,7 +190,7 @@ export async function assignLessonToClass(input: {
   instructions?: string;
   dueAt?: string;
   title?: string;
-  answerMode?: "mcq" | "text";
+  answerMode?: AssignmentAnswerMode;
   versions?: AccessibilityMode[];
   questions?: AssignmentQuestion[];
 }) {
@@ -201,19 +211,21 @@ export async function generateAssignmentDraftFromLesson(input: {
   lessonId: string;
   classroomId?: string;
   preferredVersions?: AccessibilityMode[];
+  questionType?: AssignmentAnswerMode;
 }) {
   const response = await apiJson<AssignmentDraftResponse>(
     `/api/teacher/lessons/${input.lessonId}/generate-assignment-draft`,
     "POST",
     {
       classroomId: input.classroomId,
-      preferredVersions: input.preferredVersions
+      preferredVersions: input.preferredVersions,
+      questionType: input.questionType
     }
   );
   return {
     title: response.title,
     instructions: response.instructions,
-    answerMode: response.answerMode === "mcq" ? "mcq" : "text",
+    answerMode: normalizeAssignmentAnswerMode(response.answerMode),
     versions: ((response.versions ?? []) as AccessibilityMode[]),
     questions: (response.questions ?? []).map((question, index) => ({
       id: question.id || `q${index + 1}`,

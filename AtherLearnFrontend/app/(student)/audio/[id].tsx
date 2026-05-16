@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 import {
@@ -38,6 +38,16 @@ export default function AudioLessonScreen() {
       Speech.stop();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        Speech.stop();
+        setPlaybackState("idle");
+        setMessage("Audio stopped.");
+      };
+    }, [])
+  );
 
   useEffect(() => {
     if (!preferences.audioSupport) {

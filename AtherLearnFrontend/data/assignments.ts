@@ -45,7 +45,7 @@ export const assignments: Assignment[] = [
     linkedLecture: "Fractions on a Number Line",
     postedAt: "2026-05-13T11:15:00.000Z",
     dueDate: "May 18, 2026",
-    answerMode: "text",
+    answerMode: "short_answer",
     status: "Published",
     versions: ["Standard", "Dyslexia Friendly", "Slow Learner"],
     questions: [

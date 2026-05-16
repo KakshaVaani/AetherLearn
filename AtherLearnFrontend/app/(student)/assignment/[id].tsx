@@ -17,13 +17,14 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
 import { Assignment } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
+import { assignmentAnswerModeLabel } from "@/utils/assignmentModes";
 
 export default function StudentAssignmentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [items, setItems] = useState<Assignment[]>(assignments);
   const [connected, setConnected] = useState(false);
   const assignment = items.find((item) => item.id === id) ?? assignments.find((item) => item.id === id) ?? items[0];
-  const [answer, setAnswer] = useState("");
+  const [textAnswers, setTextAnswers] = useState<Record<string, string>>({});
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [syncMessage, setSyncMessage] = useState("Answers sync to backend when the assignment exists there.");
@@ -53,7 +54,7 @@ export default function StudentAssignmentScreen() {
     try {
       await submitAssignment(
         assignment.id,
-        assignment.answerMode === "text" ? { answer } : selectedOptions
+        assignment.answerMode === "mcq" ? selectedOptions : textAnswers
       );
       setSyncMessage("Submitted to backend.");
     } catch {
@@ -76,7 +77,7 @@ export default function StudentAssignmentScreen() {
               <Badge label={preferences.textSize + " text"} tone="primary" />
             </View>
           </View>
-          <Badge label={assignment.answerMode === "mcq" ? "MCQ" : "Text answer"} tone="secondary" />
+          <Badge label={assignmentAnswerModeLabel(assignment.answerMode)} tone="secondary" />
         </View>
       </Card>
       <Text style={styles.syncText}>
@@ -129,23 +130,27 @@ export default function StudentAssignmentScreen() {
                   );
                 })}
               </View>
-            ) : null}
+            ) : (
+              <TextInput
+                value={textAnswers[question.id] ?? ""}
+                onChangeText={(value) =>
+                  setTextAnswers((current) => ({
+                    ...current,
+                    [question.id]: value
+                  }))
+                }
+                style={[
+                  styles.input,
+                  assignment.answerMode === "long_answer" ? styles.longAnswerInput : styles.shortAnswerInput,
+                  visuals.bodyTextStyle
+                ]}
+                placeholder={assignment.answerMode === "long_answer" ? "Write a paragraph answer" : "Write a short answer"}
+                multiline
+              />
+            )}
           </View>
         ))}
       </Card>
-
-      {assignment.answerMode === "text" ? (
-        <>
-          <SectionHeader title="Your answer" />
-          <TextInput
-            value={answer}
-            onChangeText={setAnswer}
-            style={[styles.input, visuals.bodyTextStyle]}
-            placeholder="Type your answer here"
-            multiline
-          />
-        </>
-      ) : null}
       <Text style={styles.syncText}>{syncMessage}</Text>
       <AppButton title="Submit Answer" onPress={submitAnswer} loading={submitting} />
     </ScreenContainer>
@@ -241,6 +246,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     textAlignVertical: "top"
+  },
+  shortAnswerInput: {
+    minHeight: 68
+  },
+  longAnswerInput: {
+    minHeight: 150
   },
   syncText: {
     color: colors.muted,

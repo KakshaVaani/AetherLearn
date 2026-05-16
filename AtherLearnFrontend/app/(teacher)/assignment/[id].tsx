@@ -12,6 +12,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { assignments } from "@/data/assignments";
 import { Assignment } from "@/types";
 import { colors, spacing } from "@/constants/theme";
+import { assignmentAnswerModeLabel } from "@/utils/assignmentModes";
 
 export default function AssignmentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,6 +47,7 @@ export default function AssignmentDetailScreen() {
         </View>
         <Text style={styles.meta}>Linked lecture: {assignment.linkedLecture}</Text>
         <Text style={styles.meta}>Due date: {assignment.dueDate}</Text>
+        <Text style={styles.meta}>Question type: {assignmentAnswerModeLabel(assignment.answerMode)}</Text>
         <Text style={styles.meta}>{connected ? "Synced from backend" : "Local demo assignment"}</Text>
       </Card>
 
@@ -66,6 +68,13 @@ export default function AssignmentDetailScreen() {
               {index + 1}. {question.prompt}
             </Text>
             {question.hint ? <Text style={styles.hint}>Hint: {question.hint}</Text> : null}
+            {assignment.answerMode === "mcq" && question.options?.length ? (
+              <View style={styles.optionsList}>
+                {question.options.map((option) => (
+                  <Text key={option} style={styles.optionText}>{option}</Text>
+                ))}
+              </View>
+            ) : null}
           </View>
         ))}
       </Card>
@@ -129,6 +138,15 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20
+  },
+  optionsList: {
+    gap: spacing.xs
+  },
+  optionText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600"
   },
   actions: {
     gap: spacing.md
