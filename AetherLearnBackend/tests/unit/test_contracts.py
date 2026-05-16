@@ -12,7 +12,10 @@ from service_auth import UserContext, decode_user_context
 from service_auth.service_tokens import build_service_headers
 from shared_events import SUBJECTS, EventEnvelope, validate_subject
 from shared_schemas import (
+    AssignmentQuestion,
     CreateAssignmentRequest,
+    GenerateAssignmentDraftInput,
+    GenerateAssignmentDraftOutput,
     GenerateFromTextInput,
     LocalSyncStatus,
     OfflineEntityType,
@@ -27,8 +30,21 @@ from shared_utils.image import validate_image_upload
 from shared_utils.inmemory import InMemoryRepository
 from shared_utils.object_id import new_id, validate_object_id
 
+from apps.ai_service.app.adapters.assignment_draft_repair import repair_assignment_draft
 from apps.ai_service.app.adapters.mock_adapter import MockAdapter
-from apps.ai_service.app.validators import apply_generation_context, validate_lesson_pack
+from apps.ai_service.app.prompts import (
+    source_pack_prompt,
+    student_pack_prompt,
+    teacher_pack_prompt,
+)
+from apps.ai_service.app.validators import (
+    apply_generation_context,
+    compose_lesson_pack_from_parts,
+    repair_source_understanding,
+    repair_student_access_pack,
+    repair_teacher_pack,
+    validate_lesson_pack,
+)
 from apps.api_gateway.app.routes.teacher_routes import (
     AssignLessonRequest,
     _assignment_target_classroom,
@@ -68,6 +84,56 @@ async def test_mock_adapter_returns_honest_complete_lesson_pack() -> None:
     assert pack.trace.hosted_api_used is False
     assert pack.trace.schema_status == SchemaStatus.PASSED
     assert "Mock" in pack.confidence_notes.teacher_review_warnings[0]
+
+
+@pytest.mark.asyncio
+async def test_mock_assignment_draft_honors_question_type() -> None:
+    pack = await MockAdapter().generate_from_text(
+        GenerateFromTextInput(
+            text="Photosynthesis",
+            settings={"subject": "Science", "gradeBand": "Class 7"},
+            teacher_id=new_id(),
+        )
+    )
+
+    mcq = await MockAdapter().generate_assignment_draft(
+        GenerateAssignmentDraftInput(lesson_pack=pack, question_type="mcq")
+    )
+    long_answer = await MockAdapter().generate_assignment_draft(
+        GenerateAssignmentDraftInput(lesson_pack=pack, question_type="long_answer")
+    )
+
+    assert mcq.answer_mode == "mcq"
+    assert all(len(question.options) == 4 for question in mcq.questions)
+    assert all("Answer from the lesson notes" not in question.options for question in mcq.questions)
+    assert long_answer.answer_mode == "long_answer"
+    assert all(question.options == [] for question in long_answer.questions)
+    assert "paragraph" in long_answer.questions[0].prompt.lower()
+
+
+@pytest.mark.asyncio
+async def test_mcq_assignment_repair_replaces_empty_options() -> None:
+    pack = await MockAdapter().generate_from_text(
+        GenerateFromTextInput(
+            text="Photosynthesis",
+            settings={"subject": "Science", "gradeBand": "Class 7"},
+            teacher_id=new_id(),
+        )
+    )
+    payload = GenerateAssignmentDraftInput(lesson_pack=pack, question_type="mcq")
+    repaired = repair_assignment_draft(
+        payload,
+        GenerateAssignmentDraftOutput(
+            title="Photosynthesis Assignment",
+            instructions="Choose the best answer.",
+            answer_mode="mcq",
+            questions=[AssignmentQuestion(id="q1", prompt="What is photosynthesis?", options=[])],
+        ),
+    )
+
+    assert repaired.answer_mode == "mcq"
+    assert len(repaired.questions[0].options) == 4
+    assert "Answer from the lesson notes" not in repaired.questions[0].options
 
 
 @pytest.mark.asyncio
@@ -379,7 +445,27 @@ def test_teacher_assign_route_payload_does_not_require_lesson_id() -> None:
 
     assert payload.classroom_id == "grade-7-a"
     assert payload.title == "Photosynthesis Assignment"
+    assert payload.answer_mode == "short_answer"
     assert payload.questions[0].prompt == "What do plants release?"
+
+
+def test_assignment_draft_request_normalizes_question_type() -> None:
+    payload = GenerateAssignmentDraftInput.model_validate(
+        {
+            "lessonPack": MockAdapter()._pack(
+                teacher_id="teacher-1",
+                lesson_id="lesson-1",
+                title="Photosynthesis",
+                subject="Science",
+                grade_band="Class 7",
+                language="en",
+                source="text",
+            ),
+            "questionType": "text",
+        }
+    )
+
+    assert payload.question_type == "short_answer"
 
 
 def test_generation_context_repair_fills_required_lesson_ownership_fields() -> None:
@@ -426,6 +512,25 @@ def test_generation_context_repair_validates_partial_gemma_lesson_pack() -> None
     assert pack.student_access_pack.simple_explanation
     assert pack.confidence_notes.teacher_review_warnings
     assert pack.trace.schema_status == "repaired"
+
+
+def test_source_repair_flattens_nested_list_fields_from_light_model() -> None:
+    source = repair_source_understanding(
+        {
+            "sourceUnderstanding": {
+                "title": "Photosynthesis",
+                "inferredTopic": "How plants make food",
+                "observedText": [["Plants use sunlight."], {"text": "Leaves take in carbon dioxide."}],
+                "observedObjects": [{"title": "leaf diagram"}],
+                "unclearAreas": [[], ["missing equation detail"]],
+            }
+        },
+        settings={"language": "en"},
+    )
+
+    assert source.observed_text == ["Plants use sunlight.", "Leaves take in carbon dioxide."]
+    assert source.observed_objects == ["leaf diagram"]
+    assert source.unclear_areas == ["missing equation detail"]
 
 
 def test_generation_context_repair_handles_non_object_model_text() -> None:
@@ -482,6 +587,178 @@ def test_generation_context_repair_overrides_invalid_generated_metadata() -> Non
     assert pack.trace.model == "gemma4:e4b"
 
 
+def test_multi_call_lesson_composition_preserves_grade_class_scope() -> None:
+    settings = {
+        "title": "Vision Transformers",
+        "subject": "Science",
+        "gradeBand": "7",
+        "language": "en",
+        "schoolId": "school-1",
+        "classroomId": "class-7a",
+        "classSubjectId": "science-7a",
+        "text": "Vision Transformers split an image into patches.",
+    }
+    source = repair_source_understanding(
+        {
+            "sourceUnderstanding": {
+                "title": "Vision Transformers",
+                "observedText": ["Images are split into patches."],
+                "inferredTopic": "Vision Transformers",
+            }
+        },
+        settings=settings,
+    )
+    teacher = repair_teacher_pack(
+        {
+            "teacherPack": {
+                "lessonObjective": "Students explain how ViT uses image patches.",
+                "teacherExplanation": "ViT treats image patches like tokens.",
+                "boardPlan": ["Write image -> patches -> embeddings -> transformer."],
+                "lowResourceActivity": "Cut a paper image into equal patches.",
+                "worksheet": ["What is a patch in ViT?"],
+                "answerKey": ["A small part of an image treated like a token."],
+                "homework": "Review the patching process.",
+                "differentiatedExplanations": ["Use a grid drawing for support."],
+            }
+        },
+        source_understanding=source,
+        settings=settings,
+    )
+    student = repair_student_access_pack(
+        {},
+        source_understanding=source,
+        settings=settings,
+    )
+
+    pack = compose_lesson_pack_from_parts(
+        source_understanding=source,
+        teacher_pack=teacher,
+        student_access_pack=student,
+        teacher_id="teacher-demo",
+        lesson_id="lesson-vit",
+        settings=settings,
+        runtime="ollama",
+        model="gemma4:e4b",
+        latency_ms=1234,
+    )
+
+    assert pack.id == "lesson-vit"
+    assert pack.classroom_id == "class-7a"
+    assert pack.class_subject_id == "science-7a"
+    assert pack.subject == "Science"
+    assert pack.grade_band == "7"
+    assert pack.trace.schema_status == SchemaStatus.PASSED
+    assert pack.teacher_pack.differentiated_explanations
+
+
+def test_lesson_pack_prompts_are_positive_and_field_specific() -> None:
+    source_prompt = source_pack_prompt(
+        "{}",
+        text="Plants make food using sunlight.",
+        settings={"subject": "Science", "gradeBand": "7"},
+    )
+    teacher_prompt = teacher_pack_prompt(
+        "{}",
+        source_understanding={"title": "Photosynthesis", "inferredTopic": "Photosynthesis"},
+        text="Plants make food using sunlight.",
+        settings={"subject": "Science", "gradeBand": "7"},
+    )
+    student_prompt = student_pack_prompt(
+        "{}",
+        source_understanding={"title": "Photosynthesis", "inferredTopic": "Photosynthesis"},
+        text="Plants make food using sunlight.",
+        settings={"subject": "Science", "gradeBand": "7"},
+    )
+    combined = "\n".join([source_prompt, teacher_prompt, student_prompt])
+
+    assert "Do not generate" not in combined
+    assert "If the text is unclear" not in combined
+    assert "success criteria" not in combined
+    assert 'Return JSON only with one top-level field: "teacherPack"' in teacher_prompt
+    assert "boardPlan: exactly 4 ordered board steps." in teacher_prompt
+    assert 'starting with "Support:", "Core:", and "Challenge:"' in teacher_prompt
+    assert "screenReaderSummary: detailed student notes" in student_prompt
+    assert "listenFirstAudioScript: 3-5 short spoken sentences" in student_prompt
+    assert "qnaContext" not in student_prompt
+    assert "independenceTips" not in student_prompt
+    assert "observedText: 5-10 short facts" in source_prompt
+
+
+def test_repair_teacher_pack_fills_malformed_partial_output() -> None:
+    source = repair_source_understanding(
+        {},
+        settings={"title": "Cells", "subject": "Science", "gradeBand": "8"},
+    )
+    teacher = repair_teacher_pack(
+        {"teacherPack": {"lessonObjective": None, "boardPlan": "not-a-list"}},
+        source_understanding=source,
+        settings={"subject": "Science", "gradeBand": "8"},
+    )
+
+    assert teacher.lesson_objective
+    assert teacher.board_plan
+    assert teacher.differentiated_explanations
+
+
+def test_repair_teacher_pack_normalizes_learner_support_text() -> None:
+    source = repair_source_understanding(
+        {"sourceUnderstanding": {"title": "Photosynthesis", "inferredTopic": "Photosynthesis"}},
+        settings={"title": "Photosynthesis", "subject": "Science", "gradeBand": "7"},
+    )
+    teacher = repair_teacher_pack(
+        {
+            "teacherPack": {
+                "differentiatedExplanations": [
+                    (
+                        "**Support (Struggling Learners):** Use physical actions for sunlight $\\to$ food "
+                        "and breathing out $\\text{CO}_2$."
+                    ),
+                    "**Core (Grade Level):** Students list reactants and products.",
+                    "**Challenge (Advanced Learners):** Explain limiting factors.",
+                ]
+            }
+        },
+        source_understanding=source,
+        settings={"subject": "Science", "gradeBand": "7"},
+    )
+
+    assert [item.split(":", 1)[0] for item in teacher.differentiated_explanations] == [
+        "Support",
+        "Core",
+        "Challenge",
+    ]
+    assert "**" not in "\n".join(teacher.differentiated_explanations)
+    assert "$" not in "\n".join(teacher.differentiated_explanations)
+    assert "\\text" not in "\n".join(teacher.differentiated_explanations)
+
+
+def test_repair_student_pack_replaces_question_like_simple_explanation() -> None:
+    source = repair_source_understanding(
+        {"sourceUnderstanding": {"title": "Transformers", "inferredTopic": "Transformer models"}},
+        settings={"title": "Transformers", "subject": "Science", "gradeBand": "7"},
+    )
+    student = repair_student_access_pack(
+        {
+            "studentAccessPack": {
+                "screenReaderSummary": (
+                    "Transformer models process information using attention. Attention helps the model "
+                    "compare parts of the input and focus on the most useful relationships."
+                ),
+                "simpleExplanation": (
+                    "1. Define Transformer and its main purpose in AI.\n"
+                    "2. Explain the difference between sequential and parallel processing.\n"
+                    "3. Describe the function of the attention mechanism."
+                ),
+            }
+        },
+        source_understanding=source,
+        settings={"gradeBand": "7"},
+    )
+
+    assert "Define Transformer" not in student.simple_explanation
+    assert "attention" in student.simple_explanation.lower()
+
+
 @pytest.mark.asyncio
 async def test_assignment_creation_persists_editable_draft_fields() -> None:
     assignment_repo = AssignmentRepository(InMemoryRepository())
@@ -513,10 +790,35 @@ async def test_assignment_creation_persists_editable_draft_fields() -> None:
     assert assignment.title == "Edited Assignment"
     assert assignment.instructions == "Answer in your notebook."
     assert assignment.due_at == "2026-05-20"
-    assert assignment.answer_mode == "text"
+    assert assignment.answer_mode == "short_answer"
     assert assignment.versions == ["Standard", "Dyslexia Friendly"]
     assert assignment.questions[0].prompt == "Edited question?"
     assert rows[0]["questions"][0]["prompt"] == "Edited question?"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("answer_mode", ["mcq", "short_answer", "long_answer"])
+async def test_assignment_creation_persists_supported_answer_modes(answer_mode: str) -> None:
+    assignment_repo = AssignmentRepository(InMemoryRepository())
+    progress_repo = ProgressRepository(InMemoryRepository())
+
+    created = await AssignmentService(assignment_repo, progress_repo).create(
+        "teacher-1",
+        CreateAssignmentRequest(
+            lesson_id=f"lesson-{answer_mode}",
+            classroom_id="grade-7-a",
+            answer_mode=answer_mode,
+            questions=[
+                {
+                    "id": "q1",
+                    "prompt": "Question?",
+                    "options": ["A", "B", "C", "D"] if answer_mode == "mcq" else [],
+                }
+            ],
+        ),
+    )
+
+    assert created[0].answer_mode == answer_mode
 
 
 @pytest.mark.asyncio

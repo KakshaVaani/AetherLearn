@@ -5,9 +5,15 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Request, UploadFile
-from pydantic import Field
+from pydantic import Field, field_validator
 from service_auth import UserContext
-from shared_schemas import AssignmentQuestion, CreateClassroomRequest, GenerateFromTextInput
+from shared_schemas import (
+    AssignmentAnswerMode,
+    AssignmentQuestion,
+    CreateClassroomRequest,
+    GenerateFromTextInput,
+    normalize_assignment_answer_mode,
+)
 from shared_schemas.base import AetherBase
 from shared_utils.errors import ForbiddenError, ValidationAppError
 from shared_utils.image import validate_image_upload
@@ -25,14 +31,25 @@ class AssignLessonRequest(AetherBase):
     due_at: str | None = None
     instructions: str | None = None
     title: str | None = None
-    answer_mode: str = "text"
+    answer_mode: AssignmentAnswerMode = "short_answer"
     versions: list[str] = Field(default_factory=list)
     questions: list[AssignmentQuestion] = Field(default_factory=list)
+
+    @field_validator("answer_mode", mode="before")
+    @classmethod
+    def _normalize_answer_mode(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
 
 
 class GenerateAssignmentDraftRequest(AetherBase):
     classroom_id: str | None = None
     preferred_versions: list[str] = Field(default_factory=list)
+    question_type: AssignmentAnswerMode = "short_answer"
+
+    @field_validator("question_type", mode="before")
+    @classmethod
+    def _normalize_question_type(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
 
 
 def _teacher_can_manage_classroom(ctx: UserContext, classroom: dict[str, Any]) -> bool:
@@ -466,6 +483,7 @@ async def generate_assignment_draft(
             "grade": classroom.get("grade") if classroom else lesson.get("gradeBand"),
             "subject": lesson.get("subject"),
             "preferredVersions": payload.preferred_versions,
+            "questionType": payload.question_type,
         },
     )
     return success_response(draft, request)

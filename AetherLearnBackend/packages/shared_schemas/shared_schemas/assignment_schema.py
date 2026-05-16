@@ -1,9 +1,22 @@
 from __future__ import annotations
 
-from pydantic import Field
+from typing import Literal
+
+from pydantic import Field, field_validator
 
 from .base import AetherBase, Timestamped
 from .lesson_pack_schema import LessonPack
+
+AssignmentAnswerMode = Literal["mcq", "short_answer", "long_answer"]
+
+
+def normalize_assignment_answer_mode(value: object) -> AssignmentAnswerMode:
+    mode = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if mode in {"mcq", "multiple_choice", "multiple_choice_question"}:
+        return "mcq"
+    if mode in {"long_answer", "long", "essay", "paragraph"}:
+        return "long_answer"
+    return "short_answer"
 
 
 class AssignmentQuestion(AetherBase):
@@ -20,9 +33,14 @@ class CreateAssignmentRequest(AetherBase):
     due_at: str | None = None
     instructions: str | None = None
     title: str | None = None
-    answer_mode: str = "text"
+    answer_mode: AssignmentAnswerMode = "short_answer"
     versions: list[str] = Field(default_factory=list)
     questions: list[AssignmentQuestion] = Field(default_factory=list)
+
+    @field_validator("answer_mode", mode="before")
+    @classmethod
+    def _normalize_answer_mode(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
 
 
 class BulkAssignmentRequest(AetherBase):
@@ -39,10 +57,15 @@ class Assignment(Timestamped):
     due_at: str | None = None
     instructions: str | None = None
     title: str | None = None
-    answer_mode: str = "text"
+    answer_mode: AssignmentAnswerMode = "short_answer"
     versions: list[str] = Field(default_factory=list)
     questions: list[AssignmentQuestion] = Field(default_factory=list)
     homework_access_code: str | None = None
+
+    @field_validator("answer_mode", mode="before")
+    @classmethod
+    def _normalize_answer_mode(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
 
 
 class AssignmentProgress(Timestamped):

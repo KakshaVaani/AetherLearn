@@ -26,6 +26,7 @@ from shared_schemas import (
 )
 from shared_utils.object_id import new_id
 
+from .assignment_draft_repair import lesson_aware_mcq_options
 from .base import BaseAIAdapter
 
 
@@ -110,6 +111,7 @@ class MockAdapter(BaseAIAdapter):
         self, input: GenerateAssignmentDraftInput
     ) -> GenerateAssignmentDraftOutput:
         lesson = input.lesson_pack
+        question_type = input.question_type
         base_questions = (
             lesson.student_access_pack.practice_questions
             or lesson.teacher_pack.assessment_questions
@@ -123,20 +125,36 @@ class MockAdapter(BaseAIAdapter):
             "Multilingual",
             "Slow Learner",
         ]
-        return GenerateAssignmentDraftOutput(
-            title=f"{lesson.title} Assignment",
-            instructions="Read the lesson notes and answer every question in complete sentences.",
-            answer_mode="text",
-            versions=versions,
-            questions=[
+        questions = []
+        for index, question in enumerate(base_questions[:6]):
+            prompt = question
+            options: list[str] = []
+            if question_type == "mcq":
+                prompt = f"Choose the best answer: {question}"
+                options = lesson_aware_mcq_options(lesson, question, index)
+            elif question_type == "long_answer":
+                prompt = (
+                    f"Explain your answer in one paragraph: {question} "
+                    "Use at least two details from the lesson."
+                )
+            questions.append(
                 {
                     "id": f"q{index + 1}",
-                    "prompt": question,
+                    "prompt": prompt,
                     "hint": "Use the lesson pack details to support your answer.",
-                    "options": [],
+                    "options": options,
                 }
-                for index, question in enumerate(base_questions[:6])
-            ],
+            )
+        return GenerateAssignmentDraftOutput(
+            title=f"{lesson.title} Assignment",
+            instructions=(
+                "Read the lesson notes and choose the best option for each question."
+                if question_type == "mcq"
+                else "Read the lesson notes and answer every question in complete sentences."
+            ),
+            answer_mode=question_type,
+            versions=versions,
+            questions=questions,
         )
 
     async def improve_lesson(self, input: ImproveLessonInput) -> LessonPack:
@@ -220,8 +238,9 @@ class MockAdapter(BaseAIAdapter):
                 ],
                 homework="Listen to the summary once, then answer two practice questions in your notebook.",
                 differentiated_explanations=[
-                    "For audio-first learners: start with the listening script.",
-                    "For advanced learners: ask for one real-life application.",
+                    f"Support: Read the key words aloud and let students answer with one labelled example about {inferred_topic}.",
+                    f"Core: Ask students to explain {inferred_topic} using lesson vocabulary and one accurate example.",
+                    f"Challenge: Ask students to connect {inferred_topic} to a new example and explain why it applies.",
                 ],
                 local_language_support="Provide examples in the learner's home language where useful.",
                 teacher_review_checklist=[

@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
-from .assignment_schema import AssignmentQuestion
+from .assignment_schema import (
+    AssignmentAnswerMode,
+    AssignmentQuestion,
+    normalize_assignment_answer_mode,
+)
 from .base import AetherBase, JsonDict
-from .lesson_pack_schema import LessonPack
+from .lesson_pack_schema import LessonPack, SourceUnderstanding, StudentAccessPack, TeacherPack
 
 
 class AnalyzeImageInput(AetherBase):
@@ -42,14 +46,37 @@ class GenerateAssignmentDraftInput(AetherBase):
     grade: str | None = None
     subject: str | None = None
     preferred_versions: list[str] = Field(default_factory=list)
+    question_type: AssignmentAnswerMode = "short_answer"
+
+    @field_validator("question_type", mode="before")
+    @classmethod
+    def _normalize_question_type(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
 
 
 class GenerateAssignmentDraftOutput(AetherBase):
     title: str
     instructions: str
-    answer_mode: str = "text"
+    answer_mode: AssignmentAnswerMode = "short_answer"
     versions: list[str] = Field(default_factory=list)
     questions: list[AssignmentQuestion] = Field(default_factory=list)
+
+    @field_validator("answer_mode", mode="before")
+    @classmethod
+    def _normalize_answer_mode(cls, value: object) -> AssignmentAnswerMode:
+        return normalize_assignment_answer_mode(value)
+
+
+class GenerateSourcePackOutput(AetherBase):
+    source_understanding: SourceUnderstanding
+
+
+class GenerateTeacherPackOutput(AetherBase):
+    teacher_pack: TeacherPack
+
+
+class GenerateStudentPackOutput(AetherBase):
+    student_access_pack: StudentAccessPack
 
 
 class ImproveLessonInput(AetherBase):

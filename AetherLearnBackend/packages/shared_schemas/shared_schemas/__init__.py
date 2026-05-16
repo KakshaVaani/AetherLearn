@@ -5,6 +5,9 @@ from .ai_schema import (
     GenerateAssignmentDraftInput,
     GenerateAssignmentDraftOutput,
     GenerateFromTextInput,
+    GenerateSourcePackOutput,
+    GenerateStudentPackOutput,
+    GenerateTeacherPackOutput,
     ImproveLessonInput,
     TranslateLessonInput,
 )
@@ -18,6 +21,7 @@ from .api_schema import (
 )
 from .assignment_schema import (
     Assignment,
+    AssignmentAnswerMode,
     AssignmentProgress,
     AssignmentQuestion,
     BulkAssignmentRequest,
@@ -25,6 +29,7 @@ from .assignment_schema import (
     StudentLessonView,
     SubmitAssignmentRequest,
     TeacherAssignmentSummary,
+    normalize_assignment_answer_mode,
 )
 from .auth_schema import (
     AuthMeResponse,
@@ -114,6 +119,7 @@ __all__ = [
     "AskAnswer",
     "AskInput",
     "Assignment",
+    "AssignmentAnswerMode",
     "AssignmentQuestion",
     "AssignmentProgress",
     "AccessibilityProfile",
@@ -140,6 +146,9 @@ __all__ = [
     "GenerateAssignmentDraftInput",
     "GenerateAssignmentDraftOutput",
     "GenerateFromTextInput",
+    "GenerateSourcePackOutput",
+    "GenerateStudentPackOutput",
+    "GenerateTeacherPackOutput",
     "HealthResponse",
     "ImageTraceMetadata",
     "ImproveLessonInput",
@@ -192,4 +201,5 @@ __all__ = [
     "TranslateLessonInput",
     "UserDocument",
     "UserRole",
+    "normalize_assignment_answer_mode",
 ]
