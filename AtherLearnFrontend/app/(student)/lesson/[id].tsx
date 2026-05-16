@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchStudentLesson } from "@/api/backend";
+import { useStudentCopy } from "@/api/studentCopy";
 import {
   studentAccessibilityVisuals,
   studentTextMetrics,
@@ -26,6 +27,7 @@ export default function StudentLessonDetailScreen() {
   const [lesson, setLesson] = useState<Lecture>(fallbackLesson);
   const [connected, setConnected] = useState(false);
   const preferences = useStudentPreferences();
+  const copy = useStudentCopy();
   const metrics = studentTextMetrics(preferences.textSize);
   const visuals = studentAccessibilityVisuals(preferences);
   const personalizedNotes = getPersonalizedNotes(lesson, preferences.accessibilityMode);
@@ -117,12 +119,13 @@ export default function StudentLessonDetailScreen() {
 
       <View style={styles.actions}>
         <AppButton
-          title="Ask Gemma"
+          title={copy.askButton}
           variant="outline"
           leftIcon={<Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.text} />}
+          onPress={() => router.push("/(student)/ask-doubt")}
         />
         <AppButton
-          title="Open Assignment"
+          title={copy.openAssignment}
           onPress={() =>
             router.push({ pathname: "/(student)/assignment/[id]", params: { id: assignments[0].id } })
           }

@@ -8,9 +8,10 @@ type HeaderProps = {
   subtitle?: string;
   showBack?: boolean;
   showSettings?: boolean;
+  onBack?: () => void;
 };
 
-export function Header({ title, subtitle, showBack = false, showSettings = true }: HeaderProps) {
+export function Header({ title, subtitle, showBack = false, showSettings = true, onBack }: HeaderProps) {
   const segments = useSegments();
 
   function openSettings() {
@@ -29,7 +30,7 @@ export function Header({ title, subtitle, showBack = false, showSettings = true 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            onPress={onBack ?? (() => router.back())}
             style={styles.iconButton}
           >
             <Ionicons name="chevron-back" size={22} color={colors.text} />

@@ -90,6 +90,16 @@ async def classes(request: Request, ctx: UserContext = Depends(student_context))
     return success_response(data, request)
 
 
+@router.patch("/profile")
+async def update_profile(request: Request, payload: dict, ctx: UserContext = Depends(student_context)):
+    data = await clients()["auth"].update_student_profile(
+        ctx.user_id,
+        payload,
+        request_id(request),
+    )
+    return success_response(data, request)
+
+
 @router.get("/lessons")
 async def lessons(request: Request, ctx: UserContext = Depends(student_context)):
     c = clients()
@@ -140,7 +150,7 @@ async def ask(
             lesson_pack=lesson_pack,
             question=payload["question"],
             student_profile=ctx.model_dump(by_alias=True),
-        ).model_dump(by_alias=True),
+        ).model_dump(mode="json", by_alias=True),
     )
     await c["assignment"].request(
         "PATCH",
@@ -148,6 +158,36 @@ async def ask(
         request_id=req_id,
         user_context=ctx,
         json={"askedQuestion": True},
+    )
+    return success_response(answer, request)
+
+
+@router.post("/ask-doubt")
+async def ask_doubt(request: Request, payload: dict, ctx: UserContext = Depends(student_context)):
+    req_id = request_id(request)
+    question = str(payload.get("question", "")).strip()
+    if not question:
+        question = "Explain this topic clearly."
+    full_question = (
+        "Answer the student's doubt completely using the supplied lesson context. "
+        "Give a direct explanation, a simple real-life example, important points to remember, "
+        "and one short practice question. Use student-friendly language and do not invent facts "
+        "outside the lesson context.\n\n"
+        f"Student doubt: {question}"
+    )
+    answer = await clients()["ai"].request(
+        "POST",
+        "/internal/ai/ask",
+        request_id=req_id,
+        user_context=ctx,
+        json=AskInput(
+            lesson_pack=payload["lessonPack"],
+            question=full_question,
+            student_profile={
+                **ctx.model_dump(by_alias=True),
+                "preferences": payload.get("studentProfile", {}),
+            },
+        ).model_dump(mode="json", by_alias=True),
     )
     return success_response(answer, request)
 

@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ApiClientError } from "@/api/client";
 import { demoLogin } from "@/api/backend";
+import { isStudentAcademicProfileComplete } from "@/api/studentProfile";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { Role } from "@/types";
 
@@ -35,6 +36,10 @@ export default function WelcomeScreen() {
   function openWorkspace(role: Role) {
     if (role === "teacher") {
       router.replace("/(teacher)/dashboard");
+      return;
+    }
+    if (!isStudentAcademicProfileComplete()) {
+      router.replace("/(student)/onboarding");
       return;
     }
     router.replace("/(student)/dashboard");

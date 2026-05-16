@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchStudentDashboard } from "@/api/backend";
 import { getSession } from "@/api/session";
+import { useStudentCopy } from "@/api/studentCopy";
+import { useStudentAcademicProfile } from "@/api/studentProfile";
 import { studentAccessibilityVisuals, useStudentPreferences } from "@/api/studentPreferences";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -21,8 +23,13 @@ export default function StudentDashboardScreen() {
   const [connected, setConnected] = useState(false);
   const session = getSession();
   const firstName = session?.name?.trim().split(/\s+/)[0] || "Learner";
+  const profile = useStudentAcademicProfile();
   const preferences = useStudentPreferences();
+  const copy = useStudentCopy();
   const visuals = studentAccessibilityVisuals(preferences);
+  const visibleSubjects = profile?.subjects.length
+    ? subjects.filter((subject) => profile.subjects.includes(subject.name))
+    : subjects;
 
   useEffect(() => {
     let mounted = true;
@@ -45,10 +52,10 @@ export default function StudentDashboardScreen() {
     <ScreenContainer style={visuals.screenStyle} contentStyle={styles.screen}>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
-          <Text style={[styles.eyebrow, visuals.metaTextStyle]}>Student workspace</Text>
+          <Text style={[styles.eyebrow, visuals.metaTextStyle]}>{copy.studentWorkspace}</Text>
           <Text style={[styles.greeting, visuals.titleTextStyle]}>Hi {firstName}</Text>
           <Text style={[styles.headerSubtitle, visuals.metaTextStyle]}>
-            Lessons, practice, and feedback in one place.
+            {copy.dashboardSubtitle}
           </Text>
         </View>
         <Pressable
@@ -64,8 +71,8 @@ export default function StudentDashboardScreen() {
       <View style={styles.metricsRow}>
         <MetricTile
           icon="book-outline"
-          label="Lessons"
-          value={String(subjects.reduce((total, subject) => total + subject.lessons, 0))}
+          label={copy.lessons}
+          value={String(visibleSubjects.reduce((total, subject) => total + subject.lessons, 0))}
           tint={colors.primary}
           cardStyle={visuals.cardStyle}
           titleStyle={visuals.titleTextStyle}
@@ -73,7 +80,7 @@ export default function StudentDashboardScreen() {
         />
         <MetricTile
           icon="clipboard-outline"
-          label="Due"
+          label={copy.due}
           value={String(syncedAssignments.length)}
           tint={colors.warning}
           cardStyle={visuals.cardStyle}
@@ -82,7 +89,7 @@ export default function StudentDashboardScreen() {
         />
         <MetricTile
           icon={connected ? "cloud-done-outline" : "phone-portrait-outline"}
-          label={connected ? "Synced" : "Local"}
+          label={connected ? copy.synced : copy.local}
           value={connected ? "On" : "Ready"}
           tint={connected ? colors.success : colors.secondary}
           cardStyle={visuals.cardStyle}
@@ -98,16 +105,16 @@ export default function StudentDashboardScreen() {
           </View>
           <View style={styles.classroomText}>
             <Text style={[styles.classroomTitle, visuals.titleTextStyle]}>
-              {syncedClasses[0]?.title ?? classrooms[0].title}
+              {profile?.className ? `${profile.className} Classroom` : syncedClasses[0]?.title ?? classrooms[0].title}
             </Text>
             <Text style={[styles.classroomMeta, visuals.metaTextStyle]}>
-              Code {(syncedClasses[0] ?? classrooms[0]).classCode}
+              {profile?.school ?? `Code ${(syncedClasses[0] ?? classrooms[0]).classCode}`}
             </Text>
           </View>
           <Badge label={connected ? "Synced" : "Local"} tone={connected ? "success" : "secondary"} />
         </View>
         <View style={styles.subjectPills}>
-          {(syncedClasses[0]?.subjects ?? classrooms[0].subjects).map((subject) => (
+          {(profile?.subjects ?? syncedClasses[0]?.subjects ?? classrooms[0].subjects).map((subject) => (
             <View key={subject} style={styles.subjectPill}>
               <Text style={styles.subjectPillText}>{subject}</Text>
             </View>
@@ -116,13 +123,13 @@ export default function StudentDashboardScreen() {
       </Card>
 
       <DashboardSection
-        title="Subjects"
-        action="View all"
+        title={copy.subjects}
+        action={copy.viewAll}
         onAction={() => router.push("/(student)/subjects")}
         titleStyle={visuals.titleTextStyle}
       />
       <View style={styles.subjectList}>
-        {subjects.map((subject) => (
+        {visibleSubjects.map((subject) => (
           <SubjectRow
             key={subject.id}
             subject={subject}
@@ -134,7 +141,7 @@ export default function StudentDashboardScreen() {
         ))}
       </View>
 
-      <DashboardSection title="Continue Learning" titleStyle={visuals.titleTextStyle} />
+      <DashboardSection title={copy.continueLearning} titleStyle={visuals.titleTextStyle} />
       <Card
         onPress={() => router.push({ pathname: "/(student)/lesson/[id]", params: { id: featuredLecture.id } })}
         style={[styles.learningCard, visuals.cardStyle]}
@@ -155,7 +162,7 @@ export default function StudentDashboardScreen() {
         </View>
       </Card>
 
-      <DashboardSection title="Pending Assignment" titleStyle={visuals.titleTextStyle} />
+      <DashboardSection title={copy.pendingAssignment} titleStyle={visuals.titleTextStyle} />
       <AssignmentPreview
         assignment={syncedAssignments[0] ?? assignments[0]}
         cardStyle={visuals.cardStyle}

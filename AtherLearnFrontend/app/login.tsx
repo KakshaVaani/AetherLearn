@@ -10,7 +10,9 @@ import {
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ApiClientError } from "@/api/client";
-import { loginWithPassword, signupWithPassword } from "@/api/backend";
+import { loginWithGoogleIdToken, loginWithPassword, signupWithPassword } from "@/api/backend";
+import { requestGoogleIdToken } from "@/api/googleIdentity";
+import { isStudentAcademicProfileComplete } from "@/api/studentProfile";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { Role } from "@/types";
 
@@ -57,6 +59,10 @@ export default function LoginScreen() {
       router.replace("/(teacher)/dashboard");
       return;
     }
+    if (!isStudentAcademicProfileComplete()) {
+      router.replace("/(student)/onboarding");
+      return;
+    }
     router.replace("/(student)/dashboard");
   }
 
@@ -65,8 +71,18 @@ export default function LoginScreen() {
     setMessage("");
   }
 
-  function showOAuthMessage() {
-    setMessage("Google sign-in will be enabled when OAuth is configured.");
+  async function submitGoogle() {
+    setLoading(true);
+    setMessage("");
+    try {
+      const idToken = await requestGoogleIdToken();
+      const user = await loginWithGoogleIdToken(idToken, selectedRole);
+      openWorkspace(user.role);
+    } catch (error) {
+      setMessage(authErrorMessage(error, "Google sign-in failed. Check OAuth configuration."));
+    } finally {
+      setLoading(false);
+    }
   }
 
   function showPasswordResetMessage() {
@@ -75,6 +91,9 @@ export default function LoginScreen() {
 
   function authErrorMessage(error: unknown, fallback: string) {
     if (error instanceof ApiClientError) {
+      return error.message;
+    }
+    if (error instanceof Error) {
       return error.message;
     }
     return fallback;
@@ -139,7 +158,7 @@ export default function LoginScreen() {
           onTogglePassword={() => setPasswordVisible((value) => !value)}
           onRoleChange={setSelectedRole}
           onSubmit={submitSignup}
-          onGoogle={showOAuthMessage}
+          onGoogle={submitGoogle}
           onSwitchMode={() => switchMode("login")}
           onModeChange={switchMode}
         />
@@ -155,7 +174,7 @@ export default function LoginScreen() {
           onPasswordChange={setPassword}
           onTogglePassword={() => setPasswordVisible((value) => !value)}
           onSubmit={submitLogin}
-          onGoogle={showOAuthMessage}
+          onGoogle={submitGoogle}
           onForgotPassword={showPasswordResetMessage}
           onSwitchMode={() => switchMode("signup")}
         />
