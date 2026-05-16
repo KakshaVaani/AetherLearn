@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.kakshavaani.atherlearn",
       "adaptiveIcon": {
         "backgroundColor": "#2563EB"
       },

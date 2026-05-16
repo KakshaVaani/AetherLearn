@@ -9,6 +9,11 @@ class Settings(BaseServiceSettings):
     service_name: str = "auth-service"
     service_port: int = 8001
     database_name: str = "aetherlearn_auth"
+    google_oauth_client_ids: str = ""
+
+    @property
+    def google_client_id_list(self) -> list[str]:
+        return [item.strip() for item in self.google_oauth_client_ids.split(",") if item.strip()]
 
 
 @lru_cache

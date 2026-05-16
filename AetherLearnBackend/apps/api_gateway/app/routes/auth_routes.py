@@ -21,6 +21,17 @@ async def login(request: Request, payload: LoginRequest):
     return success_response(data, request)
 
 
+@router.post("/google")
+async def google_login(request: Request, payload: dict):
+    data = await clients()["auth"].request(
+        "POST",
+        "/internal/auth/google",
+        json=payload,
+        request_id=request_id(request),
+    )
+    return success_response(data, request)
+
+
 @router.post("/refresh")
 async def refresh(request: Request, payload: RefreshRequest):
     data = await clients()["auth"].refresh(payload.model_dump(by_alias=True), request_id(request))

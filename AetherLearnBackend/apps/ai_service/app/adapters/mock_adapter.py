@@ -93,9 +93,21 @@ class MockAdapter(BaseAIAdapter):
             )
         return AskAnswer(
             answer=(
-                f"Using only this lesson, {input.lesson_pack.title} is about "
+                f"## Direct answer\n"
+                f"{input.lesson_pack.title} is about "
                 f"{input.lesson_pack.source_understanding.inferred_topic}. "
-                "Review the vocabulary and try the first practice question."
+                f"{input.lesson_pack.student_access_pack.simple_explanation}\n\n"
+                "## Simple explanation\n"
+                f"{input.lesson_pack.student_access_pack.screen_reader_summary}\n\n"
+                "## Real-life example\n"
+                "Think about one familiar classroom or home example, then connect each part of "
+                "the example to the lesson vocabulary.\n\n"
+                "## Remember\n"
+                "- Start with the main idea.\n"
+                "- Use the vocabulary from the lesson.\n"
+                "- Try one practice question to check understanding.\n\n"
+                "## Practice check\n"
+                f"{(input.lesson_pack.student_access_pack.practice_questions or ['What is the main idea?'])[0]}"
             ),
             simple_answer=(
                 f"This lesson explains {input.lesson_pack.source_understanding.inferred_topic} "

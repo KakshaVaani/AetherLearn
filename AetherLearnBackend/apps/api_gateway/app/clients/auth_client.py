@@ -26,3 +26,11 @@ class AuthClient(InternalServiceClient):
 
     async def user(self, user_id: str, request_id: str):
         return await self.request("GET", f"/internal/auth/users/{user_id}", request_id=request_id)
+
+    async def update_student_profile(self, user_id: str, payload: dict, request_id: str):
+        return await self.request(
+            "PATCH",
+            f"/internal/auth/users/{user_id}/student-profile",
+            json=payload,
+            request_id=request_id,
+        )

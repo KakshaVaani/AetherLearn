@@ -48,6 +48,16 @@ async def login(request: Request, payload: LoginRequest):
     return await build_auth_service(request).login(payload)
 
 
+@router.post("/google")
+async def google_login(request: Request, payload: dict):
+    await require_service(request)
+    return await build_auth_service(request).google_login(
+        id_token=str(payload.get("idToken", "")),
+        role=str(payload.get("role", "student")),
+        allowed_client_ids=get_settings().google_client_id_list,
+    )
+
+
 @router.post("/refresh")
 async def refresh(request: Request, payload: RefreshRequest):
     await require_service(request)
@@ -79,6 +89,15 @@ async def me(request: Request, authorization: str = Header(default="")):
 async def user_by_id(request: Request, user_id: str):
     await require_service(request)
     return await build_auth_service(request).user_service.get_safe_user(user_id)
+
+
+@router.patch("/users/{user_id}/student-profile")
+async def update_student_profile(request: Request, user_id: str, payload: dict):
+    await require_service(request)
+    updated = await build_auth_service(request).user_service.users.update(
+        user_id, {"studentProfile": payload}
+    )
+    return {"studentProfile": (updated or {}).get("studentProfile", payload)}
 
 
 @router.post("/verify-token")
