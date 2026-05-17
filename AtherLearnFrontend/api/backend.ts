@@ -452,7 +452,10 @@ export async function fetchStudentLesson(lessonId: string): Promise<{ lesson: Le
       progress: response.access.progress
     };
   } catch {
-    const lesson = demoLectures.find((item) => item.id === lessonId) ?? demoLectures[0];
+    const normalized = lessonId.trim().toLowerCase();
+    const lesson =
+      demoLectures.find((item) => item.id === lessonId || item.title.trim().toLowerCase() === normalized) ??
+      demoLectures[0];
     return { lesson };
   }
 }

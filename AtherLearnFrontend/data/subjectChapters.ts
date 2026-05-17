@@ -9,20 +9,20 @@ export type SubjectChapter = {
 
 export const subjectChapters: SubjectChapter[] = [
   {
-    id: "science-plants",
+    id: "science-plant-processes",
     subject: "Science",
-    title: "Chapter 1: Plant Life",
-    description: "Photosynthesis, plant nutrition, and diagram-based revision.",
-    lectureIds: ["photosynthesis"],
+    title: "Chapter 1: Plant Processes",
+    description: "Photosynthesis, water movement, and diagram-based revision.",
+    lectureIds: ["photosynthesis", "water-cycle"],
     assignmentIds: ["photosynthesis-quiz"]
   },
   {
-    id: "science-energy",
+    id: "science-human-systems",
     subject: "Science",
-    title: "Chapter 2: Energy in Living Systems",
-    description: "Teacher material will appear here after upload.",
-    lectureIds: [],
-    assignmentIds: []
+    title: "Chapter 2: Human Body Systems",
+    description: "Digestive system notes with accessible step-by-step explanations.",
+    lectureIds: ["digestive-system"],
+    assignmentIds: ["digestive-system-revision"]
   },
   {
     id: "math-fractions",
@@ -33,19 +33,35 @@ export const subjectChapters: SubjectChapter[] = [
     assignmentIds: ["fractions-practice"]
   },
   {
+    id: "math-algebra",
+    subject: "Math",
+    title: "Chapter 2: Algebra Basics",
+    description: "Linear equations, inverse operations, and balanced steps.",
+    lectureIds: ["linear-equations"],
+    assignmentIds: ["linear-equations-practice"]
+  },
+  {
     id: "english-reading",
     subject: "English",
     title: "Chapter 1: Reading Skills",
-    description: "Comprehension notes and assignments from your teacher.",
-    lectureIds: [],
-    assignmentIds: []
+    description: "Finding the main idea and supporting details in a passage.",
+    lectureIds: ["reading-main-idea"],
+    assignmentIds: ["reading-main-idea-check"]
   },
   {
     id: "social-civics",
     subject: "Social Studies",
-    title: "Chapter 1: Community and Society",
-    description: "Class notes and revision material will appear here.",
-    lectureIds: [],
+    title: "Chapter 1: Community and Constitution",
+    description: "Rights, duties, and Indian Constitution basics.",
+    lectureIds: ["constitution-basics"],
+    assignmentIds: ["constitution-basics-exit-ticket"]
+  },
+  {
+    id: "chemistry-acids-bases",
+    subject: "Science",
+    title: "Chapter 1: Acids, Bases, and Indicators",
+    description: "Litmus tests, everyday examples, and lab safety.",
+    lectureIds: ["acids-and-bases"],
     assignmentIds: []
   }
 ];

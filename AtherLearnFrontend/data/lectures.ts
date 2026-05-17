@@ -1,80 +1,122 @@
-import { Lecture } from "@/types";
+import { lessonPacks } from "@/data/lessonPacks";
+import { Lecture, SyncBadge, TeacherPdf } from "@/types";
 
-export const lectures: Lecture[] = [
-  {
-    id: "photosynthesis",
-    title: "Photosynthesis and Plant Nutrition",
-    subject: "Science",
-    source: "Biology slide with plant diagram",
-    sourceType: "Biology slide with diagram",
+const lectureMeta: Record<string, { source: string; postedAt: string; teacherPdf: TeacherPdf }> = {
+  photosynthesis: {
+    source: "Biology blackboard diagram",
     postedAt: "2026-05-13T09:00:00.000Z",
     teacherPdf: {
       fileName: "photosynthesis-plant-nutrition.pdf",
       pageCount: 8,
       uploadedAt: "May 13, 2026"
-    },
-    teacherNotes:
-      "Today we learned how green plants prepare food. Focus on the inputs: sunlight, water, and carbon dioxide. Also remember the outputs: glucose for the plant and oxygen released into the air.",
-    status: "Gemma 4 analysis complete",
-    badge: "Cloud generated",
-    diagramDescription:
-      "A green plant is shown with sunlight coming from above, roots absorbing water from the soil, leaves taking in carbon dioxide, and oxygen moving back into the air.",
-    keyVocabulary: ["Photosynthesis", "Chlorophyll", "Glucose", "Carbon dioxide", "Oxygen"],
-    practiceQuestions: [
-      "What do plants need to make food?",
-      "What gas do plants release during photosynthesis?",
-      "Where does water enter the plant?"
-    ],
-    outputs: {
-      standard:
-        "Photosynthesis is the process by which green plants make food using sunlight, water, and carbon dioxide.",
-      blindLowVision:
-        "This diagram shows a green plant receiving sunlight from above. The roots absorb water from the soil. The leaves take in carbon dioxide from the air. Inside the leaves, the plant makes glucose and releases oxygen.",
-      dyslexiaFriendly:
-        "Plants make their own food.\nThey use sunlight, water, and carbon dioxide.\nThis process is called photosynthesis.\nOxygen is released into the air.",
-      multilingual:
-        "Plants apna food khud banate hain. Is process ko photosynthesis kehte hain. Plant sunlight, water aur carbon dioxide use karta hai, phir glucose banata hai aur oxygen release karta hai.",
-      slowLearner:
-        "1. Roots take water from soil.\n2. Leaves take carbon dioxide from air.\n3. Sunlight gives energy.\n4. Plant makes glucose.\n5. Oxygen goes back into air."
     }
   },
-  {
-    id: "fractions",
-    title: "Fractions on a Number Line",
-    subject: "Math",
-    source: "Worksheet scan",
-    sourceType: "Math worksheet",
+  "water-cycle": {
+    source: "Textbook diagram photo",
+    postedAt: "2026-05-13T10:15:00.000Z",
+    teacherPdf: {
+      fileName: "water-cycle-diagram-notes.pdf",
+      pageCount: 6,
+      uploadedAt: "May 13, 2026"
+    }
+  },
+  fractions: {
+    source: "Math worksheet scan",
     postedAt: "2026-05-12T10:30:00.000Z",
     teacherPdf: {
       fileName: "fractions-number-line-practice.pdf",
       pageCount: 5,
       uploadedAt: "May 12, 2026"
-    },
-    teacherNotes:
-      "A fraction can be placed on a number line by dividing the space between whole numbers into equal parts. Count the parts carefully from zero to find the correct point.",
-    status: "Gemma 4 analysis complete",
-    badge: "Saved offline",
-    diagramDescription:
-      "A horizontal number line is divided into equal parts from zero to one, showing one-half and one-quarter as marked points.",
-    keyVocabulary: ["Numerator", "Denominator", "Equal parts", "Number line"],
-    practiceQuestions: [
-      "Which fraction is halfway between 0 and 1?",
-      "How many equal parts are in fourths?",
-      "Mark three-fourths on a number line."
-    ],
-    outputs: {
-      standard:
-        "A fraction shows part of a whole. On a number line, fractions sit between whole numbers based on equal parts.",
-      blindLowVision:
-        "Imagine a straight line from zero to one. The line is split into four equal spaces. One-quarter is after the first space, one-half is after the second space, and three-quarters is after the third space.",
-      dyslexiaFriendly:
-        "Fractions are parts of one whole.\nA number line can show those parts.\nEqual spaces help us place each fraction.",
-      multilingual:
-        "Fraction ka matlab hota hai whole ka ek part. Number line par fraction ko equal parts ke hisaab se place karte hain.",
-      slowLearner:
-        "1. Draw a line from 0 to 1.\n2. Split it into equal parts.\n3. Count the parts from 0.\n4. Place the fraction at the right count."
+    }
+  },
+  "linear-equations": {
+    source: "Algebra worked-example worksheet",
+    postedAt: "2026-05-14T08:20:00.000Z",
+    teacherPdf: {
+      fileName: "linear-equations-balanced-steps.pdf",
+      pageCount: 7,
+      uploadedAt: "May 14, 2026"
+    }
+  },
+  "digestive-system": {
+    source: "Biology slide with organ diagram",
+    postedAt: "2026-05-14T09:45:00.000Z",
+    teacherPdf: {
+      fileName: "digestive-system-overview.pdf",
+      pageCount: 9,
+      uploadedAt: "May 14, 2026"
+    }
+  },
+  "acids-and-bases": {
+    source: "Lab observation table",
+    postedAt: "2026-05-15T11:00:00.000Z",
+    teacherPdf: {
+      fileName: "acids-bases-indicators-lab.pdf",
+      pageCount: 6,
+      uploadedAt: "May 15, 2026"
+    }
+  },
+  "reading-main-idea": {
+    source: "Reading passage handout",
+    postedAt: "2026-05-15T08:40:00.000Z",
+    teacherPdf: {
+      fileName: "reading-main-idea-supporting-details.pdf",
+      pageCount: 4,
+      uploadedAt: "May 15, 2026"
+    }
+  },
+  "constitution-basics": {
+    source: "Civics notebook notes",
+    postedAt: "2026-05-16T09:10:00.000Z",
+    teacherPdf: {
+      fileName: "constitution-rights-duties-notes.pdf",
+      pageCount: 5,
+      uploadedAt: "May 16, 2026"
     }
   }
-];
+};
+
+function badgeFor(runtimeMode: string): SyncBadge {
+  if (runtimeMode === "Hosted Gemma") return "Cloud generated";
+  if (runtimeMode === "Local Ollama") return "Local mode ready";
+  return "Saved offline";
+}
+
+export const lectures: Lecture[] = lessonPacks.map((pack) => {
+  const meta = lectureMeta[pack.id];
+
+  return {
+    id: pack.id,
+    title: pack.title,
+    subject: pack.subject,
+    classroomId: pack.classroomId,
+    classSubjectId: pack.classSubjectId,
+    chapterId: pack.chapterId,
+    chapterTitle: pack.chapterTitle,
+    topicId: pack.topicId,
+    topicTitle: pack.topicTitle,
+    source: meta?.source ?? pack.sourceCard.sourceType,
+    sourceType: pack.sourceCard.sourceType,
+    postedAt: meta?.postedAt ?? "2026-05-14T09:00:00.000Z",
+    teacherPdf: meta?.teacherPdf ?? {
+      fileName: `${pack.id}.pdf`,
+      pageCount: 4,
+      uploadedAt: "May 14, 2026"
+    },
+    teacherNotes: pack.teacherPack.teachingScript,
+    status: `${pack.runtimeMode} analysis complete`,
+    diagramDescription: pack.studentAccessPack.visualDescription,
+    keyVocabulary: pack.studentAccessPack.vocabulary.map((item) => item.term),
+    practiceQuestions: pack.studentAccessPack.practiceQuestions,
+    outputs: {
+      standard: pack.studentAccessPack.screenReaderSummary,
+      blindLowVision: pack.studentAccessPack.visualDescription,
+      dyslexiaFriendly: pack.studentAccessPack.stepByStepExplanation,
+      multilingual: pack.language.includes("Hindi") ? pack.studentAccessPack.audioStudyScript : pack.studentAccessPack.screenReaderSummary,
+      slowLearner: pack.studentAccessPack.steps.map((step, index) => `${index + 1}. ${step}`).join("\n")
+    },
+    badge: badgeFor(pack.runtimeMode)
+  };
+});
 
 export const featuredLecture = lectures[0];

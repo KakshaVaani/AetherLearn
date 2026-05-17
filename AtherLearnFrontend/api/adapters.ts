@@ -96,6 +96,10 @@ type BackendClassroom = {
   grade?: string;
   section?: string | null;
   joinCode?: string | null;
+  students?: number;
+  studentCount?: number;
+  accessibilityProfiles?: number;
+  accessibilityBreakdown?: Partial<Record<AccessibilityMode, number>>;
   subjects?: Array<{
     id?: string;
     subject?: string;
@@ -385,6 +389,26 @@ export function backendClassroomToClassroom(classroom: BackendClassroom): Classr
   const subjectNames = classSubjects.length
     ? classSubjects.map((item) => item.subject)
     : ["Synced"];
+  const fallbackBreakdown: Classroom["accessibilityBreakdown"] = {
+    Standard: 0,
+    "Blind / Low Vision": 0,
+    "Dyslexia Friendly": 0,
+    Multilingual: 0,
+    "Slow Learner": 0
+  };
+  const accessibilityBreakdown: Classroom["accessibilityBreakdown"] = { ...fallbackBreakdown };
+  for (const mode of Object.keys(accessibilityBreakdown) as AccessibilityMode[]) {
+    const value = classroom.accessibilityBreakdown?.[mode];
+    if (typeof value === "number") {
+      accessibilityBreakdown[mode] = value;
+    }
+  }
+  const studentCount =
+    typeof classroom.students === "number"
+      ? classroom.students
+      : typeof classroom.studentCount === "number"
+        ? classroom.studentCount
+        : 0;
 
   return {
     id: classroom.id,
@@ -393,17 +417,11 @@ export function backendClassroomToClassroom(classroom: BackendClassroom): Classr
     section: classroom.section,
     schoolId: classroom.schoolId,
     classCode: classroom.joinCode ?? "SYNCED",
-    students: 0,
+    students: studentCount,
     subjects: subjectNames,
     classSubjects,
-    accessibilityProfiles: 0,
-    accessibilityBreakdown: {
-      Standard: 0,
-      "Blind / Low Vision": 0,
-      "Dyslexia Friendly": 0,
-      Multilingual: 0,
-      "Slow Learner": 0
-    }
+    accessibilityProfiles: classroom.accessibilityProfiles ?? studentCount,
+    accessibilityBreakdown
   };
 }
 
