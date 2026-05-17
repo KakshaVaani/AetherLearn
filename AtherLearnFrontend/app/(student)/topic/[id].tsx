@@ -7,6 +7,7 @@ import {
   GeneratedStudentNote,
   getGeneratedStudentNote
 } from "@/api/generatedNotes";
+import { useDefaultModelPreference } from "@/api/localPreferences";
 import {
   downloadPdf,
   generatedNotesPdf,
@@ -24,6 +25,7 @@ import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
+import { ModelModeSelector } from "@/components/ModelModeSelector";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { assignments } from "@/data/assignments";
 import { lectures } from "@/data/lectures";
@@ -76,6 +78,8 @@ function TopicNotes({ lecture }: { lecture: Lecture }) {
     getGeneratedStudentNote(lecture.id, preferences)
   );
   const [generating, setGenerating] = useState(false);
+  const [noteError, setNoteError] = useState("");
+  const [modelPreference, setModelPreference] = useDefaultModelPreference();
 
   useEffect(() => {
     setGeneratedNote(getGeneratedStudentNote(lecture.id, preferences));
@@ -89,9 +93,16 @@ function TopicNotes({ lecture }: { lecture: Lecture }) {
 
   async function handleGenerate() {
     setGenerating(true);
+    setNoteError("");
     try {
-      const next = await generateStudentNote(lecture, preferences);
+      const next = await generateStudentNote(lecture, preferences, { modelPreference });
       setGeneratedNote(next);
+    } catch (error) {
+      setNoteError(
+        error instanceof Error
+          ? error.message
+          : "Could not generate notes with the selected model."
+      );
     } finally {
       setGenerating(false);
     }
@@ -156,6 +167,15 @@ function TopicNotes({ lecture }: { lecture: Lecture }) {
           {lecture.teacherNotes}
         </Text>
       </View>
+
+      <ModelModeSelector
+        value={modelPreference}
+        onChange={setModelPreference}
+        label="Notes model"
+        compact
+      />
+
+      {noteError ? <Text style={styles.errorText}>{noteError}</Text> : null}
 
       {generatedNote ? (
         <View style={[styles.aiSection, visuals.cardStyle]}>
@@ -375,6 +395,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 25,
     fontWeight: "600"
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700"
   },
   aiSection: {
     gap: spacing.md,

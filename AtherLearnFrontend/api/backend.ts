@@ -1,11 +1,24 @@
-import { apiJson } from "@/api/client";
+import { ApiClientError, apiJson } from "@/api/client";
 import { getSession, saveSession } from "@/api/session";
 import {
   backendAssignmentToAssignment,
   backendClassroomToClassroom,
   backendLessonToLessonPack,
-  backendLessonToLecture
+  backendLessonToLecture,
+  normalizeLessonPack
 } from "@/api/adapters";
+import { getDefaultModelPreference } from "@/api/localPreferences";
+import { listLocalEntities, queueLocalOperation, saveLocalEntity } from "@/api/localStore";
+import {
+  askLocalDoubt,
+  generateLocalAssignmentDraft,
+  generateLocalLessonFromText,
+  LocalModelUnavailableError
+} from "@/api/localAi";
+import { assignments as demoAssignments } from "@/data/assignments";
+import { classrooms as demoClassrooms } from "@/data/classrooms";
+import { lectures as demoLectures } from "@/data/lectures";
+import { lessonPacks as demoLessonPacks } from "@/data/lessonPacks";
 import {
   AccessibilityMode,
   Assignment,
@@ -14,6 +27,7 @@ import {
   Classroom,
   LessonPack,
   Lecture,
+  ModelPreference,
   Role
 } from "@/types";
 import { normalizeAssignmentAnswerMode } from "@/utils/assignmentModes";
@@ -73,15 +87,19 @@ type AssignmentDraftResponse = {
 };
 
 export async function demoLogin(role: Role) {
-  const response = await apiJson<LoginResponse>("/api/auth/demo-login", "POST", { role }, false);
-  saveSession({
-    accessToken: response.tokens.accessToken,
-    refreshToken: response.tokens.refreshToken,
-    role: response.user.role,
-    userId: response.user.id,
-    name: response.user.name
-  });
-  return response.user;
+  try {
+    const response = await apiJson<LoginResponse>("/api/auth/demo-login", "POST", { role }, false);
+    saveSession({
+      accessToken: response.tokens.accessToken,
+      refreshToken: response.tokens.refreshToken,
+      role: response.user.role,
+      userId: response.user.id,
+      name: response.user.name
+    });
+    return response.user;
+  } catch {
+    return saveLocalDemoSession(role);
+  }
 }
 
 export async function loginWithPassword(email: string, password: string) {
@@ -137,22 +155,50 @@ export async function signupWithPassword(input: {
 }
 
 export async function fetchTeacherDashboard() {
-  const response = await apiJson<TeacherDashboardResponse>("/api/teacher/dashboard");
-  return {
-    classes: response.classes.map((item) => backendClassroomToClassroom(item as never)),
-    lessons: response.lessons.map((item) => backendLessonToLessonPack(item as never)),
-    assignments: response.assignments.map((item) => backendAssignmentToAssignment(item as never))
-  };
+  const localLessons = await localLessonPacks();
+  const localAssignments = await localAssignmentsList();
+  try {
+    const response = await apiJson<TeacherDashboardResponse>("/api/teacher/dashboard");
+    return {
+      classes: response.classes.map((item) => backendClassroomToClassroom(item as never)),
+      lessons: dedupeById([
+        ...localLessons,
+        ...response.lessons.map((item) => backendLessonToLessonPack(item as never))
+      ]),
+      assignments: dedupeById([
+        ...localAssignments,
+        ...response.assignments.map((item) => backendAssignmentToAssignment(item as never))
+      ])
+    };
+  } catch {
+    return {
+      classes: demoClassrooms,
+      lessons: dedupeById([...localLessons, ...demoLessonPacks]),
+      assignments: dedupeById([...localAssignments, ...demoAssignments])
+    };
+  }
 }
 
 export async function fetchTeacherClassrooms(): Promise<Classroom[]> {
-  const response = await apiJson<unknown[]>("/api/teacher/classes");
-  return response.map((item) => backendClassroomToClassroom(item as never));
+  try {
+    const response = await apiJson<unknown[]>("/api/teacher/classes");
+    return response.map((item) => backendClassroomToClassroom(item as never));
+  } catch {
+    return demoClassrooms;
+  }
 }
 
 export async function fetchTeacherLessons(): Promise<LessonPack[]> {
-  const response = await apiJson<unknown[]>("/api/teacher/lessons");
-  return response.map((item) => backendLessonToLessonPack(item as never));
+  const localLessons = await localLessonPacks();
+  try {
+    const response = await apiJson<unknown[]>("/api/teacher/lessons");
+    return dedupeById([
+      ...localLessons,
+      ...response.map((item) => backendLessonToLessonPack(item as never))
+    ]);
+  } catch {
+    return dedupeById([...localLessons, ...demoLessonPacks]);
+  }
 }
 
 export async function deleteTeacherLesson(lessonId: string) {
@@ -167,7 +213,17 @@ export async function generateLessonFromText(input: {
   subject: string;
   gradeBand: string;
   language?: string;
+  modelPreference?: ModelPreference;
 }) {
+  const preference = input.modelPreference ?? getDefaultModelPreference();
+  if (preference !== "remote-gemini") {
+    try {
+      return await generateLocalLessonFromText(input, preference);
+    } catch (error) {
+      throw localGenerationError(error);
+    }
+  }
+
   const session = getSession();
   const response = await apiJson<unknown>("/api/teacher/lessons/from-text", "POST", {
     text: input.text,
@@ -194,17 +250,28 @@ export async function assignLessonToClass(input: {
   versions?: AccessibilityMode[];
   questions?: AssignmentQuestion[];
 }) {
-  const response = await apiJson<unknown[]>(`/api/teacher/lessons/${input.lessonId}/assign`, "POST", {
-    lessonId: input.lessonId,
-    classroomId: input.classroomId,
-    instructions: input.instructions,
-    dueAt: input.dueAt,
-    title: input.title,
-    answerMode: input.answerMode,
-    versions: input.versions,
-    questions: input.questions
-  });
-  return response.map((item) => backendAssignmentToAssignment(item as never));
+  try {
+    const response = await apiJson<unknown[]>(`/api/teacher/lessons/${input.lessonId}/assign`, "POST", {
+      lessonId: input.lessonId,
+      classroomId: input.classroomId,
+      instructions: input.instructions,
+      dueAt: input.dueAt,
+      title: input.title,
+      answerMode: input.answerMode,
+      versions: input.versions,
+      questions: input.questions
+    });
+    return response.map((item) => backendAssignmentToAssignment(item as never));
+  } catch {
+    const assignment = localAssignmentFromInput(input);
+    await saveLocalEntity("assignment", assignment, { localId: assignment.id, syncStatus: "queued" });
+    await queueLocalOperation(
+      "ASSIGN_LESSON",
+      { input, assignment },
+      { entityType: "assignment", entityId: assignment.id }
+    );
+    return [assignment];
+  }
 }
 
 export async function generateAssignmentDraftFromLesson(input: {
@@ -212,7 +279,32 @@ export async function generateAssignmentDraftFromLesson(input: {
   classroomId?: string;
   preferredVersions?: AccessibilityMode[];
   questionType?: AssignmentAnswerMode;
+  lessonPack?: LessonPack;
+  modelPreference?: ModelPreference;
 }) {
+  const preference = input.modelPreference ?? getDefaultModelPreference();
+  if (preference !== "remote-gemini") {
+    if (!input.lessonPack) {
+      throw new ApiClientError(
+        "Local assignment generation needs the selected lesson pack on this device.",
+        "LOCAL_LESSON_REQUIRED",
+        0
+      );
+    }
+    try {
+      return await generateLocalAssignmentDraft(
+        {
+          lessonPack: input.lessonPack,
+          preferredVersions: input.preferredVersions,
+          questionType: input.questionType
+        },
+        preference
+      );
+    } catch (error) {
+      throw localGenerationError(error);
+    }
+  }
+
   const response = await apiJson<AssignmentDraftResponse>(
     `/api/teacher/lessons/${input.lessonId}/generate-assignment-draft`,
     "POST",
@@ -252,24 +344,48 @@ export async function generateDemoLessonFromText() {
 }
 
 export async function fetchStudentDashboard() {
-  const response = await apiJson<StudentDashboardResponse>("/api/student/dashboard");
-  return {
-    classes: response.classes.map((item) => backendClassroomToClassroom(item as never)),
-    assignments: response.assignments.map((item) => backendAssignmentToAssignment(item as never))
-  };
+  const localAssignments = await localAssignmentsList();
+  try {
+    const response = await apiJson<StudentDashboardResponse>("/api/student/dashboard");
+    return {
+      classes: response.classes.map((item) => backendClassroomToClassroom(item as never)),
+      assignments: dedupeById([
+        ...localAssignments,
+        ...response.assignments.map((item) => backendAssignmentToAssignment(item as never))
+      ])
+    };
+  } catch {
+    return {
+      classes: demoClassrooms,
+      assignments: dedupeById([...localAssignments, ...demoAssignments])
+    };
+  }
 }
 
 export async function fetchStudentLessons(): Promise<Assignment[]> {
-  const response = await apiJson<unknown[]>("/api/student/lessons");
-  return response.map((item) => backendAssignmentToAssignment(item as never));
+  const localAssignments = await localAssignmentsList();
+  try {
+    const response = await apiJson<unknown[]>("/api/student/lessons");
+    return dedupeById([
+      ...localAssignments,
+      ...response.map((item) => backendAssignmentToAssignment(item as never))
+    ]);
+  } catch {
+    return dedupeById([...localAssignments, ...demoAssignments]);
+  }
 }
 
 export async function fetchStudentLesson(lessonId: string): Promise<{ lesson: Lecture; progress?: unknown }> {
-  const response = await apiJson<StudentLessonResponse>(`/api/student/lessons/${lessonId}`);
-  return {
-    lesson: backendLessonToLecture(response.lesson as never),
-    progress: response.access.progress
-  };
+  try {
+    const response = await apiJson<StudentLessonResponse>(`/api/student/lessons/${lessonId}`);
+    return {
+      lesson: backendLessonToLecture(response.lesson as never),
+      progress: response.access.progress
+    };
+  } catch {
+    const lesson = demoLectures.find((item) => item.id === lessonId) ?? demoLectures[0];
+    return { lesson };
+  }
 }
 
 export async function generateStructuredStudentNotes(lessonId: string, input: {
@@ -299,7 +415,17 @@ export async function askStudentDoubt(input: {
     textSize: string;
     audioSupport: boolean;
   };
+  modelPreference?: ModelPreference;
 }) {
+  const preference = input.modelPreference ?? getDefaultModelPreference();
+  if (preference !== "remote-gemini") {
+    try {
+      return await askLocalDoubt(input, preference);
+    } catch (error) {
+      throw localGenerationError(error);
+    }
+  }
+
   return apiJson<AskLessonResponse>("/api/student/ask-doubt", "POST", {
     question: input.question,
     studentProfile: input.studentProfile,
@@ -333,6 +459,83 @@ export type ConnectedTeacherData = {
   lessons: LessonPack[];
   assignments: Assignment[];
 };
+
+function saveLocalDemoSession(role: Role) {
+  const user = {
+    id: `local-${role}-demo`,
+    name: role === "teacher" ? "Teacher Demo" : "Student Demo",
+    role
+  };
+  saveSession({
+    accessToken: `local-demo-token-${role}`,
+    refreshToken: "",
+    role,
+    userId: user.id,
+    name: user.name
+  });
+  return user;
+}
+
+function dedupeById<T extends { id: string }>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
+async function localLessonPacks() {
+  const entities = await listLocalEntities<LessonPack>("lesson");
+  return entities.map((entity) => normalizeLessonPack(entity.payload));
+}
+
+async function localAssignmentsList() {
+  const entities = await listLocalEntities<Assignment>("assignment");
+  return entities.map((entity) => entity.payload);
+}
+
+function localGenerationError(error: unknown) {
+  const details = error instanceof Error ? error.message : "Local Gemma generation failed.";
+  const message =
+    error instanceof LocalModelUnavailableError
+      ? `${details} Choose Remote Gemini to use backend AI.`
+      : `Local Gemma failed: ${details} Choose Remote Gemini to use backend AI.`;
+  return new ApiClientError(message, "LOCAL_MODEL_UNAVAILABLE", 0);
+}
+
+function localAssignmentFromInput(input: {
+  lessonId: string;
+  classroomId: string;
+  instructions?: string;
+  dueAt?: string;
+  title?: string;
+  answerMode?: AssignmentAnswerMode;
+  versions?: AccessibilityMode[];
+  questions?: AssignmentQuestion[];
+}): Assignment {
+  const now = new Date().toISOString();
+  return {
+    id: `local-assignment-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    title: input.title || "Local assignment",
+    classroom: input.classroomId,
+    subject: "Classwork",
+    linkedLecture: input.lessonId,
+    postedAt: now,
+    dueDate: input.dueAt || "No due date",
+    answerMode: input.answerMode ?? "short_answer",
+    versions: input.versions?.length ? input.versions : ["Standard"],
+    questions: input.questions?.length
+      ? input.questions
+      : [
+          {
+            id: "q1",
+            prompt: "Write what you understood from this lesson."
+          }
+        ],
+    status: "Published"
+  };
+}
 
 function lectureToAskLessonPack(lecture: Lecture, language: string) {
   const now = new Date().toISOString();

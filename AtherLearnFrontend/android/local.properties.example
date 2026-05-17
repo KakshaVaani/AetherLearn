@@ -1,0 +1,7 @@
+# Copy to local.properties (gitignored) and set the path shown in:
+# Android Studio → Settings → Languages & Frameworks → Android SDK → Android SDK location
+#
+# Default on macOS:
+# sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk
+#
+sdk.dir=

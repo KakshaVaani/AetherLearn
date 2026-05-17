@@ -8,11 +8,13 @@ import {
   fetchTeacherDashboard,
   generateAssignmentDraftFromLesson
 } from "@/api/backend";
+import { useDefaultModelPreference } from "@/api/localPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
+import { ModelModeSelector } from "@/components/ModelModeSelector";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { accessibilityModes } from "@/data/accessibilityProfiles";
@@ -79,6 +81,7 @@ export default function CreateAssignmentScreen() {
   const [message, setMessage] = useState("Using local demo classes until backend data is available.");
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modelPreference, setModelPreference] = useDefaultModelPreference();
 
   useEffect(() => {
     let mounted = true;
@@ -183,7 +186,9 @@ export default function CreateAssignmentScreen() {
         lessonId: selectedLesson.id,
         classroomId: selectedClassroom.id,
         preferredVersions: versions,
-        questionType
+        questionType,
+        lessonPack: selectedLesson,
+        modelPreference
       });
       const generatedQuestions = generated.questions.filter((item) => item.prompt.trim().length > 0);
       const fallbackQuestions = (
@@ -394,6 +399,12 @@ export default function CreateAssignmentScreen() {
             />
           ))}
         </View>
+
+        <ModelModeSelector
+          value={modelPreference}
+          onChange={setModelPreference}
+          label="Draft generation model"
+        />
       </Card>
 
       <AppButton

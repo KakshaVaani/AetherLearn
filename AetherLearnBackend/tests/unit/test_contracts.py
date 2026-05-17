@@ -3,12 +3,15 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+from datetime import UTC, datetime
 from io import BytesIO
 
+import httpx
 import pytest
 from offline_sqlite import OfflineSQLiteStore
 from PIL import Image
 from service_auth import UserContext, decode_user_context
+from service_auth.signatures import body_hash
 from service_auth.service_tokens import build_service_headers
 from shared_events import SUBJECTS, EventEnvelope, validate_subject
 from shared_schemas import (
@@ -23,9 +26,11 @@ from shared_schemas import (
     SchemaStatus,
     SubmitAssignmentRequest,
     SyncOperationType,
+    SyncPullRequest,
 )
 from shared_utils.env import BaseServiceSettings
 from shared_utils.errors import ForbiddenError, ValidationAppError
+from shared_utils.http_client import build_service_headers as build_http_client_headers
 from shared_utils.image import validate_image_upload
 from shared_utils.inmemory import InMemoryRepository
 from shared_utils.object_id import new_id, validate_object_id
@@ -49,6 +54,8 @@ from apps.api_gateway.app.routes.teacher_routes import (
     AssignLessonRequest,
     _assignment_target_classroom,
 )
+from apps.api_gateway.app.clients.base import InternalServiceClient
+from apps.auth_service.app.env import Settings as AuthSettings
 from apps.assignment_service.app.repository.assignment_repository import AssignmentRepository
 from apps.assignment_service.app.repository.progress_repository import ProgressRepository
 from apps.assignment_service.app.service.assignment_service import AssignmentService
@@ -194,6 +201,12 @@ def test_jwt_create_and_verify() -> None:
     assert payload["role"] == "teacher"
 
 
+def test_blank_service_port_env_uses_service_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SERVICE_PORT", "")
+    settings = AuthSettings()
+    assert settings.service_port == 8001
+
+
 def test_service_auth_headers_include_signed_user_context() -> None:
     context = UserContext(user_id="u1", role="teacher", school_ids=["s1"], active_school_id="s1")
     headers = build_service_headers(
@@ -210,6 +223,75 @@ def test_service_auth_headers_include_signed_user_context() -> None:
     expected = hmac.new(b"secret", encoded.encode("utf-8"), hashlib.sha256).hexdigest()
     assert hmac.compare_digest(expected, headers["X-User-Context-Signature"])
     assert decode_user_context(encoded).user_id == "u1"
+
+
+def test_body_hash_canonicalizes_datetime_values() -> None:
+    timestamp = datetime(2026, 5, 17, 12, 30, tzinfo=UTC)
+    payload = {"createdAt": timestamp, "nested": {"updatedAt": timestamp}}
+    expected = {
+        "createdAt": timestamp.isoformat(),
+        "nested": {"updatedAt": timestamp.isoformat()},
+    }
+    assert body_hash(payload) == body_hash(expected)
+
+
+def test_shared_http_client_headers_handle_datetime_bodies() -> None:
+    timestamp = datetime(2026, 5, 17, 12, 30, tzinfo=UTC)
+    headers = build_http_client_headers(
+        "sync-service",
+        "secret",
+        "POST",
+        "/internal/sync/push",
+        request_id="req-1",
+        body={"timestamp": timestamp},
+        user_context={"generatedAt": timestamp},
+    )
+    assert headers["X-Service-Name"] == "sync-service"
+    assert headers["X-Service-Signature"]
+    assert headers["X-User-Context"]
+
+
+@pytest.mark.asyncio
+async def test_internal_service_client_sends_canonical_json(monkeypatch: pytest.MonkeyPatch) -> None:
+    timestamp = datetime(2026, 5, 17, 12, 30, tzinfo=UTC)
+    captured: dict[str, object] = {}
+
+    class DummyAsyncClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self) -> DummyAsyncClient:
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def request(self, method: str, url: str, **kwargs) -> httpx.Response:
+            captured["method"] = method
+            captured["url"] = url
+            captured.update(kwargs)
+            return httpx.Response(200, json={"ok": True})
+
+    import apps.api_gateway.app.clients.base as gateway_client_base
+
+    monkeypatch.setattr(gateway_client_base.httpx, "AsyncClient", DummyAsyncClient)
+
+    client = InternalServiceClient("http://sync-service:8008", "api-gateway", "secret")
+    payload = {"createdAt": timestamp, "nested": {"updatedAt": timestamp}}
+    response = await client.request(
+        "POST",
+        "/internal/sync/push",
+        request_id="req-1",
+        json=payload,
+    )
+
+    sent_json = captured["json"]
+    assert response == {"ok": True}
+    assert sent_json == {
+        "createdAt": timestamp.isoformat(),
+        "nested": {"updatedAt": timestamp.isoformat()},
+    }
+    assert body_hash(payload) == body_hash(sent_json)
 
 
 def test_event_envelope_and_subjects() -> None:
@@ -301,6 +383,71 @@ async def test_offline_sqlite_queue_round_trips_through_sync_service() -> None:
         assert first_response["results"][0].status == "processed"
         assert duplicate_response["results"][0].status == "duplicate"
         assert duplicate_response["results"][0].data["idempotent"] is True
+    finally:
+        store.close()
+
+
+def test_local_first_sync_contract_includes_text_and_notes_operations() -> None:
+    assert SyncOperationType.CREATE_LESSON_FROM_TEXT.value == "CREATE_LESSON_FROM_TEXT"
+    assert SyncOperationType.GENERATE_STUDENT_NOTE.value == "GENERATE_STUDENT_NOTE"
+    assert OfflineEntityType.GENERATED_NOTE.value == "generated_note"
+
+
+@pytest.mark.asyncio
+async def test_push_then_pull_materializes_local_generated_work() -> None:
+    store = OfflineSQLiteStore.connect()
+    try:
+        lesson_local_id = store.upsert_entity(
+            entity_type=OfflineEntityType.LESSON,
+            owner_user_id="teacher-1",
+            payload={"id": "local-lesson-1", "title": "Plant Nutrition", "version": 1},
+            local_id="local-lesson-1",
+            sync_status=LocalSyncStatus.QUEUED,
+        )
+        store.queue_operation(
+            user_id="teacher-1",
+            device_id="device-1",
+            operation_type=SyncOperationType.CREATE_LESSON_FROM_TEXT,
+            entity_type=OfflineEntityType.LESSON,
+            entity_id=lesson_local_id,
+            payload={
+                "lesson": {
+                    "id": "local-lesson-1",
+                    "title": "Plant Nutrition",
+                    "trace": {
+                        "runtime": "on-device",
+                        "localOnly": True,
+                        "hostedApiUsed": False,
+                    },
+                }
+            },
+            idempotency_key="lesson-text-1",
+        )
+        store.queue_operation(
+            user_id="teacher-1",
+            device_id="device-1",
+            operation_type=SyncOperationType.GENERATE_STUDENT_NOTE,
+            entity_type=OfflineEntityType.GENERATED_NOTE,
+            entity_id="note-1",
+            payload={"id": "note-1", "lessonId": "local-lesson-1", "text": "Local notes"},
+            idempotency_key="note-1",
+        )
+        service = SyncService(
+            SyncOperationRepository(InMemoryRepository()),
+            DeviceStateRepository(InMemoryRepository()),
+        )
+
+        push_request = store.create_push_request(user_id="teacher-1", device_id="device-1")
+        push_response = await service.push("teacher-1", push_request)
+        pull_response = await service.pull(
+            "teacher-1",
+            SyncPullRequest(device_id="device-1", cursor=push_response["cursor"]),
+        )
+
+        assert all(result.ok for result in push_response["results"])
+        assert pull_response["changes"]["lessons"][0]["title"] == "Plant Nutrition"
+        assert pull_response["changes"]["lessons"][0]["trace"]["runtime"] == "on-device"
+        assert pull_response["changes"]["notes"][0]["text"] == "Local notes"
     finally:
         store.close()
 

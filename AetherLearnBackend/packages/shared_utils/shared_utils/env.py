@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
+from pydantic.fields import PydanticUndefined
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -60,6 +62,26 @@ class BaseServiceSettings(BaseSettings):
     log_prompts: bool = False
     log_raw_images: bool = False
     database_name: str = Field(default="aetherlearn_service")
+
+    @model_validator(mode="before")
+    @classmethod
+    def ignore_blank_values_for_defaulted_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        cleaned = dict(data)
+        for field_name, value in data.items():
+            if not isinstance(value, str) or value.strip() != "":
+                continue
+
+            field = cls.model_fields.get(field_name)
+            if field is None:
+                continue
+
+            if field.default is not PydanticUndefined or field.default_factory is not None:
+                cleaned.pop(field_name, None)
+
+        return cleaned
 
     @property
     def cors_origin_list(self) -> list[str]:

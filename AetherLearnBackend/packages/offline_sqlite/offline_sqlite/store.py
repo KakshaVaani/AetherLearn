@@ -338,6 +338,8 @@ class OfflineSQLiteStore:
             "commons": OfflineEntityType.COMMONS_LESSON,
             "progress": OfflineEntityType.PROGRESS,
             "classes": OfflineEntityType.CLASSROOM,
+            "notes": OfflineEntityType.GENERATED_NOTE,
+            "generatedNotes": OfflineEntityType.GENERATED_NOTE,
         }
         for collection_name, items in changes.items():
             entity_type = entity_map.get(collection_name)

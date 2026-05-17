@@ -1,0 +1,3 @@
+# Copy to `local.properties` (that file is gitignored) and replace YOUR_USERNAME.
+# Find the real path in Android Studio → Settings → Android SDK → Android SDK location.
+sdk.dir=/Users/YOUR_USERNAME/Library/Android/sdk

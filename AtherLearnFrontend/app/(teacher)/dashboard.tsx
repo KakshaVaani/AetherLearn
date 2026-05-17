@@ -9,6 +9,7 @@ import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { ClassroomCard } from "@/components/ClassroomCard";
 import { Header } from "@/components/Header";
+import { ManualSyncPanel } from "@/components/ManualSyncPanel";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { StatCard } from "@/components/StatCard";
@@ -71,6 +72,8 @@ export default function TeacherDashboardScreen() {
           onPress={() => router.push("/(teacher)/create-assignment")}
         />
       </View>
+
+      <ManualSyncPanel role="teacher" />
 
       <SectionHeader title="Recent classrooms" subtitle="Jump back into active classroom spaces." />
       {dashboardClasses.slice(0, 2).map((classroom) => (

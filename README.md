@@ -75,6 +75,8 @@ For web:
 npx expo start --web
 ```
 
+**Android native build** (`npm run android:dev` / `expo run:android`) requires the **Android SDK** and `adb`. If you see errors about `ANDROID_HOME` or `spawn adb ENOENT`, follow **`AtherLearnFrontend/README.md`** (install Android Studio, set `ANDROID_HOME`, install Platform Tools). For a quick device test without the SDK, use **Expo Go** and `npx expo start -c` instead.
+
 ## Useful Commands
 
 Rebuild backend after backend code changes:

@@ -117,6 +117,97 @@ function gradeLabel(value?: string) {
   return value.trim().replace(/^class\s+/i, "Grade ");
 }
 
+function toStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value
+      .split(/\r?\n|[,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function toVocabulary(
+  value: unknown
+): LessonPack["studentAccessPack"]["vocabulary"] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const term = "term" in item && typeof item.term === "string" ? item.term.trim() : "";
+      const meaning = "meaning" in item && typeof item.meaning === "string" ? item.meaning.trim() : "";
+      if (!term || !meaning) return null;
+      return { term, meaning };
+    })
+    .filter((item): item is LessonPack["studentAccessPack"]["vocabulary"][number] => Boolean(item));
+}
+
+export function normalizeLessonPack(lesson: LessonPack): LessonPack {
+  const sourceCard = lesson.sourceCard ?? ({} as LessonPack["sourceCard"]);
+  const teacherPack = lesson.teacherPack ?? ({} as LessonPack["teacherPack"]);
+  const studentAccessPack = lesson.studentAccessPack ?? ({} as LessonPack["studentAccessPack"]);
+  const trustPack = lesson.trustPack ?? ({} as LessonPack["trustPack"]);
+
+  return {
+    ...lesson,
+    classroomId: lesson.classroomId ?? null,
+    classSubjectId: lesson.classSubjectId ?? null,
+    sourceCard: {
+      topic: typeof sourceCard.topic === "string" && sourceCard.topic.trim().length > 0 ? sourceCard.topic : lesson.title,
+      sourceType:
+        typeof sourceCard.sourceType === "string" && sourceCard.sourceType.trim().length > 0
+          ? sourceCard.sourceType
+          : "Lesson source",
+      confidence: typeof sourceCard.confidence === "number" ? sourceCard.confidence : 0,
+      detectedText: toStringList(sourceCard.detectedText),
+      diagramElements: toStringList(sourceCard.diagramElements),
+      equations: toStringList(sourceCard.equations),
+      unclearRegions: toStringList(sourceCard.unclearRegions),
+      confidenceNotes: toStringList(sourceCard.confidenceNotes)
+    },
+    teacherPack: {
+      ...teacherPack,
+      objective: typeof teacherPack.objective === "string" ? teacherPack.objective : "",
+      keyConcepts: toStringList(teacherPack.keyConcepts),
+      teachingScript: typeof teacherPack.teachingScript === "string" ? teacherPack.teachingScript : "",
+      classroomActivity: typeof teacherPack.classroomActivity === "string" ? teacherPack.classroomActivity : "",
+      worksheet: toStringList(teacherPack.worksheet),
+      answerKey: toStringList(teacherPack.answerKey),
+      misconceptions: toStringList(teacherPack.misconceptions),
+      differentiatedSupport:
+        typeof teacherPack.differentiatedSupport === "string" ? teacherPack.differentiatedSupport : ""
+    },
+    studentAccessPack: {
+      ...studentAccessPack,
+      screenReaderSummary:
+        typeof studentAccessPack.screenReaderSummary === "string" ? studentAccessPack.screenReaderSummary : "",
+      audioStudyScript:
+        typeof studentAccessPack.audioStudyScript === "string" ? studentAccessPack.audioStudyScript : "",
+      visualDescription:
+        typeof studentAccessPack.visualDescription === "string" ? studentAccessPack.visualDescription : "",
+      stepByStepExplanation:
+        typeof studentAccessPack.stepByStepExplanation === "string" ? studentAccessPack.stepByStepExplanation : "",
+      vocabulary: toVocabulary(studentAccessPack.vocabulary),
+      steps: toStringList(studentAccessPack.steps),
+      practiceQuestions: toStringList(studentAccessPack.practiceQuestions),
+      selfCheckAnswers: toStringList(studentAccessPack.selfCheckAnswers)
+    },
+    trustPack: {
+      ...trustPack,
+      runtimeMode: trustPack.runtimeMode ?? lesson.runtimeMode,
+      model: typeof trustPack.model === "string" ? trustPack.model : "",
+      latency: typeof trustPack.latency === "string" ? trustPack.latency : "",
+      schemaStatus: trustPack.schemaStatus ?? "Valid",
+      teacherReviewStatus: trustPack.teacherReviewStatus ?? "Review Required",
+      confidence: typeof trustPack.confidence === "number" ? trustPack.confidence : 0,
+      accessibilityWarnings: toStringList(trustPack.accessibilityWarnings)
+    }
+  };
+}
+
 export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
   const source = pack.sourceUnderstanding;
   const teacher = pack.teacherPack;
@@ -127,7 +218,7 @@ export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
     ...(pack.trace?.warnings?.map((warning) => warning.message ?? "").filter(Boolean) ?? [])
   ];
 
-  return {
+  return normalizeLessonPack({
     id: pack.id,
     title: pack.title,
     classroomId: pack.classroomId ?? null,
@@ -188,7 +279,7 @@ export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
       possibleOcrError: warnings.length > 0,
       teacherReviewRequired: warnings.length > 0
     }
-  };
+  });
 }
 
 export function backendLessonToLecture(pack: BackendLessonPack): Lecture {

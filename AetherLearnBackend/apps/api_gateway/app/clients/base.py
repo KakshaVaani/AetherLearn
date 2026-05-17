@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
+from fastapi.encoders import jsonable_encoder
 from service_auth import UserContext
 from service_auth.service_tokens import build_service_headers
 from shared_utils.errors import RemoteAppError, ServiceUnavailableError
@@ -24,13 +25,14 @@ class InternalServiceClient:
         params: dict[str, Any] | None = None,
         user_context: UserContext | None = None,
     ) -> Any:
+        canonical_json = jsonable_encoder(json) if json is not None else None
         headers = build_service_headers(
             self.service_name,
             self.secret,
             method,
             path,
             request_id=request_id,
-            body=json,
+            body=canonical_json,
             user_context=user_context,
         )
         try:
@@ -38,7 +40,7 @@ class InternalServiceClient:
                 response = await client.request(
                     method,
                     f"{self.base_url}{path}",
-                    json=json,
+                    json=canonical_json,
                     params=params,
                     headers=headers,
                 )

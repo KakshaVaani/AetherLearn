@@ -1,6 +1,8 @@
 import { StudentPreferences } from "@/api/studentPreferences";
 import { generateStructuredStudentNotes } from "@/api/backend";
-import { AccessibilityMode, Lecture } from "@/types";
+import { getDefaultModelPreference } from "@/api/localPreferences";
+import { generateLocalStudentNotes, LocalModelUnavailableError } from "@/api/localAi";
+import { AccessibilityMode, Lecture, ModelPreference } from "@/types";
 
 export type GeneratedStudentNote = {
   lessonId: string;
@@ -54,13 +56,19 @@ export function getGeneratedStudentNote(lessonId: string, preferences: StudentPr
 
 export async function generateStudentNote(
   lecture: Lecture,
-  preferences: StudentPreferences
+  preferences: StudentPreferences,
+  options: { modelPreference?: ModelPreference } = {}
 ): Promise<GeneratedStudentNote> {
   const store = readStore();
   const key = noteKey(lecture.id, preferences);
   const previous = store[key];
   const version = (previous?.version ?? 0) + 1;
-  const text = await generateNoteText(lecture, preferences, version);
+  const text = await generateNoteText(
+    lecture,
+    preferences,
+    version,
+    options.modelPreference ?? getDefaultModelPreference()
+  );
   const note: GeneratedStudentNote = {
     lessonId: lecture.id,
     mode: preferences.accessibilityMode,
@@ -79,8 +87,18 @@ export async function generateStudentNote(
 async function generateNoteText(
   lecture: Lecture,
   preferences: StudentPreferences,
-  version: number
+  version: number,
+  modelPreference: ModelPreference
 ) {
+  if (modelPreference !== "remote-gemini") {
+    try {
+      return await generateLocalStudentNotes(lecture, preferences, version, modelPreference);
+    } catch (error) {
+      if (error instanceof LocalModelUnavailableError) throw error;
+      throw new Error(error instanceof Error ? error.message : "Local Gemma note generation failed.");
+    }
+  }
+
   try {
     const response = await generateStructuredStudentNotes(lecture.id, {
       mode: preferences.accessibilityMode,

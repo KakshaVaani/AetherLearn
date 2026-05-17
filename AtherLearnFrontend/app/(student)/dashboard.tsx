@@ -9,6 +9,7 @@ import { useStudentAcademicProfile } from "@/api/studentProfile";
 import { studentAccessibilityVisuals, useStudentPreferences } from "@/api/studentPreferences";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
+import { ManualSyncPanel } from "@/components/ManualSyncPanel";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { assignments } from "@/data/assignments";
 import { classrooms } from "@/data/classrooms";
@@ -97,6 +98,8 @@ export default function StudentDashboardScreen() {
           metaStyle={visuals.metaTextStyle}
         />
       </View>
+
+      <ManualSyncPanel role="student" />
 
       <Card style={[styles.classroomCard, visuals.cardStyle]}>
         <View style={styles.classroomHeader}>

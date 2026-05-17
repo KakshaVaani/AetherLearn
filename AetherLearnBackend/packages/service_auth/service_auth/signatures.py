@@ -6,11 +6,13 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+from fastapi.encoders import jsonable_encoder
 from shared_utils.errors import UnauthorizedError
 
 
 def body_hash(body: Any | None) -> str:
-    data = json.dumps(body or {}, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_body = jsonable_encoder(body or {})
+    data = json.dumps(canonical_body, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(data).hexdigest()
 
 

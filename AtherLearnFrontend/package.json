@@ -5,8 +5,10 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "prebuild:android": "expo prebuild --platform android",
+    "android": "expo run:android",
+    "android:dev": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit"
   },
@@ -21,7 +23,9 @@
     "expo-router": "~6.0.23",
     "expo-sharing": "~14.0.8",
     "expo-speech": "~14.0.8",
+    "expo-sqlite": "~16.0.8",
     "expo-status-bar": "~3.0.0",
+    "aether-gemma": "file:./modules/aether-gemma",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",

@@ -12,6 +12,19 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
 
+function toStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value
+      .split(/\r?\n|[,;]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
 function Chip({ label, tone = "neutral" }: { label: string; tone?: "primary" | "success" | "neutral" }) {
   const stylesByTone = {
     primary: { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft },
@@ -35,7 +48,13 @@ export default function SourceUnderstandingScreen() {
     subject?: string;
   }>();
   const { lesson, connected } = useLessonPackReview(params.lessonId);
-  const source = lesson.sourceCard;
+  const source = {
+    topic: lesson.sourceCard?.topic ?? lesson.title,
+    confidence: typeof lesson.sourceCard?.confidence === "number" ? lesson.sourceCard.confidence : 0,
+    detectedText: toStringList(lesson.sourceCard?.detectedText),
+    diagramElements: toStringList(lesson.sourceCard?.diagramElements),
+    unclearRegions: toStringList(lesson.sourceCard?.unclearRegions)
+  };
   const reviewParams = {
     lessonId: params.lessonId ?? lesson.id,
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
@@ -66,21 +85,21 @@ export default function SourceUnderstandingScreen() {
 
       <SectionHeader title="Detected text" />
       <View style={styles.chipGrid}>
-        {source.detectedText.map((text) => (
+        {source.detectedText.length ? source.detectedText.map((text) => (
           <Chip key={text} label={text} tone="success" />
-        ))}
+        )) : <Text style={styles.emptyState}>No text was detected yet.</Text>}
       </View>
 
       <SectionHeader title="Detected diagram elements" />
       <View style={styles.chipGrid}>
-        {source.diagramElements.map((element) => (
+        {source.diagramElements.length ? source.diagramElements.map((element) => (
           <Chip key={element} label={element} tone="primary" />
-        ))}
+        )) : <Text style={styles.emptyState}>No diagram elements were detected yet.</Text>}
       </View>
 
       <Card style={styles.warningCard}>
         <Ionicons name="warning-outline" size={22} color={colors.warning} />
-        <Text style={styles.warningText}>{source.unclearRegions[0]}</Text>
+        <Text style={styles.warningText}>{source.unclearRegions[0] ?? "No unclear regions were flagged."}</Text>
       </Card>
 
       <View style={styles.actions}>
@@ -135,6 +154,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm
+  },
+  emptyState: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700"
   },
   chip: {
     minHeight: 34,

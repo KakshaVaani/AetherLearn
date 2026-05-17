@@ -5,6 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { clearSession, getSession } from "@/api/session";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
+import { LocalModelSettingsPanel } from "@/components/LocalModelSettingsPanel";
+import { ManualSyncPanel } from "@/components/ManualSyncPanel";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { colors, radii, spacing } from "@/constants/theme";
@@ -90,12 +92,8 @@ export default function SettingsScreen() {
       </Card>
 
       <SectionHeader title="System and storage" />
-      <Card style={styles.card}>
-        <SettingsRow icon="hardware-chip-outline" label="Runtime Mode" value="Hosted Gemma" />
-        <SettingsRow icon="server-outline" label="Local Server Address" value="http://192.168.1.10:8080" />
-        <SettingsRow icon="folder-outline" label="Storage Usage" value="2.1 GB / 10 GB" />
-        <SettingsRow icon="download-outline" label="Export and Backup" value="HTML and Markdown ready" />
-      </Card>
+      <LocalModelSettingsPanel />
+      {session?.role ? <ManualSyncPanel role={session.role} /> : null}
 
       <Pressable accessibilityRole="button" onPress={handleLogout} style={styles.signoutButton}>
         <Ionicons name="log-out-outline" size={18} color={colors.danger} />

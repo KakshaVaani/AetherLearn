@@ -4,10 +4,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ApiClientError } from "@/api/client";
 import { fetchTeacherClassrooms, generateLessonFromText } from "@/api/backend";
+import { useDefaultModelPreference } from "@/api/localPreferences";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { LessonSourcePreview } from "@/components/LessonSourcePreview";
+import { ModelModeSelector } from "@/components/ModelModeSelector";
 import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -36,6 +38,7 @@ export default function UploadLectureScreen() {
   const [message, setMessage] = useState("Using local demo classes until backend data is available.");
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modelPreference, setModelPreference] = useDefaultModelPreference();
 
   useEffect(() => {
     let mounted = true;
@@ -99,7 +102,8 @@ export default function UploadLectureScreen() {
         classSubjectId: selectedClassSubject?.id,
         subject: selectedSubjectName,
         gradeBand: selectedClassroom.grade ?? selectedClassroom.title,
-        language: "en"
+        language: "en",
+        modelPreference
       });
       router.push({
         pathname: "/source-understanding",
@@ -135,7 +139,7 @@ export default function UploadLectureScreen() {
         </View>
         <Text style={styles.uploadTitle}>Source Pack</Text>
         <Text style={styles.uploadText}>
-          Paste classroom notes below. The backend will generate Source, Teacher, Student, and Trust packs as a
+          Paste classroom notes below. Your selected model will generate Source, Teacher, Student, and Trust packs as a
           private draft.
         </Text>
         <View style={styles.uploadTypes}>
@@ -194,6 +198,12 @@ export default function UploadLectureScreen() {
           style={[styles.input, styles.textArea]}
           placeholder="Paste notes for this class only"
           multiline
+        />
+
+        <ModelModeSelector
+          value={modelPreference}
+          onChange={setModelPreference}
+          label="Generation model"
         />
       </Card>
 

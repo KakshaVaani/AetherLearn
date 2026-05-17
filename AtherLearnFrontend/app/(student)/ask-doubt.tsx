@@ -4,6 +4,7 @@ import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Speech from "expo-speech";
 import { askStudentDoubt } from "@/api/backend";
+import { useDefaultModelPreference } from "@/api/localPreferences";
 import { useStudentCopy } from "@/api/studentCopy";
 import {
   studentAccessibilityVisuals,
@@ -13,6 +14,7 @@ import {
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
+import { ModelModeSelector } from "@/components/ModelModeSelector";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { lectures } from "@/data/lectures";
 import { colors, radii, spacing } from "@/constants/theme";
@@ -29,6 +31,7 @@ export default function AskDoubtScreen() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [modelPreference, setModelPreference] = useDefaultModelPreference();
   const selectedLecture = useMemo(
     () => lectures.find((lecture) => lecture.id === lessonId) ?? lectures[0],
     [lessonId]
@@ -64,12 +67,17 @@ export default function AskDoubtScreen() {
           language: preferences.language,
           textSize: preferences.textSize,
           audioSupport: preferences.audioSupport
-        }
+        },
+        modelPreference
       });
       setAnswer(response.answer || response.simpleAnswer || "I could not generate an answer.");
       setFollowUp(response.followUpSuggestion ?? response.follow_up_suggestion ?? "");
-    } catch {
-      setError("I could not reach Gemma 4 right now. Please check that the backend and AI service are running, then ask again.");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "I could not reach Gemma 4 right now. Please check the selected model and try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -128,6 +136,12 @@ export default function AskDoubtScreen() {
           placeholderTextColor={colors.muted}
           multiline
           style={[styles.input, visuals.bodyTextStyle]}
+        />
+        <ModelModeSelector
+          value={modelPreference}
+          onChange={setModelPreference}
+          label="Answer model"
+          compact
         />
         <AppButton
           title={copy.askButton}

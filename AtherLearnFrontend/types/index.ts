@@ -1,6 +1,12 @@
 export type Role = "teacher" | "student";
 
-export type RuntimeMode = "Hosted Gemma" | "Local Ollama" | "Demo Fixture";
+export type RuntimeMode = "Hosted Gemma" | "Local Ollama" | "On-device Gemma" | "Demo Fixture";
+
+export type ModelPreference = "local-auto" | "local-e4b" | "local-e2b" | "remote-gemini";
+
+export type LocalModelId = "gemma-4-e4b-it" | "gemma-4-e2b-it";
+
+export type SyncOperationState = "queued" | "syncing" | "synced" | "failed" | "conflict" | "local_only";
 
 export type LessonStatus = "Draft" | "Needs Review" | "Approved" | "Exported";
 
@@ -177,6 +183,15 @@ export type SafetyFlags = {
   teacherReviewRequired: boolean;
 };
 
+export type LessonTrace = {
+  runtime: string;
+  model?: string;
+  localOnly?: boolean;
+  hostedApiUsed?: boolean;
+  latencyMs?: number;
+  generatedAt?: string;
+};
+
 export type LessonPack = {
   id: string;
   title: string;
@@ -195,4 +210,5 @@ export type LessonPack = {
   studentAccessPack: StudentAccessPack;
   trustPack: TrustPack;
   safetyFlags: SafetyFlags;
+  trace?: LessonTrace;
 };

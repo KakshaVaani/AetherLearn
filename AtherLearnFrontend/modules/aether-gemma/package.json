@@ -1,0 +1,16 @@
+{
+  "name": "aether-gemma",
+  "version": "0.1.0",
+  "description": "Android LiteRT-LM bridge for AetherLearn on-device Gemma inference.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "private": true,
+  "keywords": ["expo", "gemma", "litert-lm"],
+  "expo-module": {
+    "platforms": ["android"]
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "expo-modules-core": "*"
+  }
+}

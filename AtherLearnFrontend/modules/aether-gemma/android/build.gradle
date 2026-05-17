@@ -1,0 +1,26 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'com.aetherlearn.gemma'
+version = '0.1.0'
+
+expoModule {
+  canBePublished false
+}
+
+android {
+  namespace "com.aetherlearn.gemma"
+  defaultConfig {
+    consumerProguardFiles 'proguard-rules.pro'
+    minSdkVersion 24
+  }
+  kotlinOptions {
+    freeCompilerArgs += ['-Xskip-metadata-version-check']
+  }
+}
+
+dependencies {
+  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${kotlinVersion}"
+  implementation project(':expo-modules-core')
+  implementation("com.google.ai.edge.litertlm:litertlm-android:latest.release")
+}

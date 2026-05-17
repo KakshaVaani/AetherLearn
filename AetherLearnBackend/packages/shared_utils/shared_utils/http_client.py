@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
+from fastapi.encoders import jsonable_encoder
 
 
 class ServiceHttpClient:
@@ -27,19 +28,20 @@ class ServiceHttpClient:
         request_id: str,
         user_context: dict[str, Any] | None = None,
     ) -> httpx.Response:
+        canonical_json = jsonable_encoder(json) if json is not None else None
         headers = build_service_headers(
             self.service_name,
             self.secret,
             method,
             path,
             request_id=request_id,
-            body=json,
+            body=canonical_json,
             user_context=user_context,
         )
         return await self.client.request(
             method,
             f"{self.base_url}{path}",
-            json=json,
+            json=canonical_json,
             params=params,
             headers=headers,
         )
@@ -59,7 +61,10 @@ def build_service_headers(
     user_context: dict[str, Any] | None = None,
 ) -> dict[str, str]:
     timestamp = datetime.now(UTC).isoformat()
-    body_bytes = json.dumps(body or {}, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_body = jsonable_encoder(body or {})
+    body_bytes = json.dumps(canonical_body, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     body_hash = hashlib.sha256(body_bytes).hexdigest()
     message = "\n".join([service_name, timestamp, method.upper(), path, body_hash])
     signature = hmac.new(
@@ -72,7 +77,8 @@ def build_service_headers(
         "X-Request-Id": request_id,
     }
     if user_context is not None:
-        context_json = json.dumps(user_context, sort_keys=True, separators=(",", ":"))
+        canonical_context = jsonable_encoder(user_context)
+        context_json = json.dumps(canonical_context, sort_keys=True, separators=(",", ":"))
         context_b64 = base64.urlsafe_b64encode(context_json.encode("utf-8")).decode("ascii")
         context_sig = hmac.new(secret.encode("utf-8"), context_b64.encode("utf-8"), hashlib.sha256)
         headers["X-User-Context"] = context_b64
