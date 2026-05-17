@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchStudentLesson } from "@/api/backend";
 import {
   generateStudentNote,
   GeneratedStudentNote,
@@ -35,12 +36,30 @@ import { colors, radii, spacing } from "@/constants/theme";
 
 export default function StudentTopicScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const lecture = lectures.find((item) => item.id === id) ?? lectures[0];
+  const fallbackLecture = lectures.find((item) => item.id === id) ?? lectures[0];
+  const [lecture, setLecture] = useState<Lecture>(fallbackLecture);
   const preferences = useStudentPreferences();
   const visuals = studentAccessibilityVisuals(preferences);
   const copy = useStudentCopy();
   const parentChapter = chapterForLecture(lecture.id);
-  const linkedAssignments = assignments.filter((assignment) => assignment.linkedLecture === lecture.title);
+  const linkedAssignments = assignments.filter(
+    (assignment) => assignment.linkedLecture === lecture.id || assignment.linkedLecture === lecture.title
+  );
+
+  useEffect(() => {
+    if (!id || lectures.some((item) => item.id === id)) return;
+    let mounted = true;
+    fetchStudentLesson(id)
+      .then((data) => {
+        if (mounted) setLecture(data.lesson);
+      })
+      .catch(() => {
+        if (mounted) setLecture(fallbackLecture);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [fallbackLecture, id]);
 
   return (
     <ScreenContainer style={visuals.screenStyle}>
@@ -51,7 +70,7 @@ export default function StudentTopicScreen() {
         onBack={() =>
           router.replace({
             pathname: "/(student)/chapter/[id]",
-            params: { id: parentChapter?.id ?? "science-plants" }
+            params: { id: lecture.chapterId ?? parentChapter?.id ?? "science-plants" }
           })
         }
       />

@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { saveStudentAcademicProfileRemote } from "@/api/backend";
+import {
+  fetchSchoolSuggestions,
+  joinStudentClassByCode,
+  SchoolSuggestion,
+  saveStudentAcademicProfileRemote
+} from "@/api/backend";
 import { saveStudentAcademicProfile } from "@/api/studentProfile";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
@@ -14,6 +19,8 @@ const classes = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10"];
 
 export default function StudentOnboardingScreen() {
   const [school, setSchool] = useState("");
+  const [schoolSuggestions, setSchoolSuggestions] = useState<SchoolSuggestion[]>([]);
+  const [classCode, setClassCode] = useState("");
   const [className, setClassName] = useState("Grade 8");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(["Science", "Math", "English"]);
   const [saving, setSaving] = useState(false);
@@ -26,16 +33,34 @@ export default function StudentOnboardingScreen() {
     );
   }
 
+  useEffect(() => {
+    let mounted = true;
+    fetchSchoolSuggestions(school)
+      .then((items) => {
+        if (mounted) setSchoolSuggestions(items.filter((item) => item.name !== school).slice(0, 5));
+      })
+      .catch(() => {
+        if (mounted) setSchoolSuggestions([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [school]);
+
   async function continueToDashboard() {
     const profile = {
       school: school.trim() || "AtherLearn Demo School",
       className,
       subjects: selectedSubjects,
+      classCode: classCode.trim().toUpperCase() || undefined,
       completed: true
     };
     saveStudentAcademicProfile(profile);
     setSaving(true);
     try {
+      if (profile.classCode) {
+        await joinStudentClassByCode(profile.classCode);
+      }
       await saveStudentAcademicProfileRemote(profile);
     } catch {
       // Local storage keeps the demo usable even if the backend is offline.
@@ -55,9 +80,24 @@ export default function StudentOnboardingScreen() {
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>Set up your classroom</Text>
-          <Text style={styles.subtitle}>This helps AtherLearn map you to the right class and teachers.</Text>
+          <Text style={styles.subtitle}>Use your teacher's class code to connect to the right classroom.</Text>
         </View>
       </View>
+
+      <Card style={styles.card}>
+        <Text style={styles.label}>Class join code</Text>
+        <TextInput
+          value={classCode}
+          onChangeText={(value) => setClassCode(value.toUpperCase())}
+          placeholder="Example: G8A204"
+          placeholderTextColor={colors.muted}
+          autoCapitalize="characters"
+          style={styles.input}
+        />
+        <Text style={styles.helper}>
+          Enter the code your teacher shares. The fields below keep the demo usable without a code.
+        </Text>
+      </Card>
 
       <Card style={styles.card}>
         <Text style={styles.label}>School</Text>
@@ -68,6 +108,26 @@ export default function StudentOnboardingScreen() {
           placeholderTextColor={colors.muted}
           style={styles.input}
         />
+        {schoolSuggestions.length > 0 ? (
+          <View style={styles.suggestionList}>
+            {schoolSuggestions.map((item) => (
+              <Pressable
+                key={item.id}
+                accessibilityRole="button"
+                onPress={() => setSchool(item.name)}
+                style={styles.suggestionRow}
+              >
+                <Ionicons name="business-outline" size={18} color={colors.primary} />
+                <View style={styles.suggestionText}>
+                  <Text style={styles.suggestionTitle}>{item.name}</Text>
+                  <Text style={styles.suggestionMeta}>
+                    {[item.district, item.state, item.country].filter(Boolean).join(", ") || "Existing school"}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
       </Card>
 
       <Card style={styles.card}>
@@ -171,6 +231,40 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingHorizontal: spacing.md,
     fontSize: 16
+  },
+  helper: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19
+  },
+  suggestionList: {
+    gap: spacing.sm
+  },
+  suggestionRow: {
+    minHeight: 52,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingHorizontal: spacing.md
+  },
+  suggestionText: {
+    flex: 1,
+    gap: 2
+  },
+  suggestionTitle: {
+    color: colors.text,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  suggestionMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17
   },
   choiceGrid: {
     flexDirection: "row",

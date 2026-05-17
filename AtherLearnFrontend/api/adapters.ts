@@ -16,6 +16,10 @@ type BackendLessonPack = {
   title: string;
   classroomId?: string | null;
   classSubjectId?: string | null;
+  chapterId?: string | null;
+  chapterTitle?: string | null;
+  topicId?: string | null;
+  topicTitle?: string | null;
   subject?: string;
   gradeBand?: string;
   language?: string;
@@ -208,6 +212,20 @@ export function normalizeLessonPack(lesson: LessonPack): LessonPack {
   };
 }
 
+function classTitle(classroom: BackendClassroom) {
+  const grade = classroom.grade?.trim();
+  const section = classroom.section?.trim();
+  const name = classroom.name?.trim();
+  const parts: string[] = [];
+  if (grade) parts.push(grade);
+  if (section) parts.push(section);
+  if (!section && name) parts.push(name);
+  if (name && !parts.some((part) => part.toLowerCase() === name.toLowerCase())) {
+    parts.push(name);
+  }
+  return parts.join(" ") || "Classroom";
+}
+
 export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
   const source = pack.sourceUnderstanding;
   const teacher = pack.teacherPack;
@@ -223,6 +241,10 @@ export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {
     title: pack.title,
     classroomId: pack.classroomId ?? null,
     classSubjectId: pack.classSubjectId ?? null,
+    chapterId: pack.chapterId ?? null,
+    chapterTitle: pack.chapterTitle ?? null,
+    topicId: pack.topicId ?? null,
+    topicTitle: pack.topicTitle ?? null,
     grade: gradeLabel(pack.gradeBand),
     subject: pack.subject ?? "General",
     language: pack.language ?? "en",
@@ -288,6 +310,12 @@ export function backendLessonToLecture(pack: BackendLessonPack): Lecture {
     id: lesson.id,
     title: lesson.title,
     subject: lesson.subject,
+    classroomId: lesson.classroomId,
+    classSubjectId: lesson.classSubjectId,
+    chapterId: lesson.chapterId,
+    chapterTitle: lesson.chapterTitle,
+    topicId: lesson.topicId,
+    topicTitle: lesson.topicTitle,
     source: "Backend generated lesson",
     sourceType: lesson.sourceCard.sourceType,
     postedAt: "Synced now",
@@ -347,7 +375,6 @@ export function backendAssignmentToAssignment(assignment: BackendAssignment): As
 }
 
 export function backendClassroomToClassroom(classroom: BackendClassroom): Classroom {
-  const title = [classroom.name, classroom.grade, classroom.section].filter(Boolean).join(" ");
   const classSubjects: ClassSubject[] = (classroom.subjects ?? [])
     .filter((item) => Boolean(item.subject))
     .map((item) => ({
@@ -361,7 +388,7 @@ export function backendClassroomToClassroom(classroom: BackendClassroom): Classr
 
   return {
     id: classroom.id,
-    title: title || "Classroom",
+    title: classTitle(classroom),
     grade: classroom.grade,
     section: classroom.section,
     schoolId: classroom.schoolId,

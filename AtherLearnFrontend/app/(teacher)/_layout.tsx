@@ -45,6 +45,7 @@ export default function TeacherTabsLayout() {
         name="settings"
         options={{ title: "Settings", tabBarIcon: tabIcon("settings-outline") }}
       />
+      <Tabs.Screen name="onboarding" options={{ href: null }} />
       <Tabs.Screen name="insights" options={{ href: null }} />
       <Tabs.Screen name="classrooms/[id]" options={{ href: null }} />
       <Tabs.Screen name="upload" options={{ href: null }} />

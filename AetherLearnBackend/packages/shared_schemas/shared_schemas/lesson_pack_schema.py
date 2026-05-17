@@ -108,6 +108,10 @@ class LessonPack(Timestamped):
     school_id: str | None = None
     classroom_id: str | None = None
     class_subject_id: str | None = None
+    chapter_id: str | None = None
+    chapter_title: str | None = None
+    topic_id: str | None = None
+    topic_title: str | None = None
     language: str = "en"
     subject: str = "General"
     grade_band: str = "unknown"

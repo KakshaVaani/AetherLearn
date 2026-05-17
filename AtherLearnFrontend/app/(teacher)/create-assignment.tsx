@@ -82,6 +82,7 @@ export default function CreateAssignmentScreen() {
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modelPreference, setModelPreference] = useDefaultModelPreference();
+  const [classPickerOpen, setClassPickerOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -157,6 +158,7 @@ export default function CreateAssignmentScreen() {
     setDraft(null);
     setAssigned(false);
     setAssignedAssignmentId(null);
+    setClassPickerOpen(false);
   }
 
   function selectQuestionType(mode: AssignmentAnswerMode) {
@@ -334,16 +336,42 @@ export default function CreateAssignmentScreen() {
       <SectionHeader title="Assignment source" />
       <Card style={styles.formCard}>
         <Text style={styles.label}>Select classroom</Text>
-        <View style={styles.selectorColumn}>
-          {availableClassrooms.map((classroom) => (
-            <ChoiceChip
-              key={classroom.id}
-              label={`${classroom.title}${classroom.grade ? ` - ${classroom.grade}` : ""}`}
-              selected={selectedClassroom.id === classroom.id}
-              onPress={() => selectClassroom(classroom)}
-            />
-          ))}
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setClassPickerOpen((value) => !value)}
+          style={styles.dropdownButton}
+        >
+          <View style={styles.dropdownText}>
+            <Text style={styles.dropdownTitle}>{selectedClassroom.title}</Text>
+            <Text style={styles.dropdownMeta}>
+              {selectedClassroom.grade ?? "Grade not set"} - {selectedClassroom.subjects.join(", ")}
+            </Text>
+          </View>
+          <Ionicons name={classPickerOpen ? "chevron-up" : "chevron-down"} size={22} color={colors.muted} />
+        </Pressable>
+        {classPickerOpen ? (
+          <View style={styles.dropdownMenu}>
+            {availableClassrooms.map((classroom) => (
+              <Pressable
+                key={classroom.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedClassroom.id === classroom.id }}
+                onPress={() => selectClassroom(classroom)}
+                style={[styles.dropdownOption, selectedClassroom.id === classroom.id && styles.dropdownOptionSelected]}
+              >
+                <View style={styles.dropdownText}>
+                  <Text style={styles.dropdownTitle}>{classroom.title}</Text>
+                  <Text style={styles.dropdownMeta}>
+                    {classroom.grade ?? "Grade not set"} - {classroom.subjects.join(", ")}
+                  </Text>
+                </View>
+                {selectedClassroom.id === classroom.id ? (
+                  <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         <Text style={styles.label}>Select subject</Text>
         <View style={styles.selectorRow}>
@@ -595,6 +623,53 @@ const styles = StyleSheet.create({
   },
   selectorColumn: {
     gap: spacing.sm
+  },
+  dropdownButton: {
+    minHeight: 62,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingHorizontal: spacing.md
+  },
+  dropdownMenu: {
+    gap: spacing.sm
+  },
+  dropdownOption: {
+    minHeight: 58,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    paddingHorizontal: spacing.md
+  },
+  dropdownOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft
+  },
+  dropdownText: {
+    flex: 1,
+    gap: 2
+  },
+  dropdownTitle: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900"
+  },
+  dropdownMeta: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "700"
   },
   chip: {
     minHeight: 42,

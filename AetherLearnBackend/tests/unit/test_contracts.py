@@ -11,8 +11,8 @@ import pytest
 from offline_sqlite import OfflineSQLiteStore
 from PIL import Image
 from service_auth import UserContext, decode_user_context
-from service_auth.signatures import body_hash
 from service_auth.service_tokens import build_service_headers
+from service_auth.signatures import body_hash
 from shared_events import SUBJECTS, EventEnvelope, validate_subject
 from shared_schemas import (
     AssignmentQuestion,
@@ -50,16 +50,16 @@ from apps.ai_service.app.validators import (
     repair_teacher_pack,
     validate_lesson_pack,
 )
+from apps.api_gateway.app.clients.base import InternalServiceClient
 from apps.api_gateway.app.routes.teacher_routes import (
     AssignLessonRequest,
     _assignment_target_classroom,
 )
-from apps.api_gateway.app.clients.base import InternalServiceClient
-from apps.auth_service.app.env import Settings as AuthSettings
 from apps.assignment_service.app.repository.assignment_repository import AssignmentRepository
 from apps.assignment_service.app.repository.progress_repository import ProgressRepository
 from apps.assignment_service.app.service.assignment_service import AssignmentService
 from apps.assignment_service.app.service.progress_service import ProgressService
+from apps.auth_service.app.env import Settings as AuthSettings
 from apps.auth_service.app.security.jwt import create_jwt, decode_jwt
 from apps.auth_service.app.security.password import hash_password, verify_password
 from apps.export_service.app.kvpack.builder import build_kvpack

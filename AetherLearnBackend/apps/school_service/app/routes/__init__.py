@@ -51,6 +51,13 @@ async def create_school(request: Request, payload: CreateSchoolRequest):
     return await SchoolService(schools).create_school(payload, ctx.user_id)
 
 
+@router.get("/schools")
+async def list_schools(request: Request, query: str | None = None):
+    await require_service(request)
+    schools, _, _, _ = repos(request)
+    return await SchoolService(schools).list_schools(query)
+
+
 @router.get("/schools/{school_id}")
 async def get_school(request: Request, school_id: str):
     await require_service(request)
@@ -70,7 +77,7 @@ async def patch_school(request: Request, school_id: str, payload: dict):
 async def teacher_classes(request: Request, teacher_id: str):
     await require_service(request)
     _, classrooms, subjects, _ = repos(request)
-    return await ClassroomService(classrooms, subjects).list_for_teacher(teacher_id)
+    return await ClassroomService(classrooms, subjects).list_for_teacher_with_subjects(teacher_id)
 
 
 @router.post("/teacher/{teacher_id}/classes")
@@ -84,7 +91,7 @@ async def create_class(request: Request, teacher_id: str, payload: CreateClassro
 async def get_class(request: Request, classroom_id: str):
     await require_service(request)
     _, classrooms, subjects, _ = repos(request)
-    return await ClassroomService(classrooms, subjects).get(classroom_id)
+    return await ClassroomService(classrooms, subjects).get_with_subjects(classroom_id)
 
 
 @router.patch("/classes/{classroom_id}")
@@ -125,8 +132,13 @@ async def student_join_class(request: Request, student_id: str, payload: JoinCla
 @router.get("/student/{student_id}/classes")
 async def student_classes(request: Request, student_id: str):
     await require_service(request)
-    _, classrooms, _, enrollments = repos(request)
-    return await EnrollmentService(classrooms, enrollments).list_student_classes(student_id)
+    _, classrooms, subjects, enrollments = repos(request)
+    classes = await EnrollmentService(classrooms, enrollments).list_student_classes(student_id)
+    return [
+        classroom.model_dump(mode="json", by_alias=True)
+        | {"subjects": await subjects.list_for_class(classroom.id)}
+        for classroom in classes
+    ]
 
 
 @router.get("/student/{student_id}/subjects")

@@ -4,6 +4,7 @@ export type StudentAcademicProfile = {
   school: string;
   className: string;
   subjects: string[];
+  classCode?: string;
   completed: boolean;
 };
 
@@ -30,6 +31,7 @@ function normalize(value: unknown): StudentAcademicProfile | null {
     school: candidate.school,
     className: candidate.className,
     subjects: candidate.subjects.filter(Boolean),
+    classCode: typeof candidate.classCode === "string" ? candidate.classCode : undefined,
     completed: candidate.completed === true
   };
 }

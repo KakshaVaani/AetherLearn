@@ -40,6 +40,7 @@ class CreateClassroomRequest(AetherBase):
     grade: str
     section: str | None = None
     subject: str | None = None
+    subjects: list[str] = Field(default_factory=list)
 
 
 class ClassSubject(Timestamped):
