@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchStudentAssignedLectures } from "@/api/backend";
 import { useStudentCopy } from "@/api/studentCopy";
 import { studentAccessibilityVisuals, useStudentPreferences } from "@/api/studentPreferences";
 import { AccessibilityBadge } from "@/components/AccessibilityBadge";
@@ -12,6 +14,7 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { classrooms } from "@/data/classrooms";
 import { chaptersForSubject, SubjectChapter } from "@/data/subjectChapters";
 import { subjects } from "@/data/subjects";
+import { Lecture } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 export default function StudentSubjectDetailScreen() {
@@ -21,6 +24,21 @@ export default function StudentSubjectDetailScreen() {
   const copy = useStudentCopy();
   const visuals = studentAccessibilityVisuals(preferences);
   const chapters = chaptersForSubject(subject.name);
+  const [backendLectures, setBackendLectures] = useState<Lecture[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchStudentAssignedLectures()
+      .then((items) => {
+        if (mounted) setBackendLectures(items);
+      })
+      .catch(() => {
+        if (mounted) setBackendLectures([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <ScreenContainer style={visuals.screenStyle}>
@@ -57,16 +75,17 @@ export default function StudentSubjectDetailScreen() {
       ) : null}
 
       {chapters.map((chapter) => (
-        <ChapterCard key={chapter.id} chapter={chapter} />
+        <ChapterCard key={chapter.id} chapter={chapter} backendLectures={backendLectures} />
       ))}
     </ScreenContainer>
   );
 }
 
-function ChapterCard({ chapter }: { chapter: SubjectChapter }) {
+function ChapterCard({ chapter, backendLectures }: { chapter: SubjectChapter; backendLectures: Lecture[] }) {
   const preferences = useStudentPreferences();
   const visuals = studentAccessibilityVisuals(preferences);
-  const topicCount = chapter.lectureIds.length;
+  const syncedTopicCount = backendLectures.filter((lecture) => lecture.chapterId === chapter.id).length;
+  const topicCount = Math.max(chapter.lectureIds.length, syncedTopicCount);
   const assignmentCount = chapter.assignmentIds.length;
 
   return (

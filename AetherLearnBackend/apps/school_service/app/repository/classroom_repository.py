@@ -14,6 +14,19 @@ class ClassroomRepository:
     async def find_by_join_code(self, code: str) -> dict | None:
         return await self.repo.find_one(joinCode=code)
 
+    async def find_matching_classroom(
+        self,
+        *,
+        school_id: str,
+        grade: str,
+        section_normalized: str,
+    ) -> dict | None:
+        return await self.repo.find_one(
+            schoolId=school_id,
+            grade=grade,
+            sectionNormalized=section_normalized,
+        )
+
     async def list_for_teacher(self, teacher_id: str) -> list[dict]:
         return [item for item in await self.repo.list() if teacher_id in item.get("teacherIds", [])]
 

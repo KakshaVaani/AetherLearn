@@ -11,6 +11,7 @@ from shared_schemas import (
     AssignmentAnswerMode,
     AssignmentQuestion,
     CreateClassroomRequest,
+    CreateSchoolRequest,
     GenerateFromTextInput,
     normalize_assignment_answer_mode,
 )
@@ -50,6 +51,21 @@ class GenerateAssignmentDraftRequest(AetherBase):
     @classmethod
     def _normalize_question_type(cls, value: object) -> AssignmentAnswerMode:
         return normalize_assignment_answer_mode(value)
+
+
+class TeacherSetupClassRequest(AetherBase):
+    name: str
+    grade: str
+    section: str | None = None
+    subjects: list[str] = Field(default_factory=list)
+
+
+class TeacherSetupRequest(AetherBase):
+    school_name: str
+    district: str | None = None
+    state: str | None = None
+    country: str = "IN"
+    classes: list[TeacherSetupClassRequest] = Field(default_factory=list)
 
 
 def _teacher_can_manage_classroom(ctx: UserContext, classroom: dict[str, Any]) -> bool:
@@ -131,6 +147,20 @@ async def _scoped_lesson_settings(
     return scoped
 
 
+async def _create_join_code(
+    c: dict[str, Any],
+    classroom_id: str,
+    ctx: UserContext,
+    req_id: str,
+) -> dict[str, Any]:
+    return await c["school"].request(
+        "POST",
+        f"/internal/classes/{classroom_id}/join-code",
+        request_id=req_id,
+        user_context=ctx,
+    )
+
+
 async def _teacher_lesson(
     c: dict[str, Any], lesson_id: str, ctx: UserContext, req_id: str
 ) -> dict[str, Any]:
@@ -209,6 +239,53 @@ async def classes(request: Request, ctx: UserContext = Depends(teacher_context))
         user_context=ctx,
     )
     return success_response(data, request)
+
+
+@router.post("/setup")
+async def setup_teacher(
+    request: Request, payload: TeacherSetupRequest, ctx: UserContext = Depends(teacher_context)
+):
+    c = clients()
+    req_id = request_id(request)
+    school = await c["school"].request(
+        "POST",
+        "/internal/schools",
+        json=CreateSchoolRequest(
+            name=payload.school_name.strip(),
+            district=payload.district,
+            state=payload.state,
+            country=payload.country,
+        ).model_dump(by_alias=True),
+        request_id=req_id,
+        user_context=ctx,
+    )
+    created_classes = []
+    for class_payload in payload.classes:
+        subjects = [subject.strip() for subject in class_payload.subjects if subject.strip()]
+        if not subjects:
+            continue
+        classroom = await c["school"].request(
+            "POST",
+            f"/internal/teacher/{ctx.user_id}/classes",
+            json=CreateClassroomRequest(
+                school_id=school["id"],
+                name=class_payload.name.strip(),
+                grade=class_payload.grade.strip(),
+                section=class_payload.section,
+                subjects=subjects,
+            ).model_dump(by_alias=True),
+            request_id=req_id,
+            user_context=ctx,
+        )
+        join_code = await _create_join_code(c, classroom["id"], ctx, req_id)
+        enriched = await c["school"].request(
+            "GET",
+            f"/internal/classes/{classroom['id']}",
+            request_id=req_id,
+            user_context=ctx,
+        )
+        created_classes.append(enriched | {"joinCode": join_code.get("code")})
+    return success_response({"school": school, "classes": created_classes}, request, status_code=201)
 
 
 @router.post("/classes")

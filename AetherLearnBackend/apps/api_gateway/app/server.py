@@ -9,6 +9,7 @@ from .routes import (
     commons_routes,
     export_routes,
     review_routes,
+    school_routes,
     status_routes,
     student_routes,
     sync_routes,
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
         app.include_router(auth_routes.router)
         app.include_router(teacher_routes.router)
         app.include_router(student_routes.router)
+        app.include_router(school_routes.router)
         app.include_router(commons_routes.router)
         app.include_router(review_routes.router)
         app.include_router(sync_routes.router)

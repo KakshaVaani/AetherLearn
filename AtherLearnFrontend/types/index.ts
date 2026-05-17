@@ -80,6 +80,12 @@ export type Lecture = {
   id: string;
   title: string;
   subject: string;
+  classroomId?: string | null;
+  classSubjectId?: string | null;
+  chapterId?: string | null;
+  chapterTitle?: string | null;
+  topicId?: string | null;
+  topicTitle?: string | null;
   source: string;
   sourceType: string;
   postedAt: string;
@@ -182,6 +188,10 @@ export type LessonPack = {
   title: string;
   classroomId?: string | null;
   classSubjectId?: string | null;
+  chapterId?: string | null;
+  chapterTitle?: string | null;
+  topicId?: string | null;
+  topicTitle?: string | null;
   grade: string;
   subject: string;
   language: string;
