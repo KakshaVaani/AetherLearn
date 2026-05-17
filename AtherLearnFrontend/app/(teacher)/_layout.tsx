@@ -52,6 +52,7 @@ export default function TeacherTabsLayout() {
       <Tabs.Screen name="assignment/index" options={{ href: null }} />
       <Tabs.Screen name="assignment/[id]" options={{ href: null }} />
       <Tabs.Screen name="lecture-result" options={{ href: null }} />
+      <Tabs.Screen name="lesson-editor" options={{ href: null }} />
       <Tabs.Screen name="create-assignment" options={{ href: null }} />
       <Tabs.Screen name="submissions" options={{ href: null }} />
     </Tabs>

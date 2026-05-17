@@ -396,17 +396,7 @@ export async function fetchSchoolSuggestions(query: string): Promise<SchoolSugge
 }
 
 export async function fetchTeacherLessons(): Promise<LessonPack[]> {
-  const localLessons = await localLessonPacks();
-  try {
-    const response = await apiJson<unknown[]>("/api/teacher/lessons");
-    const queuedLocalLessons = await localLessonPacks({ includeSynced: false });
-    return dedupeById([
-      ...response.map((item) => backendLessonToLessonPack(item as never)),
-      ...queuedLocalLessons
-    ]);
-  } catch {
-    return dedupeById([...localLessons, ...demoLessonPacks]);
-  }
+  return (await fetchTeacherDashboard()).lessons;
 }
 
 export async function fetchTeacherLesson(lessonId: string): Promise<{
@@ -564,7 +554,7 @@ export async function updateTeacherLesson(
     }).catch(() => undefined);
     await queueLocalOperation(
       "UPDATE_LESSON",
-      { lessonId, patch },
+      { lessonId, patch, lesson },
       { entityType: "lesson", entityId: lessonId }
     ).catch(() => undefined);
     return lesson;
@@ -599,7 +589,7 @@ export async function publishTeacherLessonChanges(
     }).catch(() => undefined);
     await queueLocalOperation(
       "UPDATE_LESSON",
-      { lessonId, patch },
+      { lessonId, patch, lesson },
       { entityType: "lesson", entityId: lessonId }
     ).catch(() => undefined);
     return lesson;

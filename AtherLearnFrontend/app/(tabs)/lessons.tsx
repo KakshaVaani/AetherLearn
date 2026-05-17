@@ -1,21 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ApiClientError } from "@/api/client";
-import { deleteTeacherLesson, fetchTeacherLessons } from "@/api/backend";
+import { deleteTeacherLesson, fetchTeacherDashboard } from "@/api/backend";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
 import { LessonThumbnail } from "@/components/LessonThumbnail";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { lessonPacks } from "@/data/lessonPacks";
-import { LessonPack, LessonStatus } from "@/types";
+import { Classroom, LessonPack, LessonStatus } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
-type FilterKey = "grade" | "subject" | "status";
+type FilterKey = "classroom" | "grade" | "subject" | "status";
+type LessonDataSource = "backend" | "local" | "demo";
 
 const filterLabels: Record<FilterKey, string> = {
+  classroom: "Class",
   grade: "Grade",
   subject: "Subject",
   status: "Status"
@@ -34,52 +36,105 @@ function gradeFilterValue(grade: string) {
   return cleaned || grade.trim();
 }
 
+function fallbackClassroomLabel(classroomId?: string | null) {
+  if (!classroomId) return "Unassigned";
+  const canonical = classroomId.match(/^class-(\d+)([a-z])$/i);
+  if (canonical) return `Class ${canonical[1]}${canonical[2].toUpperCase()}`;
+  return classroomId
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export default function LessonsScreen() {
-  const [lessons, setLessons] = useState<LessonPack[]>(lessonPacks);
+  const [lessons, setLessons] = useState<LessonPack[]>([]);
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [dataSource, setDataSource] = useState<LessonDataSource>("demo");
   const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "warning">("success");
   const [search, setSearch] = useState("");
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const [selectedClassroom, setSelectedClassroom] = useState("All");
   const [selectedGrade, setSelectedGrade] = useState("All");
   const [selectedSubject, setSelectedSubject] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState<LessonStatus | "All">("All");
 
+  const classroomNameById = useMemo(() => {
+    const names = new Map<string, string>();
+    classrooms.forEach((classroom) => {
+      names.set(classroom.id, classroom.title);
+    });
+    lessons.forEach((lesson) => {
+      if (lesson.classroomId && !names.has(lesson.classroomId)) {
+        names.set(lesson.classroomId, fallbackClassroomLabel(lesson.classroomId));
+      }
+    });
+    return names;
+  }, [classrooms, lessons]);
+
+  const classroomLabel = useCallback(
+    (classroomId?: string | null) => {
+      if (!classroomId) return "Unassigned";
+      return classroomNameById.get(classroomId) ?? fallbackClassroomLabel(classroomId);
+    },
+    [classroomNameById]
+  );
+
   const filterOptions = useMemo(
     () => ({
+      classroom: [
+        "All",
+        ...Array.from(new Set(lessons.map((lesson) => lesson.classroomId).filter((id): id is string => Boolean(id))))
+          .sort((a, b) => classroomLabel(a).localeCompare(classroomLabel(b)))
+      ],
       grade: ["All", ...Array.from(new Set(lessons.map((lesson) => gradeFilterValue(lesson.grade))))],
       subject: ["All", ...Array.from(new Set(lessons.map((lesson) => lesson.subject)))],
       status: ["All", "Draft", "Needs Review", "Approved", "Exported"] as Array<LessonStatus | "All">
     }),
-    [lessons]
+    [classroomLabel, lessons]
   );
 
   const visibleLessons = useMemo(
     () =>
       lessons.filter((lesson) => {
-        const matchesSearch = `${lesson.title} ${lesson.subject} ${lesson.grade} ${lesson.learnerNeed}`
+        const lessonClassroom = classroomLabel(lesson.classroomId);
+        const matchesSearch = `${lesson.title} ${lesson.subject} ${lesson.grade} ${lesson.learnerNeed} ${lessonClassroom}`
           .toLowerCase()
           .includes(search.toLowerCase());
+        const matchesClassroom = selectedClassroom === "All" || lesson.classroomId === selectedClassroom;
         const matchesGrade = selectedGrade === "All" || gradeFilterValue(lesson.grade) === selectedGrade;
         const matchesSubject = selectedSubject === "All" || lesson.subject === selectedSubject;
         const matchesStatus = selectedStatus === "All" || lesson.status === selectedStatus;
 
-        return matchesSearch && matchesGrade && matchesSubject && matchesStatus;
+        return matchesSearch && matchesClassroom && matchesGrade && matchesSubject && matchesStatus;
       }),
-    [lessons, search, selectedGrade, selectedSubject, selectedStatus]
+    [classroomLabel, lessons, search, selectedClassroom, selectedGrade, selectedSubject, selectedStatus]
   );
 
   useEffect(() => {
     let mounted = true;
-    fetchTeacherLessons()
-      .then((items) => {
+    setLoading(true);
+    fetchTeacherDashboard()
+      .then((dashboard) => {
         if (!mounted) return;
-        if (items.length > 0) setLessons(items);
-        setConnected(true);
+        setLessons(dashboard.lessons.length > 0 ? dashboard.lessons : lessonPacks);
+        setClassrooms(dashboard.classes);
+        setConnected(dashboard.source === "backend");
+        setDataSource(dashboard.source);
       })
       .catch(() => {
-        if (mounted) setConnected(false);
+        if (!mounted) return;
+        setConnected(false);
+        setDataSource("demo");
+        setLessons(lessonPacks);
+        setClassrooms([]);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
       });
     return () => {
       mounted = false;
@@ -87,16 +142,23 @@ export default function LessonsScreen() {
   }, []);
 
   function selectedValue(key: FilterKey) {
+    if (key === "classroom") return selectedClassroom;
     if (key === "grade") return selectedGrade;
     if (key === "subject") return selectedSubject;
     return selectedStatus;
   }
 
   function setSelectedValue(key: FilterKey, value: string) {
+    if (key === "classroom") setSelectedClassroom(value);
     if (key === "grade") setSelectedGrade(value);
     if (key === "subject") setSelectedSubject(value);
     if (key === "status") setSelectedStatus(value as LessonStatus | "All");
     setOpenFilter(null);
+  }
+
+  function displayValue(key: FilterKey, value: string) {
+    if (key === "classroom") return value === "All" ? "All" : classroomLabel(value);
+    return value;
   }
 
   async function confirmDeleteLesson(title: string) {
@@ -153,7 +215,11 @@ export default function LessonsScreen() {
         <View>
           <Text style={styles.title}>Lesson Library</Text>
           <Text style={styles.subtitle}>
-            {connected ? "Synced backend lesson packs" : "Saved accessible lesson packs"}
+            {connected
+              ? "Synced backend lesson packs"
+              : dataSource === "local"
+                ? "Saved local lesson packs"
+                : "Demo fallback lesson packs"}
           </Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Filter lessons" style={styles.iconButton}>
@@ -185,7 +251,7 @@ export default function LessonsScreen() {
                 style={[styles.filterChip, selected !== "All" && styles.filterChipActive]}
               >
                 <Text style={styles.filterText}>
-                  {filterLabels[key]}: {selected}
+                  {filterLabels[key]}: {displayValue(key, selected)}
                 </Text>
                 <Ionicons name={openFilter === key ? "chevron-up" : "chevron-down"} size={14} color={colors.muted} />
               </Pressable>
@@ -199,7 +265,7 @@ export default function LessonsScreen() {
                       style={[styles.optionRow, option === selected && styles.optionRowSelected]}
                     >
                       <Text style={[styles.optionText, option === selected && styles.optionTextSelected]}>
-                        {option}
+                        {displayValue(key, option)}
                       </Text>
                     </Pressable>
                   ))}
@@ -216,8 +282,23 @@ export default function LessonsScreen() {
         </Text>
       ) : null}
 
-      <SectionHeader title="Lessons" />
-      {visibleLessons.map((lesson) => (
+      <SectionHeader
+        title="Lessons"
+        subtitle={loading ? "Loading synced lessons..." : `${visibleLessons.length} of ${lessons.length} visible`}
+      />
+      {loading ? (
+        <Card style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Loading lesson library...</Text>
+          <Text style={styles.emptyBody}>Fetching the backend lessons for all demo classes.</Text>
+        </Card>
+      ) : null}
+      {!loading && visibleLessons.length === 0 ? (
+        <Card style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>No lessons match these filters</Text>
+          <Text style={styles.emptyBody}>Clear the class, grade, subject, or status filters to see the full library.</Text>
+        </Card>
+      ) : null}
+      {!loading && visibleLessons.map((lesson) => (
         <Card
           key={lesson.id}
           onPress={() =>
@@ -240,7 +321,7 @@ export default function LessonsScreen() {
           <View style={styles.lessonText}>
             <Text style={styles.lessonTitle}>{lesson.title}</Text>
             <Text style={styles.lessonMeta}>
-              {lesson.grade} - {lesson.subject} - {lesson.language}
+              {classroomLabel(lesson.classroomId)} - {lesson.grade} - {lesson.subject} - {lesson.language}
             </Text>
             <Text style={styles.lessonMeta}>Learner need: {lesson.learnerNeed}</Text>
             <Text numberOfLines={2} style={styles.lessonMeta}>
@@ -410,6 +491,21 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 12,
     lineHeight: 16
+  },
+  emptyCard: {
+    gap: spacing.xs,
+    padding: spacing.md
+  },
+  emptyTitle: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900"
+  },
+  emptyBody: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18
   },
   badges: {
     flexDirection: "row",

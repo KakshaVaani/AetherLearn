@@ -92,6 +92,10 @@ class SyncService:
             if operation_type == "CREATE_LESSON_FROM_TEXT":
                 lesson = payload.get("lesson") if isinstance(payload.get("lesson"), dict) else payload
                 changes["lessons"].append(self._server_echo(operation, lesson))
+            elif operation_type == "UPDATE_LESSON":
+                lesson = payload.get("lesson") if isinstance(payload.get("lesson"), dict) else None
+                if lesson is not None:
+                    changes["lessons"].append(self._server_echo(operation, lesson))
             elif operation_type == "ASSIGN_LESSON":
                 assignment = (
                     payload.get("assignment") if isinstance(payload.get("assignment"), dict) else payload

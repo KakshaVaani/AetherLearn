@@ -389,6 +389,7 @@ async def test_offline_sqlite_queue_round_trips_through_sync_service() -> None:
 
 def test_local_first_sync_contract_includes_text_and_notes_operations() -> None:
     assert SyncOperationType.CREATE_LESSON_FROM_TEXT.value == "CREATE_LESSON_FROM_TEXT"
+    assert SyncOperationType.UPDATE_LESSON.value == "UPDATE_LESSON"
     assert SyncOperationType.GENERATE_STUDENT_NOTE.value == "GENERATE_STUDENT_NOTE"
     assert OfflineEntityType.GENERATED_NOTE.value == "generated_note"
 
@@ -426,6 +427,26 @@ async def test_push_then_pull_materializes_local_generated_work() -> None:
         store.queue_operation(
             user_id="teacher-1",
             device_id="device-1",
+            operation_type=SyncOperationType.UPDATE_LESSON,
+            entity_type=OfflineEntityType.LESSON,
+            entity_id=lesson_local_id,
+            payload={
+                "lesson": {
+                    "id": "local-lesson-1",
+                    "title": "Plant Nutrition Edited",
+                    "status": "pending_review",
+                    "trace": {
+                        "runtime": "on-device",
+                        "localOnly": True,
+                        "hostedApiUsed": False,
+                    },
+                }
+            },
+            idempotency_key="lesson-update-1",
+        )
+        store.queue_operation(
+            user_id="teacher-1",
+            device_id="device-1",
             operation_type=SyncOperationType.GENERATE_STUDENT_NOTE,
             entity_type=OfflineEntityType.GENERATED_NOTE,
             entity_id="note-1",
@@ -447,6 +468,8 @@ async def test_push_then_pull_materializes_local_generated_work() -> None:
         assert all(result.ok for result in push_response["results"])
         assert pull_response["changes"]["lessons"][0]["title"] == "Plant Nutrition"
         assert pull_response["changes"]["lessons"][0]["trace"]["runtime"] == "on-device"
+        assert pull_response["changes"]["lessons"][1]["title"] == "Plant Nutrition Edited"
+        assert pull_response["changes"]["lessons"][1]["status"] == "pending_review"
         assert pull_response["changes"]["notes"][0]["text"] == "Local notes"
     finally:
         store.close()
