@@ -205,7 +205,7 @@ export default function ClassroomDetailScreen() {
       <Card style={styles.breakdownCard}>
         {accessibilityModes.map((mode) => {
           const count = classroom.accessibilityBreakdown[mode];
-          const percent = Math.round((count / classroom.students) * 100);
+          const percent = classroom.students > 0 ? Math.round((count / classroom.students) * 100) : 0;
 
           return (
             <View key={mode} style={styles.breakdownItem}>

@@ -12,6 +12,7 @@ import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { classrooms as demoClassrooms } from "@/data/classrooms";
+import { chaptersForSubject } from "@/data/subjectChapters";
 import { ClassSubject, Classroom } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
@@ -30,6 +31,7 @@ export default function UploadLectureScreen() {
     demoClassrooms[0].classSubjects?.[0]?.id ?? ""
   );
   const [title, setTitle] = useState("Photosynthesis and Plant Nutrition");
+  const [topicTitle, setTopicTitle] = useState("Photosynthesis");
   const [notesText, setNotesText] = useState(
     "Green plants use sunlight, water, and carbon dioxide to prepare food. The process is called photosynthesis. Plants make glucose and release oxygen."
   );
@@ -69,6 +71,9 @@ export default function UploadLectureScreen() {
     : selectedClassroom.subjects.map((subject) => ({ id: subject, subject }));
   const selectedClassSubject = classSubjects.find((item) => item.id === selectedClassSubjectId) ?? classSubjects[0];
   const selectedSubjectName = selectedClassSubject?.subject ?? selectedClassroom.subjects[0] ?? "General";
+  const subjectChapters = useMemo(() => chaptersForSubject(selectedSubjectName), [selectedSubjectName]);
+  const [selectedChapterId, setSelectedChapterId] = useState(subjectChapters[0]?.id ?? "custom-chapter");
+  const selectedChapter = subjectChapters.find((chapter) => chapter.id === selectedChapterId) ?? subjectChapters[0];
   const canSubmit = title.trim().length > 0 && notesText.trim().length > 0 && Boolean(selectedClassroom?.id);
   const reviewParams = {
     classroomId: selectedClassroom.id,
@@ -82,6 +87,13 @@ export default function UploadLectureScreen() {
       setSelectedClassSubjectId(firstSubjectId);
     }
   }, [classSubjects, selectedClassSubjectId]);
+
+  useEffect(() => {
+    const firstChapterId = subjectChapters[0]?.id ?? "custom-chapter";
+    if (!subjectChapters.some((chapter) => chapter.id === selectedChapterId)) {
+      setSelectedChapterId(firstChapterId);
+    }
+  }, [selectedChapterId, subjectChapters]);
 
   function selectClassroom(classroom: Classroom) {
     setSelectedClassroomId(classroom.id);
@@ -97,6 +109,10 @@ export default function UploadLectureScreen() {
         text: notesText.trim(),
         classroomId: selectedClassroom.id,
         classSubjectId: selectedClassSubject?.id,
+        chapterId: selectedChapter?.id ?? "custom-chapter",
+        chapterTitle: selectedChapter?.title ?? "Chapter 1: Classroom Notes",
+        topicId: topicTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "class-topic",
+        topicTitle: topicTitle.trim() || title.trim(),
         subject: selectedSubjectName,
         gradeBand: selectedClassroom.grade ?? selectedClassroom.title,
         language: "en"
@@ -183,6 +199,24 @@ export default function UploadLectureScreen() {
         </View>
 
         <Text style={styles.gradeLine}>Grade scope: {selectedClassroom.grade ?? selectedClassroom.title}</Text>
+
+        <Text style={styles.label}>Chapter</Text>
+        <View style={styles.selectorColumn}>
+          {(subjectChapters.length
+            ? subjectChapters
+            : [{ id: "custom-chapter", title: "Chapter 1: Classroom Notes", description: "Teacher-created material." }]
+          ).map((chapter) => (
+            <ChoiceChip
+              key={chapter.id}
+              label={chapter.title}
+              selected={selectedChapterId === chapter.id}
+              onPress={() => setSelectedChapterId(chapter.id)}
+            />
+          ))}
+        </View>
+
+        <Text style={styles.label}>Topic</Text>
+        <TextInput value={topicTitle} onChangeText={setTopicTitle} style={styles.input} placeholder="Topic name" />
 
         <Text style={styles.label}>Lesson title</Text>
         <TextInput value={title} onChangeText={setTitle} style={styles.input} placeholder="Enter title" />

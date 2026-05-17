@@ -72,6 +72,33 @@ type AssignmentDraftResponse = {
   }>;
 };
 
+export type SchoolSuggestion = {
+  id: string;
+  name: string;
+  district?: string | null;
+  state?: string | null;
+  country?: string;
+};
+
+function dedupeClassrooms(classes: Classroom[]) {
+  const byKey = new Map<string, Classroom>();
+  for (const classroom of classes) {
+    const key = [
+      classroom.schoolId ?? "",
+      classroom.grade ?? "",
+      classroom.section ?? classroom.title,
+      classroom.subjects.slice().sort().join("|")
+    ]
+      .join("::")
+      .toLowerCase();
+    const previous = byKey.get(key);
+    if (!previous || classroom.classCode !== "SYNCED") {
+      byKey.set(key, classroom);
+    }
+  }
+  return Array.from(byKey.values());
+}
+
 export async function demoLogin(role: Role) {
   const response = await apiJson<LoginResponse>("/api/auth/demo-login", "POST", { role }, false);
   saveSession({
@@ -138,8 +165,9 @@ export async function signupWithPassword(input: {
 
 export async function fetchTeacherDashboard() {
   const response = await apiJson<TeacherDashboardResponse>("/api/teacher/dashboard");
+  const classes = dedupeClassrooms(response.classes.map((item) => backendClassroomToClassroom(item as never)));
   return {
-    classes: response.classes.map((item) => backendClassroomToClassroom(item as never)),
+    classes,
     lessons: response.lessons.map((item) => backendLessonToLessonPack(item as never)),
     assignments: response.assignments.map((item) => backendAssignmentToAssignment(item as never))
   };
@@ -147,7 +175,36 @@ export async function fetchTeacherDashboard() {
 
 export async function fetchTeacherClassrooms(): Promise<Classroom[]> {
   const response = await apiJson<unknown[]>("/api/teacher/classes");
-  return response.map((item) => backendClassroomToClassroom(item as never));
+  return dedupeClassrooms(response.map((item) => backendClassroomToClassroom(item as never)));
+}
+
+export async function setupTeacherWorkspace(input: {
+  schoolName: string;
+  district?: string;
+  state?: string;
+  classes: Array<{
+    name: string;
+    grade: string;
+    section?: string;
+    subjects: string[];
+  }>;
+}) {
+  const response = await apiJson<{ school: unknown; classes: unknown[] }>("/api/teacher/setup", "POST", {
+    schoolName: input.schoolName,
+    district: input.district,
+    state: input.state,
+    classes: input.classes
+  });
+  return {
+    school: response.school,
+    classes: response.classes.map((item) => backendClassroomToClassroom(item as never))
+  };
+}
+
+export async function fetchSchoolSuggestions(query: string): Promise<SchoolSuggestion[]> {
+  const suffix = query.trim() ? `?query=${encodeURIComponent(query.trim())}` : "";
+  const response = await apiJson<SchoolSuggestion[]>(`/api/schools${suffix}`);
+  return response;
 }
 
 export async function fetchTeacherLessons(): Promise<LessonPack[]> {
@@ -164,6 +221,10 @@ export async function generateLessonFromText(input: {
   text: string;
   classroomId: string;
   classSubjectId?: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  topicId?: string;
+  topicTitle?: string;
   subject: string;
   gradeBand: string;
   language?: string;
@@ -176,6 +237,10 @@ export async function generateLessonFromText(input: {
       title: input.title,
       classroomId: input.classroomId,
       classSubjectId: input.classSubjectId,
+      chapterId: input.chapterId,
+      chapterTitle: input.chapterTitle,
+      topicId: input.topicId,
+      topicTitle: input.topicTitle,
       subject: input.subject,
       gradeBand: input.gradeBand,
       language: input.language ?? "en"
@@ -259,6 +324,11 @@ export async function fetchStudentDashboard() {
   };
 }
 
+export async function joinStudentClassByCode(code: string) {
+  const response = await apiJson<unknown>("/api/student/join-class", "POST", { code });
+  return response;
+}
+
 export async function fetchStudentLessons(): Promise<Assignment[]> {
   const response = await apiJson<unknown[]>("/api/student/lessons");
   return response.map((item) => backendAssignmentToAssignment(item as never));
@@ -270,6 +340,15 @@ export async function fetchStudentLesson(lessonId: string): Promise<{ lesson: Le
     lesson: backendLessonToLecture(response.lesson as never),
     progress: response.access.progress
   };
+}
+
+export async function fetchStudentAssignedLectures(): Promise<Lecture[]> {
+  const assignments = await fetchStudentLessons();
+  const lessonIds = Array.from(new Set(assignments.map((assignment) => assignment.linkedLecture).filter(Boolean)));
+  const settled = await Promise.allSettled(lessonIds.map((lessonId) => fetchStudentLesson(lessonId)));
+  return settled
+    .filter((item): item is PromiseFulfilledResult<{ lesson: Lecture; progress?: unknown }> => item.status === "fulfilled")
+    .map((item) => item.value.lesson);
 }
 
 export async function generateStructuredStudentNotes(lessonId: string, input: {
@@ -311,6 +390,7 @@ export async function saveStudentAcademicProfileRemote(input: {
   school: string;
   className: string;
   subjects: string[];
+  classCode?: string;
   completed: boolean;
 }) {
   return apiJson("/api/student/profile", "PATCH", input);
@@ -439,6 +519,12 @@ function lectureToAskLessonPack(lecture: Lecture, language: string) {
     sourceImageMetadata: {},
     createdBy: "teacher-demo",
     createdByRole: "teacher",
+    classroomId: lecture.classroomId,
+    classSubjectId: lecture.classSubjectId,
+    chapterId: lecture.chapterId,
+    chapterTitle: lecture.chapterTitle,
+    topicId: lecture.topicId,
+    topicTitle: lecture.topicTitle,
     language,
     subject: lecture.subject,
     gradeBand: "Grade 8",

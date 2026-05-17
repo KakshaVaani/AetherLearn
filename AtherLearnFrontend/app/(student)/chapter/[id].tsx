@@ -1,6 +1,8 @@
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { fetchStudentAssignedLectures } from "@/api/backend";
 import { useStudentCopy } from "@/api/studentCopy";
 import { studentAccessibilityVisuals, useStudentPreferences } from "@/api/studentPreferences";
 import { Badge } from "@/components/Badge";
@@ -22,9 +24,33 @@ export default function StudentChapterScreen() {
   const copy = useStudentCopy();
   const visuals = studentAccessibilityVisuals(preferences);
   const parentSubject = subjects.find((subject) => subject.name === chapter?.subject);
-  const chapterLectures = (chapter?.lectureIds ?? [])
+  const [backendLectures, setBackendLectures] = useState<Lecture[]>([]);
+  const staticLectures = (chapter?.lectureIds ?? [])
     .map((lectureId) => lectures.find((lecture) => lecture.id === lectureId))
     .filter((lecture): lecture is Lecture => Boolean(lecture));
+  const chapterLectures = useMemo(() => {
+    const synced = backendLectures.filter((lecture) => {
+      if (lecture.chapterId && chapter?.id) return lecture.chapterId === chapter.id;
+      return lecture.subject === chapter?.subject && lecture.chapterTitle === chapter?.title;
+    });
+    const byId = new Map<string, Lecture>();
+    [...synced, ...staticLectures].forEach((lecture) => byId.set(lecture.id, lecture));
+    return Array.from(byId.values());
+  }, [backendLectures, chapter?.id, chapter?.subject, chapter?.title, staticLectures]);
+
+  useEffect(() => {
+    let mounted = true;
+    fetchStudentAssignedLectures()
+      .then((items) => {
+        if (mounted) setBackendLectures(items);
+      })
+      .catch(() => {
+        if (mounted) setBackendLectures([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <ScreenContainer style={visuals.screenStyle}>
@@ -71,7 +97,9 @@ export default function StudentChapterScreen() {
 function TopicCard({ lecture }: { lecture: Lecture }) {
   const preferences = useStudentPreferences();
   const visuals = studentAccessibilityVisuals(preferences);
-  const linkedAssignments = assignments.filter((assignment) => assignment.linkedLecture === lecture.title);
+  const linkedAssignments = assignments.filter(
+    (assignment) => assignment.linkedLecture === lecture.id || assignment.linkedLecture === lecture.title
+  );
 
   return (
     <Card
