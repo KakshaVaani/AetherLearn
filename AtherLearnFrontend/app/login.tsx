@@ -56,7 +56,7 @@ export default function LoginScreen() {
 
   function openWorkspace(role: Role) {
     if (role === "teacher") {
-      router.replace("/(teacher)/onboarding");
+      router.replace("/(teacher)/dashboard");
       return;
     }
     if (!isStudentAcademicProfileComplete()) {

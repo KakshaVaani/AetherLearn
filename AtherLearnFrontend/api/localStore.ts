@@ -12,6 +12,7 @@ export type LocalEntityType =
 
 export type LocalOperationType =
   | "CREATE_LESSON_FROM_TEXT"
+  | "UPDATE_LESSON"
   | "ASSIGN_LESSON"
   | "UPDATE_PROGRESS"
   | "ASK_QUESTION"
@@ -242,6 +243,97 @@ export async function saveLocalEntity<T>(
   const entities = await getFallbackEntities();
   await setFallbackEntities([...entities.filter((item) => item.localId !== localId), entity]);
   return entity;
+}
+
+export async function replaceSyncedLocalEntities<T>(
+  entityType: LocalEntityType,
+  items: Array<{ localId: string; serverId?: string | null; payload: T }>,
+  options: { ownerUserId?: string } = {}
+) {
+  const timestamp = now();
+  const ownerUserId = options.ownerUserId ?? ownerId();
+  const entities: LocalEntity<T>[] = items.map((item) => ({
+    localId: item.localId,
+    serverId: item.serverId ?? item.localId,
+    entityType,
+    ownerUserId,
+    version: 1,
+    payload: item.payload,
+    syncStatus: "synced",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    lastSyncedAt: timestamp
+  }));
+
+  const db = await sqliteDb();
+  if (db) {
+    await db.runAsync(
+      "DELETE FROM offline_entities WHERE entity_type = ? AND owner_user_id = ? AND sync_status = ?",
+      [entityType, ownerUserId, "synced"]
+    );
+    for (const entity of entities) {
+      await db.runAsync(
+        `INSERT OR REPLACE INTO offline_entities
+        (local_id, server_id, entity_type, owner_user_id, version, payload_json, sync_status, created_at, updated_at, last_synced_at, conflict_state_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          entity.localId,
+          entity.serverId,
+          entity.entityType,
+          entity.ownerUserId,
+          entity.version,
+          JSON.stringify(entity.payload),
+          entity.syncStatus,
+          entity.createdAt,
+          entity.updatedAt,
+          entity.lastSyncedAt,
+          null
+        ]
+      );
+    }
+    return entities;
+  }
+
+  const current = await getFallbackEntities();
+  await setFallbackEntities([
+    ...current.filter(
+      (item) =>
+        !(
+          item.entityType === entityType &&
+          item.ownerUserId === ownerUserId &&
+          item.syncStatus === "synced"
+        )
+    ),
+    ...entities
+  ]);
+  return entities;
+}
+
+export async function deleteLocalEntity(
+  entityType: LocalEntityType,
+  localId: string,
+  options: { ownerUserId?: string } = {}
+) {
+  const ownerUserId = options.ownerUserId ?? ownerId();
+  const db = await sqliteDb();
+  if (db) {
+    const rows = await db.getAllAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM offline_entities WHERE entity_type = ? AND local_id = ? AND owner_user_id = ?",
+      [entityType, localId, ownerUserId]
+    );
+    await db.runAsync(
+      "DELETE FROM offline_entities WHERE entity_type = ? AND local_id = ? AND owner_user_id = ?",
+      [entityType, localId, ownerUserId]
+    );
+    return (rows[0]?.count ?? 0) > 0;
+  }
+
+  const current = await getFallbackEntities();
+  const next = current.filter(
+    (item) => !(item.entityType === entityType && item.localId === localId && item.ownerUserId === ownerUserId)
+  );
+  await setFallbackEntities(next);
+  return next.length !== current.length;
 }
 
 export async function listLocalEntities<T>(entityType: LocalEntityType): Promise<LocalEntity<T>[]> {

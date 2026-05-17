@@ -22,7 +22,7 @@ export default function StudentOnboardingScreen() {
   const [schoolSuggestions, setSchoolSuggestions] = useState<SchoolSuggestion[]>([]);
   const [classCode, setClassCode] = useState("");
   const [className, setClassName] = useState("Grade 8");
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(["Science", "Math", "English"]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(["Science", "Math"]);
   const [saving, setSaving] = useState(false);
 
   function toggleSubject(subject: string) {

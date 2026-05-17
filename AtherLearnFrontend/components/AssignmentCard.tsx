@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleProp, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -11,9 +12,17 @@ type AssignmentCardProps = {
   cardStyle?: StyleProp<ViewStyle>;
   titleStyle?: StyleProp<TextStyle>;
   metaStyle?: StyleProp<TextStyle>;
+  rightAction?: ReactNode;
 };
 
-export function AssignmentCard({ assignment, onPress, cardStyle, titleStyle, metaStyle }: AssignmentCardProps) {
+export function AssignmentCard({
+  assignment,
+  onPress,
+  cardStyle,
+  titleStyle,
+  metaStyle,
+  rightAction
+}: AssignmentCardProps) {
   return (
     <Card onPress={onPress} style={[styles.card, cardStyle]}>
       <View style={styles.header}>
@@ -21,9 +30,12 @@ export function AssignmentCard({ assignment, onPress, cardStyle, titleStyle, met
           <Text style={styles.subject}>{assignment.subject}</Text>
           <Text style={[styles.title, titleStyle]}>{assignment.title}</Text>
         </View>
-        <View style={styles.badges}>
-          <Badge label={assignmentAnswerModeLabel(assignment.answerMode)} tone="secondary" />
-          <Badge label={assignment.status} tone={assignment.status === "Published" ? "success" : "warning"} />
+        <View style={styles.trailing}>
+          <View style={styles.badges}>
+            <Badge label={assignmentAnswerModeLabel(assignment.answerMode)} tone="secondary" />
+            <Badge label={assignment.status} tone={assignment.status === "Published" ? "success" : "warning"} />
+          </View>
+          {rightAction}
         </View>
       </View>
       <Text style={[styles.meta, metaStyle]}>{assignment.linkedLecture}</Text>
@@ -44,6 +56,10 @@ const styles = StyleSheet.create({
   titleBlock: {
     flex: 1,
     gap: 2
+  },
+  trailing: {
+    alignItems: "flex-end",
+    gap: spacing.sm
   },
   badges: {
     alignItems: "flex-end",

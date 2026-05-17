@@ -220,14 +220,29 @@ function classTitle(classroom: BackendClassroom) {
   const grade = classroom.grade?.trim();
   const section = classroom.section?.trim();
   const name = classroom.name?.trim();
-  const parts: string[] = [];
-  if (grade) parts.push(grade);
-  if (section) parts.push(section);
-  if (!section && name) parts.push(name);
-  if (name && !parts.some((part) => part.toLowerCase() === name.toLowerCase())) {
-    parts.push(name);
+
+  if (name) {
+    const compactName = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const gradeNumber = grade?.match(/\d+/)?.[0];
+    const compactSection = section?.replace(/^section\s+/i, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const isCompleteClassLabel =
+      /^(class|grade)\s*\d+/i.test(name) ||
+      (Boolean(gradeNumber) &&
+        compactName.includes(gradeNumber ?? "") &&
+        (!compactSection || compactName.includes(compactSection)));
+
+    if (isCompleteClassLabel) {
+      return name;
+    }
   }
-  return parts.join(" ") || "Classroom";
+
+  const gradeNumber = grade?.match(/\d+/)?.[0];
+  if (gradeNumber) {
+    const sectionLabel = section?.replace(/^section\s+/i, "").trim();
+    return `Class ${gradeNumber}${sectionLabel ? sectionLabel : ""}`;
+  }
+
+  return name || grade || "Classroom";
 }
 
 export function backendLessonToLessonPack(pack: BackendLessonPack): LessonPack {

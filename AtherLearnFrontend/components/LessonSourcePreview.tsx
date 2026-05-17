@@ -1,38 +1,84 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LessonPack } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 type LessonSourcePreviewProps = {
   compact?: boolean;
+  lesson?: LessonPack | null;
+  topic?: string;
+  subject?: string;
+  sourceType?: string;
+  detectedText?: string[];
+  diagramElements?: string[];
+  equations?: string[];
 };
 
-export function LessonSourcePreview({ compact = false }: LessonSourcePreviewProps) {
+function sourceIcon(subject: string): keyof typeof Ionicons.glyphMap {
+  const normalized = subject.toLowerCase();
+  if (normalized.includes("math")) return "calculator-outline";
+  if (normalized.includes("science")) return "flask-outline";
+  if (normalized.includes("english")) return "book-outline";
+  if (normalized.includes("social")) return "earth-outline";
+  return "document-text-outline";
+}
+
+function compactList(items: string[], fallback: string) {
+  const cleaned = items.map((item) => item.trim()).filter(Boolean);
+  return cleaned.length ? cleaned.slice(0, 4) : [fallback];
+}
+
+export function LessonSourcePreview({
+  compact = false,
+  lesson,
+  topic,
+  subject,
+  sourceType,
+  detectedText,
+  diagramElements,
+  equations
+}: LessonSourcePreviewProps) {
+  const previewTopic = topic ?? lesson?.sourceCard.topic ?? lesson?.topicTitle ?? lesson?.title ?? "Classroom source";
+  const previewSubject = subject ?? lesson?.subject ?? "Lesson";
+  const previewSourceType = sourceType ?? lesson?.sourceCard.sourceType ?? "Teacher notes";
+  const previewDetectedText = detectedText ?? lesson?.sourceCard.detectedText ?? [];
+  const previewDiagramElements = diagramElements ?? lesson?.sourceCard.diagramElements ?? [];
+  const previewEquations = equations ?? lesson?.sourceCard.equations ?? [];
+  const previewNotes = compactList(
+    [...previewEquations, ...previewDetectedText, ...previewDiagramElements],
+    "Ready for teacher review"
+  );
+  const mainDetail = previewEquations[0] ?? previewDetectedText[0] ?? previewDiagramElements[0] ?? previewTopic;
+
   return (
     <View style={[styles.board, compact && styles.boardCompact]}>
       <View style={styles.boardHeader}>
-        <Text style={styles.boardTitle}>Photosynthesis</Text>
+        <Text style={styles.boardTitle}>{previewTopic}</Text>
         <View style={styles.boardBadge}>
-          <Text style={styles.boardBadgeText}>Demo source</Text>
+          <Text style={styles.boardBadgeText}>{previewSourceType}</Text>
         </View>
       </View>
       <View style={styles.diagramRow}>
-        <View style={styles.sunBlock}>
-          <Ionicons name="sunny-outline" size={compact ? 24 : 30} color={colors.warning} />
-          <Text style={styles.diagramLabel}>Sunlight</Text>
+        <View style={styles.previewBlock}>
+          <Ionicons name={sourceIcon(previewSubject)} size={compact ? 26 : 34} color={colors.primary} />
+          <Text style={styles.diagramLabel}>{previewSubject}</Text>
         </View>
-        <View style={styles.plantBlock}>
-          <Ionicons name="leaf-outline" size={compact ? 46 : 62} color={colors.success} />
-          <Text style={styles.diagramLabel}>Plant</Text>
+        <View style={styles.previewBlock}>
+          <Ionicons name="scan-outline" size={compact ? 34 : 48} color={colors.success} />
+          <Text style={styles.diagramLabel}>Source</Text>
         </View>
         <View style={styles.equationBlock}>
-          <Text style={styles.equation}>6CO2 + 6H2O</Text>
-          <Text style={styles.equation}>-&gt;</Text>
-          <Text style={styles.equation}>C6H12O6 + 6O2</Text>
+          <Text numberOfLines={compact ? 2 : 3} style={styles.equation}>
+            {mainDetail}
+          </Text>
         </View>
       </View>
       <View style={styles.noteRow}>
-        <Text style={styles.note}>CO2 enters leaves</Text>
-        <Text style={styles.note}>H2O enters roots</Text>
+        {previewNotes.map((note, index) => (
+          <Text key={`${note}-${index}`} numberOfLines={1} style={styles.note}>
+            {note}
+          </Text>
+        ))}
       </View>
     </View>
   );
@@ -83,12 +129,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.md
   },
-  sunBlock: {
+  previewBlock: {
     alignItems: "center",
-    gap: spacing.xs
-  },
-  plantBlock: {
-    alignItems: "center",
+    minWidth: 64,
     gap: spacing.xs
   },
   equationBlock: {

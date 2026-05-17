@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { publishTeacherLessonChanges } from "@/api/backend";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -10,6 +11,13 @@ import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
+import {
+  lessonOriginRoute,
+  lessonStateLabel,
+  lessonStateTone,
+  resolveLessonOrigin,
+  resolveLessonReviewMode
+} from "@/utils/lessonReview";
 
 const tabs = ["Objective", "Script", "Activity", "Worksheet", "Answers"] as const;
 type TeacherTab = (typeof tabs)[number];
@@ -21,11 +29,37 @@ export default function TeacherPackScreen() {
     title?: string;
     grade?: string;
     subject?: string;
+    mode?: "generated" | "view";
+    origin?: "classroom" | "library";
   }>();
   const [activeTab, setActiveTab] = useState<TeacherTab>("Objective");
   const [revision, setRevision] = useState(1);
   const [regenerating, setRegenerating] = useState(false);
-  const { lesson } = useLessonPackReview(params.lessonId);
+  const [publishing, setPublishing] = useState(false);
+  const { lesson, loading, notFound, source: lessonSource, replaceLesson } = useLessonPackReview(params.lessonId);
+
+  if (loading || !lesson) {
+    return (
+      <ScreenContainer>
+        <Header
+          title={notFound ? "Lesson not found" : "Loading Teacher Pack"}
+          subtitle={notFound ? "This lesson is not available in the current workspace." : "Fetching the selected lesson."}
+          showBack
+        />
+        <Card style={styles.stateCard}>
+          {notFound ? (
+            <Ionicons name="alert-circle-outline" size={24} color={colors.warning} />
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )}
+          <Text style={styles.stateText}>
+            {notFound ? "Return to the class and open a synced lesson." : "Loading topic-specific teacher notes..."}
+          </Text>
+        </Card>
+      </ScreenContainer>
+    );
+  }
+
   const pack = lesson.teacherPack;
   const learnerSupport = learnerSupportItems(pack.differentiatedSupport);
   const reviewParams = {
@@ -33,8 +67,13 @@ export default function TeacherPackScreen() {
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
     title: params.title ?? lesson.title,
     grade: params.grade ?? lesson.grade,
-    subject: params.subject ?? lesson.subject
+    subject: params.subject ?? lesson.subject,
+    mode: resolveLessonReviewMode(params.mode, params.lessonId),
+    origin: resolveLessonOrigin(params.origin, params.classroomId ?? lesson.classroomId ?? undefined)
   };
+  const isViewMode = reviewParams.mode === "view";
+  const statusLabel = lessonStateLabel(lesson);
+  const needsPublish = isViewMode && lesson.status === "Needs Review";
   const revisionSuffix = revision > 1
     ? `\n\nRevision ${revision}: Refined for clearer classroom delivery and easier review.`
     : "";
@@ -49,9 +88,29 @@ export default function TeacherPackScreen() {
     }
   }
 
+  function goBackToOrigin() {
+    router.replace(lessonOriginRoute(reviewParams.origin, reviewParams.classroomId));
+  }
+
+  async function publishChanges() {
+    if (!lesson) return;
+    setPublishing(true);
+    try {
+      const saved = await publishTeacherLessonChanges(lesson.id, lesson);
+      replaceLesson(saved, lessonSource);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   return (
     <ScreenContainer>
-      <Header title="Teacher Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <Header
+        title={isViewMode ? "Teacher Notes" : "Teacher Pack"}
+        subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject} - ${isViewMode ? statusLabel : "Generated draft"}`}
+        showBack
+        onBack={isViewMode ? goBackToOrigin : undefined}
+      />
       <ReviewTabs active="teacher" params={reviewParams} />
 
       <View style={styles.tabRow}>
@@ -137,7 +196,7 @@ export default function TeacherPackScreen() {
       <Card style={styles.supportCard}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Learner support</Text>
-          {revision > 1 ? <Badge label={`Revision ${revision}`} tone="primary" /> : null}
+          {isViewMode ? <Badge label={statusLabel} tone={lessonStateTone(lesson)} /> : revision > 1 ? <Badge label={`Revision ${revision}`} tone="primary" /> : null}
         </View>
         <View style={styles.supportList}>
           {learnerSupport.map((item) => (
@@ -155,16 +214,52 @@ export default function TeacherPackScreen() {
           title="Edit"
           variant="outline"
           leftIcon={<Ionicons name="create-outline" size={20} color={colors.text} />}
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/lesson-editor",
+              params: {
+                ...reviewParams,
+                returnTo: "teacher"
+              }
+            })
+          }
           style={styles.actionButton}
         />
-        <AppButton
-          title="Regenerate"
-          variant="outline"
-          loading={regenerating}
-          leftIcon={<Ionicons name="refresh-outline" size={20} color={colors.text} />}
-          onPress={regeneratePack}
-          style={styles.actionButton}
-        />
+        {needsPublish ? (
+          <AppButton
+            title="Publish Changes"
+            variant="success"
+            loading={publishing}
+            leftIcon={<Ionicons name="cloud-upload-outline" size={20} color={colors.white} />}
+            onPress={publishChanges}
+            style={styles.actionButton}
+          />
+        ) : isViewMode ? (
+          <AppButton
+            title="Assignment"
+            variant="outline"
+            leftIcon={<Ionicons name="clipboard-outline" size={20} color={colors.text} />}
+            onPress={() =>
+              router.push({
+                pathname: "/(teacher)/create-assignment",
+                params: {
+                  lessonId: lesson.id,
+                  classroomId: lesson.classroomId ?? params.classroomId
+                }
+              })
+            }
+            style={styles.actionButton}
+          />
+        ) : (
+          <AppButton
+            title="Regenerate"
+            variant="outline"
+            loading={regenerating}
+            leftIcon={<Ionicons name="refresh-outline" size={20} color={colors.text} />}
+            onPress={regeneratePack}
+            style={styles.actionButton}
+          />
+        )}
         <AppButton
           title="Student Pack"
           variant="success"
@@ -330,5 +425,16 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingHorizontal: spacing.sm
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: spacing.md
+  },
+  stateText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+    textAlign: "center"
   }
 });

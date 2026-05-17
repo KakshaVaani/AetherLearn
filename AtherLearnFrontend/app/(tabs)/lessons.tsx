@@ -228,7 +228,9 @@ export default function LessonsScreen() {
                 classroomId: lesson.classroomId ?? undefined,
                 title: lesson.title,
                 grade: lesson.grade,
-                subject: lesson.subject
+                subject: lesson.subject,
+                mode: "view",
+                origin: "library"
               }
             })
           }

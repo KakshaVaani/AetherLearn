@@ -12,7 +12,7 @@ export default function SubmissionsScreen() {
   return (
     <ScreenContainer>
       <Header title="Submissions" subtitle="Review student work and AI feedback status." showBack />
-      <SectionHeader title="Photosynthesis Quick Check" subtitle="Grade 8 - Section A" />
+      <SectionHeader title="Photosynthesis Quick Check" subtitle="Class 7A - Science" />
 
       {submissions.map((submission) => (
         <Card key={submission.id} style={styles.card}>

@@ -35,7 +35,7 @@ export default function WelcomeScreen() {
 
   function openWorkspace(role: Role) {
     if (role === "teacher") {
-      router.replace("/(teacher)/onboarding");
+      router.replace("/(teacher)/dashboard");
       return;
     }
     if (!isStudentAcademicProfileComplete()) {
@@ -55,7 +55,7 @@ export default function WelcomeScreen() {
       setMessage(
         error instanceof ApiClientError
           ? error.message
-          : "Demo login failed. Start the backend and run the seed script first."
+          : "Demo login failed. Check that the backend is running."
       );
     } finally {
       setDemoRole(null);

@@ -8,7 +8,13 @@ import {
   normalizeLessonPack
 } from "@/api/adapters";
 import { getDefaultModelPreference } from "@/api/localPreferences";
-import { listLocalEntities, queueLocalOperation, saveLocalEntity } from "@/api/localStore";
+import {
+  deleteLocalEntity,
+  listLocalEntities,
+  queueLocalOperation,
+  replaceSyncedLocalEntities,
+  saveLocalEntity
+} from "@/api/localStore";
 import {
   askLocalDoubt,
   generateLocalAssignmentDraft,
@@ -48,6 +54,62 @@ type TeacherDashboardResponse = {
   classes: unknown[];
   lessons: unknown[];
   assignments: unknown[];
+};
+
+type ClassroomSource = "backend" | "local" | "demo";
+export type LessonDataSource = ClassroomSource;
+
+export type LessonPackEditPatch = {
+  title?: string;
+  status?: "pending_review" | "published";
+  visibility?: "class";
+  topicTitle?: string | null;
+  searchText?: string;
+  sourceUnderstanding?: {
+    title: string;
+    observedText: string[];
+    observedObjects: string[];
+    inferredTopic: string;
+    unclearAreas: string[];
+    sourceLanguage: string;
+  };
+  teacherPack?: {
+    lessonObjective: string;
+    teacherExplanation: string;
+    boardPlan: string[];
+    lowResourceActivity: string;
+    worksheet: string[];
+    quiz: string[];
+    answerKey: string[];
+    assessmentQuestions: string[];
+    homework: string;
+    differentiatedExplanations: string[];
+    teacherReviewChecklist: string[];
+  };
+  studentAccessPack?: {
+    listenFirstAudioScript: string;
+    screenReaderSummary: string;
+    visualDescription: string;
+    simpleExplanation: string;
+    vocabulary: string[];
+    practiceQuestions: string[];
+    hintsAnswers: string[];
+    revisionChecklist: string[];
+    independenceTips: string[];
+    qnaContext: string;
+  };
+  confidenceNotes?: {
+    overallConfidence: number;
+    notes: string[];
+    teacherReviewWarnings: string[];
+  };
+};
+
+export type TeacherDashboardData = {
+  classes: Classroom[];
+  lessons: LessonPack[];
+  assignments: Assignment[];
+  source: ClassroomSource;
 };
 
 type StudentDashboardResponse = {
@@ -94,6 +156,8 @@ export type SchoolSuggestion = {
   country?: string;
 };
 
+const DEMO_CLASS_IDS = ["class-7a", "class-7b", "class-8a", "class-8b"];
+
 function dedupeClassrooms(classes: Classroom[]) {
   const byKey = new Map<string, Classroom>();
   for (const classroom of classes) {
@@ -113,6 +177,47 @@ function dedupeClassrooms(classes: Classroom[]) {
   return Array.from(byKey.values());
 }
 
+function hasCanonicalDemoClasses(classes: Classroom[]) {
+  const ids = new Set(classes.map((item) => item.id));
+  return DEMO_CLASS_IDS.every((id) => ids.has(id));
+}
+
+function isTeacherDemoSession() {
+  return getSession()?.userId === "teacher-demo";
+}
+
+async function hydrateTeacherCache(classes: Classroom[], lessons: LessonPack[], assignments: Assignment[]) {
+  const ownerUserId = getSession()?.userId;
+  const options = ownerUserId ? { ownerUserId } : {};
+  await Promise.all([
+    replaceSyncedLocalEntities(
+      "classroom",
+      classes.map((item) => ({ localId: item.id, serverId: item.id, payload: item })),
+      options
+    ),
+    replaceSyncedLocalEntities(
+      "lesson",
+      lessons.map((item) => ({ localId: item.id, serverId: item.id, payload: item })),
+      options
+    ),
+    replaceSyncedLocalEntities(
+      "assignment",
+      assignments.map((item) => ({ localId: item.id, serverId: item.id, payload: item })),
+      options
+    )
+  ]);
+}
+
+async function hydrateTeacherDemoCacheFromBackend() {
+  if (!isTeacherDemoSession()) return;
+  const response = await apiJson<TeacherDashboardResponse>("/api/teacher/dashboard");
+  const classes = dedupeClassrooms(response.classes.map((item) => backendClassroomToClassroom(item as never)));
+  if (!hasCanonicalDemoClasses(classes)) return;
+  const lessons = response.lessons.map((item) => backendLessonToLessonPack(item as never));
+  const assignments = response.assignments.map((item) => backendAssignmentToAssignment(item as never));
+  await hydrateTeacherCache(classes, lessons, assignments);
+}
+
 export async function demoLogin(role: Role) {
   try {
     const response = await apiJson<LoginResponse>("/api/auth/demo-login", "POST", { role }, false);
@@ -123,6 +228,9 @@ export async function demoLogin(role: Role) {
       userId: response.user.id,
       name: response.user.name
     });
+    if (response.user.role === "teacher") {
+      await hydrateTeacherDemoCacheFromBackend().catch(() => undefined);
+    }
     return response.user;
   } catch {
     return saveLocalDemoSession(role);
@@ -181,38 +289,81 @@ export async function signupWithPassword(input: {
   return response.user;
 }
 
-export async function fetchTeacherDashboard() {
+export async function fetchTeacherDashboard(): Promise<TeacherDashboardData> {
+  const localClasses = await localClassrooms();
   const localLessons = await localLessonPacks();
   const localAssignments = await localAssignmentsList();
   try {
     const response = await apiJson<TeacherDashboardResponse>("/api/teacher/dashboard");
+    const backendClasses = dedupeClassrooms(response.classes.map((item) => backendClassroomToClassroom(item as never)));
+    const backendLessons = response.lessons.map((item) => backendLessonToLessonPack(item as never));
+    const backendAssignments = response.assignments.map((item) => backendAssignmentToAssignment(item as never));
+    if (isTeacherDemoSession() && !hasCanonicalDemoClasses(backendClasses)) {
+      return {
+        classes:
+          localClasses.length && hasCanonicalDemoClasses(localClasses)
+            ? dedupeClassrooms(localClasses)
+            : dedupeClassrooms(demoClassrooms),
+        lessons: localLessons.length
+          ? dedupeById([...localLessons, ...demoLessonPacks])
+          : dedupeById(demoLessonPacks),
+        assignments: localAssignments.length
+          ? dedupeById([...localAssignments, ...demoAssignments])
+          : dedupeById(demoAssignments),
+        source: localClasses.length || localLessons.length || localAssignments.length ? "local" : "demo"
+      };
+    }
+    await hydrateTeacherCache(backendClasses, backendLessons, backendAssignments).catch(() => undefined);
+    const queuedLocalLessons = await localLessonPacks({ includeSynced: false });
+    const queuedLocalAssignments = await localAssignmentsList({ includeSynced: false });
     return {
-      classes: dedupeClassrooms(response.classes.map((item) => backendClassroomToClassroom(item as never))),
+      classes: backendClasses,
       lessons: dedupeById([
-        ...localLessons,
-        ...response.lessons.map((item) => backendLessonToLessonPack(item as never))
+        ...backendLessons,
+        ...queuedLocalLessons
       ]),
       assignments: dedupeById([
-        ...localAssignments,
-        ...response.assignments.map((item) => backendAssignmentToAssignment(item as never))
-      ])
+        ...backendAssignments,
+        ...queuedLocalAssignments
+      ]),
+      source: "backend"
     };
   } catch {
     return {
-      classes: dedupeClassrooms(demoClassrooms),
+      classes: localClasses.length ? dedupeClassrooms(localClasses) : dedupeClassrooms(demoClassrooms),
       lessons: dedupeById([...localLessons, ...demoLessonPacks]),
-      assignments: dedupeById([...localAssignments, ...demoAssignments])
+      assignments: dedupeById([...localAssignments, ...demoAssignments]),
+      source: localClasses.length || localLessons.length || localAssignments.length ? "local" : "demo"
     };
   }
 }
 
 export async function fetchTeacherClassrooms(): Promise<Classroom[]> {
+  return (await fetchTeacherClassroomsWithSource()).classes;
+}
+
+export async function fetchTeacherClassroomsWithSource(): Promise<{
+  classes: Classroom[];
+  source: ClassroomSource;
+}> {
   try {
     const response = await apiJson<unknown[]>("/api/teacher/classes");
-    return dedupeClassrooms(response.map((item) => backendClassroomToClassroom(item as never)));
+    const backendClasses = dedupeClassrooms(response.map((item) => backendClassroomToClassroom(item as never)));
+    if (backendClasses.length > 0 && (!isTeacherDemoSession() || hasCanonicalDemoClasses(backendClasses))) {
+      await replaceSyncedLocalEntities(
+        "classroom",
+        backendClasses.map((item) => ({ localId: item.id, serverId: item.id, payload: item }))
+      ).catch(() => undefined);
+      return { classes: backendClasses, source: "backend" };
+    }
   } catch {
-    return dedupeClassrooms(demoClassrooms);
+    // Fall through to local cache and final fixture fallback.
   }
+  const local = dedupeClassrooms(await localClassrooms());
+  if (local.length > 0 && (!isTeacherDemoSession() || hasCanonicalDemoClasses(local))) {
+    return { classes: local, source: "local" };
+  }
+  return { classes: dedupeClassrooms(demoClassrooms), source: "demo" };
 }
 
 export async function setupTeacherWorkspace(input: {
@@ -248,17 +399,239 @@ export async function fetchTeacherLessons(): Promise<LessonPack[]> {
   const localLessons = await localLessonPacks();
   try {
     const response = await apiJson<unknown[]>("/api/teacher/lessons");
+    const queuedLocalLessons = await localLessonPacks({ includeSynced: false });
     return dedupeById([
-      ...localLessons,
-      ...response.map((item) => backendLessonToLessonPack(item as never))
+      ...response.map((item) => backendLessonToLessonPack(item as never)),
+      ...queuedLocalLessons
     ]);
   } catch {
     return dedupeById([...localLessons, ...demoLessonPacks]);
   }
 }
 
-export async function deleteTeacherLesson(lessonId: string) {
-  return apiJson(`/api/teacher/lessons/${lessonId}`, "DELETE");
+export async function fetchTeacherLesson(lessonId: string): Promise<{
+  lesson: LessonPack;
+  source: ClassroomSource;
+}> {
+  try {
+    const response = await apiJson<unknown>(`/api/teacher/lessons/${lessonId}`);
+    return {
+      lesson: backendLessonToLessonPack(response as never),
+      source: "backend"
+    };
+  } catch {
+    const localMatch = (await localLessonPacks()).find((item) => item.id === lessonId);
+    if (localMatch) {
+      return { lesson: localMatch, source: "local" };
+    }
+    const demoMatch = demoLessonPacks.find((item) => item.id === lessonId);
+    if (demoMatch) {
+      return { lesson: normalizeLessonPack(demoMatch), source: "demo" };
+    }
+    throw new ApiClientError("Lesson not found.", "LESSON_NOT_FOUND", 404);
+  }
+}
+
+function pendingReviewLesson(lesson: LessonPack): LessonPack {
+  return normalizeLessonPack({
+    ...lesson,
+    status: "Needs Review",
+    trustPack: {
+      ...lesson.trustPack,
+      teacherReviewStatus: "Review Required",
+      accessibilityWarnings: Array.from(
+        new Set([
+          ...(lesson.trustPack.accessibilityWarnings ?? []),
+          "Edited by teacher; review before sharing."
+        ])
+      )
+    },
+    safetyFlags: {
+      ...lesson.safetyFlags,
+      teacherReviewRequired: true
+    }
+  });
+}
+
+function publishedLesson(lesson: LessonPack): LessonPack {
+  return normalizeLessonPack({
+    ...lesson,
+    status: "Approved",
+    trustPack: {
+      ...lesson.trustPack,
+      teacherReviewStatus: "Approved",
+      accessibilityWarnings: (lesson.trustPack.accessibilityWarnings ?? []).filter(
+        (warning) => !warning.toLowerCase().includes("edited by teacher")
+      )
+    },
+    safetyFlags: {
+      ...lesson.safetyFlags,
+      teacherReviewRequired: false
+    }
+  });
+}
+
+export function lessonPackToEditPatch(lesson: LessonPack): LessonPackEditPatch {
+  const normalized = pendingReviewLesson(lesson);
+  const sourceText = [
+    normalized.title,
+    normalized.subject,
+    normalized.grade,
+    normalized.topicTitle ?? normalized.sourceCard.topic,
+    ...normalized.sourceCard.detectedText
+  ].filter(Boolean).join(" ");
+
+  return {
+    title: normalized.title,
+    status: "pending_review",
+    topicTitle: normalized.topicTitle ?? normalized.sourceCard.topic,
+    searchText: sourceText,
+    sourceUnderstanding: {
+      title: normalized.title,
+      observedText: [
+        ...normalized.sourceCard.detectedText,
+        ...normalized.sourceCard.equations
+      ],
+      observedObjects: normalized.sourceCard.diagramElements,
+      inferredTopic: normalized.topicTitle ?? normalized.sourceCard.topic,
+      unclearAreas: normalized.sourceCard.unclearRegions,
+      sourceLanguage: normalized.language
+    },
+    teacherPack: {
+      lessonObjective: normalized.teacherPack.objective,
+      teacherExplanation: normalized.teacherPack.teachingScript,
+      boardPlan: normalized.teacherPack.keyConcepts,
+      lowResourceActivity: normalized.teacherPack.classroomActivity,
+      worksheet: normalized.teacherPack.worksheet,
+      quiz: normalized.studentAccessPack.practiceQuestions,
+      answerKey: normalized.teacherPack.answerKey,
+      assessmentQuestions: normalized.teacherPack.worksheet,
+      homework: "Review the lesson notes and answer the practice questions.",
+      differentiatedExplanations: normalized.teacherPack.differentiatedSupport
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      teacherReviewChecklist: normalized.teacherPack.misconceptions
+    },
+    studentAccessPack: {
+      listenFirstAudioScript: normalized.studentAccessPack.audioStudyScript,
+      screenReaderSummary: normalized.studentAccessPack.screenReaderSummary,
+      visualDescription: normalized.studentAccessPack.visualDescription,
+      simpleExplanation: normalized.studentAccessPack.stepByStepExplanation,
+      vocabulary: normalized.studentAccessPack.vocabulary.map((item) => item.term),
+      practiceQuestions: normalized.studentAccessPack.practiceQuestions,
+      hintsAnswers: normalized.studentAccessPack.selfCheckAnswers,
+      revisionChecklist: normalized.studentAccessPack.steps,
+      independenceTips: [
+        "Read the summary before attempting questions.",
+        "Use the vocabulary list while revising."
+      ],
+      qnaContext: [
+        normalized.studentAccessPack.screenReaderSummary,
+        normalized.studentAccessPack.stepByStepExplanation,
+        ...normalized.studentAccessPack.practiceQuestions
+      ].filter(Boolean).join(" ")
+    },
+    confidenceNotes: {
+      overallConfidence: Math.max(0, Math.min(1, normalized.trustPack.confidence / 100)),
+      notes: normalized.sourceCard.confidenceNotes,
+      teacherReviewWarnings: normalized.trustPack.accessibilityWarnings
+    }
+  };
+}
+
+export async function updateTeacherLesson(
+  lessonId: string,
+  patch: LessonPackEditPatch,
+  localLesson?: LessonPack
+): Promise<LessonPack> {
+  try {
+    const response = await apiJson<unknown>(`/api/teacher/lessons/${lessonId}`, "PATCH", patch);
+    const lesson = backendLessonToLessonPack(response as never);
+    await saveLocalEntity("lesson", lesson, {
+      localId: lesson.id,
+      serverId: lesson.id,
+      syncStatus: "synced"
+    }).catch(() => undefined);
+    return lesson;
+  } catch (error) {
+    if (!localLesson) throw error;
+    const lesson = pendingReviewLesson(localLesson);
+    await saveLocalEntity("lesson", lesson, {
+      localId: lesson.id,
+      serverId: lesson.id,
+      syncStatus: "queued"
+    }).catch(() => undefined);
+    await queueLocalOperation(
+      "UPDATE_LESSON",
+      { lessonId, patch },
+      { entityType: "lesson", entityId: lessonId }
+    ).catch(() => undefined);
+    return lesson;
+  }
+}
+
+export async function publishTeacherLessonChanges(
+  lessonId: string,
+  localLesson?: LessonPack
+): Promise<LessonPack> {
+  const patch: LessonPackEditPatch = {
+    status: "published",
+    visibility: "class"
+  };
+
+  try {
+    const response = await apiJson<unknown>(`/api/teacher/lessons/${lessonId}`, "PATCH", patch);
+    const lesson = backendLessonToLessonPack(response as never);
+    await saveLocalEntity("lesson", lesson, {
+      localId: lesson.id,
+      serverId: lesson.id,
+      syncStatus: "synced"
+    }).catch(() => undefined);
+    return lesson;
+  } catch (error) {
+    if (!localLesson) throw error;
+    const lesson = publishedLesson(localLesson);
+    await saveLocalEntity("lesson", lesson, {
+      localId: lesson.id,
+      serverId: lesson.id,
+      syncStatus: "queued"
+    }).catch(() => undefined);
+    await queueLocalOperation(
+      "UPDATE_LESSON",
+      { lessonId, patch },
+      { entityType: "lesson", entityId: lessonId }
+    ).catch(() => undefined);
+    return lesson;
+  }
+}
+
+export async function deleteTeacherLesson(lessonId: string, source: ClassroomSource = "backend") {
+  if (source !== "demo") {
+    try {
+      const result = await apiJson(`/api/teacher/lessons/${lessonId}`, "DELETE");
+      await deleteLocalEntity("lesson", lessonId).catch(() => undefined);
+      return result;
+    } catch (error) {
+      if (source === "backend") throw error;
+    }
+  }
+  await deleteLocalEntity("lesson", lessonId).catch(() => undefined);
+  return { deleted: true };
+}
+
+export async function deleteTeacherAssignment(assignmentId: string, source: ClassroomSource = "backend") {
+  if (source !== "demo") {
+    try {
+      const result = await apiJson(`/api/teacher/assignments/${assignmentId}`, "DELETE");
+      await deleteLocalEntity("assignment", assignmentId).catch(() => undefined);
+      return result;
+    } catch (error) {
+      if (source === "backend") throw error;
+    }
+  }
+  await deleteLocalEntity("assignment", assignmentId).catch(() => undefined);
+  return { deleted: true };
 }
 
 export async function generateLessonFromText(input: {
@@ -567,13 +940,22 @@ function dedupeById<T extends { id: string }>(items: T[]) {
   });
 }
 
-async function localLessonPacks() {
+async function localLessonPacks(options: { includeSynced?: boolean } = {}) {
   const entities = await listLocalEntities<LessonPack>("lesson");
-  return entities.map((entity) => normalizeLessonPack(entity.payload));
+  return entities
+    .filter((entity) => options.includeSynced !== false || entity.syncStatus !== "synced")
+    .map((entity) => normalizeLessonPack(entity.payload));
 }
 
-async function localAssignmentsList() {
+async function localAssignmentsList(options: { includeSynced?: boolean } = {}) {
   const entities = await listLocalEntities<Assignment>("assignment");
+  return entities
+    .filter((entity) => options.includeSynced !== false || entity.syncStatus !== "synced")
+    .map((entity) => entity.payload);
+}
+
+async function localClassrooms() {
+  const entities = await listLocalEntities<Classroom>("classroom");
   return entities.map((entity) => entity.payload);
 }
 
@@ -581,8 +963,8 @@ function localGenerationError(error: unknown) {
   const details = error instanceof Error ? error.message : "Local Gemma generation failed.";
   const message =
     error instanceof LocalModelUnavailableError
-      ? `${details} Choose Remote Gemini to use backend AI.`
-      : `Local Gemma failed: ${details} Choose Remote Gemini to use backend AI.`;
+      ? `${details} Choose Remote Gemini to use backend AI, or keep exploring the seeded demo content.`
+      : `Local Gemma failed: ${details} Choose Remote Gemini to use backend AI, or keep exploring the seeded demo content.`;
   return new ApiClientError(message, "LOCAL_MODEL_UNAVAILABLE", 0);
 }
 

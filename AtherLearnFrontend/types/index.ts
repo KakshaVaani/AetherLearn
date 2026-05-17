@@ -1,6 +1,11 @@
 export type Role = "teacher" | "student";
 
-export type RuntimeMode = "Hosted Gemma" | "Local Ollama" | "On-device Gemma" | "Demo Fixture";
+export type RuntimeMode =
+  | "Hosted Gemma"
+  | "Local Ollama"
+  | "On-device Gemma"
+  | "Browser Gemma"
+  | "Demo Fixture";
 
 export type ModelPreference = "local-auto" | "local-e4b" | "local-e2b" | "remote-gemini";
 

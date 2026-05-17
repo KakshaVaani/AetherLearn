@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { publishTeacherLessonChanges } from "@/api/backend";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
@@ -10,6 +11,12 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { speakWithDeviceTts, stopDeviceTts, TtsStatus } from "@/utils/tts";
 import { colors, radii, spacing } from "@/constants/theme";
+import {
+  lessonOriginRoute,
+  lessonStateLabel,
+  resolveLessonOrigin,
+  resolveLessonReviewMode
+} from "@/utils/lessonReview";
 
 const sections = [
   "Summary",
@@ -28,34 +35,14 @@ export default function StudentPackScreen() {
     title?: string;
     grade?: string;
     subject?: string;
+    mode?: "generated" | "view";
+    origin?: "classroom" | "library";
   }>();
   const [playbackState, setPlaybackState] = useState<TtsStatus>("ready");
   const [audioMessage, setAudioMessage] = useState("Ready to play device TTS.");
   const [openSection, setOpenSection] = useState<StudentSection>("Summary");
-  const { lesson } = useLessonPackReview(params.lessonId);
-  const pack = lesson.studentAccessPack;
-  const transcript = pack.audioStudyScript.trim() || pack.screenReaderSummary.trim();
-  const canPlayAudio = transcript.length > 0;
-  const playing = playbackState === "playing" || playbackState === "loading_voices";
-  const reviewParams = {
-    lessonId: params.lessonId ?? lesson.id,
-    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
-    title: params.title ?? lesson.title,
-    grade: params.grade ?? lesson.grade,
-    subject: params.subject ?? lesson.subject
-  };
-
-  function sectionBody(section: StudentSection) {
-    if (section === "Summary") return pack.screenReaderSummary;
-    if (section === "Visual Description") return pack.visualDescription;
-    if (section === "Key Vocabulary") {
-      return pack.vocabulary.map((item) => `${item.term}: ${item.meaning}`).join("\n");
-    }
-    if (section === "Step-by-Step Explanation") {
-      return pack.stepByStepExplanation || pack.screenReaderSummary;
-    }
-    return pack.practiceQuestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
-  }
+  const [publishing, setPublishing] = useState(false);
+  const { lesson, loading, notFound, source: lessonSource, replaceLesson } = useLessonPackReview(params.lessonId);
 
   useEffect(() => {
     return () => {
@@ -74,10 +61,63 @@ export default function StudentPackScreen() {
   );
 
   useEffect(() => {
+    if (!lesson) return;
     stopDeviceTts();
     setPlaybackState("ready");
     setAudioMessage("Ready to play device TTS.");
-  }, [lesson.id]);
+  }, [lesson?.id]);
+
+  if (loading || !lesson) {
+    return (
+      <ScreenContainer>
+        <Header
+          title={notFound ? "Lesson not found" : "Loading Student Pack"}
+          subtitle={notFound ? "This lesson is not available in the current workspace." : "Fetching the selected lesson."}
+          showBack
+        />
+        <Card style={styles.stateCard}>
+          {notFound ? (
+            <Ionicons name="alert-circle-outline" size={24} color={colors.warning} />
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )}
+          <Text style={styles.stateText}>
+            {notFound ? "Return to the class and open a synced lesson." : "Loading topic-specific student notes..."}
+          </Text>
+        </Card>
+      </ScreenContainer>
+    );
+  }
+
+  const pack = lesson.studentAccessPack;
+  const lessonLanguage = lesson.language;
+  const transcript = pack.audioStudyScript.trim() || pack.screenReaderSummary.trim();
+  const canPlayAudio = transcript.length > 0;
+  const playing = playbackState === "playing" || playbackState === "loading_voices";
+  const reviewParams = {
+    lessonId: params.lessonId ?? lesson.id,
+    classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
+    title: params.title ?? lesson.title,
+    grade: params.grade ?? lesson.grade,
+    subject: params.subject ?? lesson.subject,
+    mode: resolveLessonReviewMode(params.mode, params.lessonId),
+    origin: resolveLessonOrigin(params.origin, params.classroomId ?? lesson.classroomId ?? undefined)
+  };
+  const isViewMode = reviewParams.mode === "view";
+  const statusLabel = lessonStateLabel(lesson);
+  const needsPublish = isViewMode && lesson.status === "Needs Review";
+
+  function sectionBody(section: StudentSection) {
+    if (section === "Summary") return pack.screenReaderSummary;
+    if (section === "Visual Description") return pack.visualDescription;
+    if (section === "Key Vocabulary") {
+      return pack.vocabulary.map((item) => `${item.term}: ${item.meaning}`).join("\n");
+    }
+    if (section === "Step-by-Step Explanation") {
+      return pack.stepByStepExplanation || pack.screenReaderSummary;
+    }
+    return pack.practiceQuestions.map((item, index) => `${index + 1}. ${item}`).join("\n");
+  }
 
   function stopAudio(message = "Audio stopped.") {
     stopDeviceTts();
@@ -97,7 +137,7 @@ export default function StudentPackScreen() {
       return;
     }
     void speakWithDeviceTts(transcript, {
-      language: languageCode(lesson.language),
+      language: languageCode(lessonLanguage),
       rate: 0.82,
       pitch: 1,
       onStatus: updateAudioStatus,
@@ -116,9 +156,31 @@ export default function StudentPackScreen() {
     playAudio();
   }
 
+  function goBackToOrigin() {
+    stopAudio();
+    router.replace(lessonOriginRoute(reviewParams.origin, reviewParams.classroomId));
+  }
+
+  async function publishChanges() {
+    if (!lesson) return;
+    setPublishing(true);
+    try {
+      stopAudio();
+      const saved = await publishTeacherLessonChanges(lesson.id, lesson);
+      replaceLesson(saved, lessonSource);
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   return (
     <ScreenContainer>
-      <Header title="Student Access Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <Header
+        title={isViewMode ? "Student Notes" : "Student Access Pack"}
+        subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject} - ${isViewMode ? statusLabel : "Generated draft"}`}
+        showBack
+        onBack={isViewMode ? goBackToOrigin : undefined}
+      />
       <ReviewTabs active="student" params={reviewParams} onBeforeNavigate={() => stopAudio()} />
 
       <Card style={styles.playerCard}>
@@ -160,12 +222,60 @@ export default function StudentPackScreen() {
       })}
 
       <View style={styles.actions}>
-        <AppButton
-          title="Ask Question"
-          variant="outline"
-          leftIcon={<Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.text} />}
-          style={styles.actionButton}
-        />
+        {isViewMode ? (
+          <>
+            <AppButton
+              title="Edit"
+              variant="outline"
+              leftIcon={<Ionicons name="create-outline" size={20} color={colors.text} />}
+              onPress={() => {
+                stopAudio();
+                router.push({
+                  pathname: "/(teacher)/lesson-editor",
+                  params: {
+                    ...reviewParams,
+                    returnTo: "student"
+                  }
+                });
+              }}
+              style={styles.actionButton}
+            />
+            {needsPublish ? (
+              <AppButton
+                title="Publish Changes"
+                variant="success"
+                loading={publishing}
+                leftIcon={<Ionicons name="cloud-upload-outline" size={20} color={colors.white} />}
+                onPress={publishChanges}
+                style={styles.actionButton}
+              />
+            ) : (
+              <AppButton
+                title="Assignment"
+                variant="outline"
+                leftIcon={<Ionicons name="clipboard-outline" size={20} color={colors.text} />}
+                onPress={() => {
+                  stopAudio();
+                  router.push({
+                    pathname: "/(teacher)/create-assignment",
+                    params: {
+                      lessonId: lesson.id,
+                      classroomId: lesson.classroomId ?? params.classroomId
+                    }
+                  });
+                }}
+                style={styles.actionButton}
+              />
+            )}
+          </>
+        ) : (
+          <AppButton
+            title="Ask Question"
+            variant="outline"
+            leftIcon={<Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.text} />}
+            style={styles.actionButton}
+          />
+        )}
         <AppButton
           title="Trust Pack"
           leftIcon={<Ionicons name="shield-checkmark-outline" size={20} color={colors.white} />}
@@ -272,5 +382,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: spacing.md
+  },
+  stateText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+    textAlign: "center"
   }
 });

@@ -513,6 +513,19 @@ async def delete_lesson(
     return success_response(data, request)
 
 
+@router.delete("/assignments/{assignment_id}")
+async def delete_assignment(
+    request: Request, assignment_id: str, ctx: UserContext = Depends(teacher_context)
+):
+    data = await clients()["assignment"].request(
+        "DELETE",
+        f"/internal/assignments/{assignment_id}",
+        request_id=request_id(request),
+        user_context=ctx,
+    )
+    return success_response(data, request)
+
+
 @router.post("/lessons/{lesson_id}/assign")
 async def assign_lesson(
     request: Request,

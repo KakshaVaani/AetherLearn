@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Platform, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { modelPreferenceLabels, modelPreferenceOptions } from "@/api/modelCatalog";
 import { ModelPreference } from "@/types";
@@ -20,12 +20,16 @@ const icons: Record<ModelPreference, keyof typeof Ionicons.glyphMap> = {
   "remote-gemini": "cloud-outline"
 };
 
-const subtitles: Record<ModelPreference, string> = {
-  "local-auto": "E4B, then E2B",
-  "local-e4b": "High-end Android",
-  "local-e2b": "Phone fallback",
-  "remote-gemini": "Backend API"
-};
+function subtitleFor(preference: ModelPreference) {
+  const web = Platform.OS === "web";
+  const subtitles: Record<ModelPreference, string> = {
+    "local-auto": web ? "E2B, then E4B" : "E4B, then E2B",
+    "local-e4b": web ? "2.96 GB WebGPU task" : "High-end Android",
+    "local-e2b": web ? "2.0 GB WebGPU task" : "Phone fallback",
+    "remote-gemini": "Backend API"
+  };
+  return subtitles[preference];
+}
 
 export function ModelModeSelector({
   value,
@@ -65,7 +69,7 @@ export function ModelModeSelector({
                 <Text style={[styles.optionLabel, selected && styles.optionLabelSelected]}>
                   {modelPreferenceLabels[preference]}
                 </Text>
-                {!compact ? <Text style={styles.optionSubtitle}>{subtitles[preference]}</Text> : null}
+                {!compact ? <Text style={styles.optionSubtitle}>{subtitleFor(preference)}</Text> : null}
               </View>
             </Pressable>
           );

@@ -1,0 +1,2063 @@
+[
+  {
+    "language": "English",
+    "runtimeMode": "Hosted Gemma",
+    "model": "Gemma hosted demo",
+    "latency": "1.2s",
+    "status": "Approved",
+    "confidence": 93,
+    "unclearRegions": [
+      "One lower-right board label is cropped and should be reviewed."
+    ],
+    "accessibilityWarnings": [],
+    "id": "photosynthesis",
+    "title": "Photosynthesis in Plants",
+    "classroomId": "class-7a",
+    "classSubjectId": "subject-7a-science",
+    "chapterId": "science-plant-processes",
+    "chapterTitle": "Chapter 1: Plant Processes",
+    "topicId": "photosynthesis",
+    "topicTitle": "Photosynthesis",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Blind / Low Vision",
+    "sourceType": "Blackboard diagram",
+    "detectedText": [
+      "Photosynthesis",
+      "CO2 + H2O -> glucose + O2",
+      "Sunlight",
+      "Chlorophyll",
+      "Leaves make food"
+    ],
+    "diagramElements": [
+      "Sun arrow reaching leaf",
+      "Roots taking water",
+      "Carbon dioxide entering leaf",
+      "Oxygen leaving leaf",
+      "Glucose made in leaf"
+    ],
+    "equations": [
+      "carbon dioxide + water --sunlight/chlorophyll--> glucose + oxygen"
+    ],
+    "confidenceNotes": [
+      "Equation and main labels are clear.",
+      "Teacher should confirm the cropped output label before sharing."
+    ],
+    "objective": "Students explain photosynthesis as the process by which green plants make glucose using sunlight, water, carbon dioxide, and chlorophyll.",
+    "keyConcepts": [
+      "Green plants are producers because they can make their own food.",
+      "Leaves are the main site of photosynthesis because they contain chlorophyll.",
+      "Roots absorb water from soil and carry it to leaves through the stem.",
+      "Carbon dioxide enters leaves through tiny openings called stomata.",
+      "Sunlight provides the energy needed to change raw materials into glucose.",
+      "Oxygen is released as a useful by-product during photosynthesis.",
+      "Glucose can be used immediately for energy or stored as starch."
+    ],
+    "teachingScript": "Begin by asking students where a plant gets its food. Let a few students answer, then separate two ideas on the board: plants take in materials from outside, but they make food inside their leaves. Draw a large leaf and mark sunlight, water, and carbon dioxide as inputs.\n\nNext, trace the journey of each input. Water comes from the soil through roots and stem. Carbon dioxide enters through stomata. Sunlight is trapped by chlorophyll, the green pigment in leaves. Use arrows so students can hear and see the direction of each input.\n\nFinally, write the word equation and read it aloud twice: carbon dioxide plus water, in the presence of sunlight and chlorophyll, makes glucose and oxygen. Emphasize that glucose is the plant food, while oxygen is released into the air. Close by asking students to explain why plants are important for animals and humans.",
+    "classroomActivity": "Give five students cards labelled sunlight, water, carbon dioxide, glucose, and oxygen. Ask the class to arrange them around a plant drawing, then narrate the process in order. Repeat once with students closing their notebooks and using only the cards as prompts.",
+    "worksheet": [
+      "List the three raw materials or conditions needed for photosynthesis.",
+      "Explain the role of chlorophyll in one sentence.",
+      "Write the word equation for photosynthesis.",
+      "Why are leaves called the food factories of the plant?",
+      "What happens to the oxygen made during photosynthesis?",
+      "A plant is kept in darkness for two days. Predict how this affects food-making and explain why."
+    ],
+    "answerKey": [
+      "Water, carbon dioxide, and sunlight are needed; chlorophyll in the leaf is also necessary.",
+      "Chlorophyll captures light energy so the leaf can make glucose.",
+      "Carbon dioxide + water --sunlight and chlorophyll--> glucose + oxygen.",
+      "Leaves are called food factories because they make glucose for the plant.",
+      "Oxygen is released into the air through the leaf.",
+      "Food-making slows or stops because sunlight is not available as the energy source."
+    ],
+    "misconceptions": [
+      "Plants do not get ready-made food from soil; soil provides water and minerals.",
+      "Photosynthesis is not the same as breathing; it is food-making.",
+      "Only green parts with chlorophyll can photosynthesize strongly.",
+      "Oxygen is not an input for photosynthesis; it is an output."
+    ],
+    "differentiatedSupport": "Support: Read the process as input cards first, then let students match each card to a diagram arrow.\nCore: Ask students to explain each arrow and then write the full word equation.\nChallenge: Ask students to connect photosynthesis to food chains and oxygen in the air.",
+    "screenReaderSummary": "Photosynthesis is the food-making process in green plants. Leaves use sunlight, chlorophyll, water from roots, and carbon dioxide from air to make glucose. Oxygen is released from the leaf as a by-product.",
+    "audioStudyScript": "Listen for the order of the process. Water reaches the leaf from the roots. Carbon dioxide enters through stomata. Chlorophyll traps sunlight. The leaf makes glucose, which is plant food, and oxygen leaves the plant.",
+    "visualDescription": "The source shows a plant with arrows: sunlight points to the leaf, water moves from roots upward, carbon dioxide enters the leaf, glucose is shown inside the leaf, and oxygen leaves the leaf.",
+    "stepByStepExplanation": "Step 1: Roots absorb water. Step 2: Carbon dioxide enters the leaf through stomata. Step 3: Chlorophyll traps sunlight. Step 4: The leaf uses energy to combine water and carbon dioxide. Step 5: Glucose is formed as food. Step 6: Oxygen is released into the air.",
+    "vocabulary": [
+      {
+        "term": "Photosynthesis",
+        "meaning": "The process by which green plants make food."
+      },
+      {
+        "term": "Chlorophyll",
+        "meaning": "The green pigment that traps sunlight in leaves."
+      },
+      {
+        "term": "Glucose",
+        "meaning": "A simple sugar made by plants as food."
+      },
+      {
+        "term": "Stomata",
+        "meaning": "Tiny pores in leaves that allow gases to enter and leave."
+      },
+      {
+        "term": "Producer",
+        "meaning": "A living thing that can make its own food."
+      }
+    ],
+    "steps": [
+      "Identify the inputs.",
+      "Locate where each input enters the plant.",
+      "Use chlorophyll and sunlight as the energy step.",
+      "Name glucose as plant food.",
+      "Name oxygen as the released gas.",
+      "Read the full word equation aloud."
+    ],
+    "practiceQuestions": [
+      "What is photosynthesis?",
+      "Name two inputs and two outputs.",
+      "Why is chlorophyll important?",
+      "Where does carbon dioxide enter the leaf?",
+      "Why do animals depend on photosynthesis?",
+      "What may happen if a plant gets no sunlight?"
+    ],
+    "selfCheckAnswers": [
+      "Food-making in green plants.",
+      "Inputs: water and carbon dioxide; outputs: glucose and oxygen.",
+      "It traps light energy.",
+      "Through stomata.",
+      "It provides food directly or indirectly and releases oxygen.",
+      "Photosynthesis slows or stops."
+    ],
+    "homework": "Draw a labelled photosynthesis diagram and write three sentences explaining the arrows.",
+    "warnings": [
+      "One cropped board edge may hide a label."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Local Ollama",
+    "model": "Gemma local proof",
+    "latency": "1.9s",
+    "status": "Approved",
+    "confidence": 90,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "plant-nutrition-stomata",
+    "title": "Plant Nutrition and Stomata",
+    "classroomId": "class-7a",
+    "classSubjectId": "subject-7a-science",
+    "chapterId": "science-plant-processes",
+    "chapterTitle": "Chapter 1: Plant Processes",
+    "topicId": "plant-nutrition-stomata",
+    "topicTitle": "Plant Nutrition and Stomata",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Standard",
+    "sourceType": "Leaf cross-section notes",
+    "detectedText": [
+      "Autotrophic nutrition",
+      "Stomata",
+      "Guard cells",
+      "Gas exchange",
+      "Transpiration"
+    ],
+    "diagramElements": [
+      "Leaf surface",
+      "Open stoma",
+      "Guard cells",
+      "Carbon dioxide arrow",
+      "Water vapour arrow"
+    ],
+    "confidenceNotes": [
+      "Stomata diagram and labels are readable.",
+      "Guard-cell label is clear enough for student use."
+    ],
+    "objective": "Students describe autotrophic nutrition and explain how stomata help leaves exchange gases while also losing water vapour.",
+    "keyConcepts": [
+      "Autotrophic nutrition means making food from simple substances using energy.",
+      "Plants are autotrophs because they make glucose during photosynthesis.",
+      "Stomata are tiny pores mostly found on leaf surfaces.",
+      "Guard cells open and close stomata to control gas movement.",
+      "Carbon dioxide enters through stomata for photosynthesis.",
+      "Oxygen and water vapour can leave through stomata.",
+      "Too much water loss through stomata is called transpiration and must be controlled."
+    ],
+    "teachingScript": "Start with the word autotroph. Break it into auto, meaning self, and troph, meaning nutrition. Explain that plants do not eat like animals; they make food from carbon dioxide and water using sunlight.\n\nShow a simple leaf surface drawing. Mark stomata as tiny doorways. Explain that the plant needs carbon dioxide to enter, but every open doorway can also let water vapour escape. This creates a useful trade-off: open stomata help food-making, but closed stomata reduce water loss.\n\nUse guard cells as the control system. When guard cells swell, the pore opens. When they lose water, the pore closes. End by connecting this topic back to photosynthesis: without stomata, the leaf cannot easily get carbon dioxide.",
+    "classroomActivity": "Use two students as guard cells standing with arms apart for an open stoma and together for a closed stoma. Other students act as carbon dioxide, oxygen, and water vapour moving in or out only when the stoma is open.",
+    "worksheet": [
+      "Define autotrophic nutrition.",
+      "What are stomata?",
+      "How do guard cells help the plant?",
+      "Which gas enters the leaf for photosynthesis?",
+      "Why might a plant close its stomata on a hot day?",
+      "How are stomata connected to transpiration?"
+    ],
+    "answerKey": [
+      "Making food by oneself from simple materials.",
+      "Tiny pores on leaf surfaces.",
+      "They open and close the stomatal pore.",
+      "Carbon dioxide.",
+      "To reduce water loss.",
+      "Water vapour leaves through open stomata."
+    ],
+    "misconceptions": [
+      "Stomata are not large holes visible to the naked eye.",
+      "Guard cells do not make food; they control the pore.",
+      "Transpiration is water loss, not food-making.",
+      "Plants need gas exchange even though they do not have lungs."
+    ],
+    "differentiatedSupport": "Support: Use the doorway acting activity before writing definitions.\nCore: Ask students to complete a cause-effect chart for open and closed stomata.\nChallenge: Ask students to explain the trade-off between carbon dioxide entry and water conservation.",
+    "screenReaderSummary": "Plants use autotrophic nutrition to make their own food. Stomata are tiny leaf pores controlled by guard cells. They let carbon dioxide enter for photosynthesis and allow oxygen and water vapour to leave.",
+    "audioStudyScript": "A stoma is like a tiny door in a leaf. When it opens, carbon dioxide can enter. Oxygen and water vapour can leave. Guard cells open and close this door so the leaf can make food without losing too much water.",
+    "visualDescription": "The diagram shows two curved guard cells around a small opening. Arrows show carbon dioxide entering and water vapour leaving through the opening.",
+    "stepByStepExplanation": "First, plants make their food, so they have autotrophic nutrition. Second, leaves need carbon dioxide for this food-making. Third, carbon dioxide enters through stomata. Fourth, guard cells open the pore when gas exchange is needed. Fifth, the plant may close stomata to save water.",
+    "vocabulary": [
+      {
+        "term": "Autotroph",
+        "meaning": "An organism that makes its own food."
+      },
+      {
+        "term": "Stomata",
+        "meaning": "Tiny pores on leaves for gas exchange."
+      },
+      {
+        "term": "Guard cells",
+        "meaning": "Cells that open and close stomata."
+      },
+      {
+        "term": "Transpiration",
+        "meaning": "Loss of water vapour from plant parts."
+      },
+      {
+        "term": "Gas exchange",
+        "meaning": "Movement of gases in and out of a living thing."
+      }
+    ],
+    "steps": [
+      "Define autotrophic nutrition.",
+      "Locate stomata on the leaf.",
+      "Name the gases moving through stomata.",
+      "Explain guard-cell opening and closing.",
+      "Connect open stomata to both photosynthesis and water loss."
+    ],
+    "practiceQuestions": [
+      "What does autotrophic nutrition mean?",
+      "Why does a leaf need stomata?",
+      "What do guard cells do?",
+      "Which gas enters through stomata?",
+      "Why can open stomata be risky on a hot day?",
+      "How is this topic linked to photosynthesis?"
+    ],
+    "selfCheckAnswers": [
+      "Making own food.",
+      "For gas exchange.",
+      "They open and close the pore.",
+      "Carbon dioxide.",
+      "Water vapour may be lost quickly.",
+      "Carbon dioxide needed for photosynthesis enters through stomata."
+    ],
+    "homework": "Draw one open stoma and one closed stoma. Add arrows for carbon dioxide and water vapour."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Local Ollama",
+    "model": "Gemma local proof",
+    "latency": "2.4s",
+    "status": "Draft",
+    "confidence": 88,
+    "unclearRegions": [
+      "Top heading is partly cut off."
+    ],
+    "accessibilityWarnings": [],
+    "id": "water-cycle",
+    "title": "Water Cycle",
+    "classroomId": "class-7a",
+    "classSubjectId": "subject-7a-science",
+    "chapterId": "science-water-cycle",
+    "chapterTitle": "Chapter 2: Water and Weather",
+    "topicId": "water-cycle",
+    "topicTitle": "Water Cycle",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Dyslexia Friendly",
+    "sourceType": "Textbook diagram",
+    "detectedText": [
+      "Evaporation",
+      "Condensation",
+      "Precipitation",
+      "Collection",
+      "Runoff",
+      "Groundwater"
+    ],
+    "diagramElements": [
+      "Sun over water body",
+      "Rising water vapour arrows",
+      "Cloud",
+      "Rainfall arrows",
+      "River returning to sea"
+    ],
+    "confidenceNotes": [
+      "Main cycle labels are clear.",
+      "The heading may need confirmation."
+    ],
+    "objective": "Students explain the water cycle as the continuous movement of water through evaporation, condensation, precipitation, collection, runoff, and groundwater flow.",
+    "keyConcepts": [
+      "The sun provides energy for evaporation.",
+      "Evaporation changes liquid water into water vapour.",
+      "Condensation changes water vapour into tiny droplets that form clouds.",
+      "Precipitation returns water to Earth as rain, snow, or hail.",
+      "Collection gathers water in rivers, lakes, oceans, and underground spaces.",
+      "Runoff moves water over land toward rivers and seas.",
+      "The cycle repeats, so water is reused in nature."
+    ],
+    "teachingScript": "Begin with a local rain question: after rain falls near the school, where does the water go? List student answers such as puddles, drains, soil, and rivers. Use these answers to introduce collection and runoff before moving to the full cycle.\n\nDraw the cycle as a loop, not a straight line. Start at a pond or sea. The sun heats water, evaporation sends water vapour upward, condensation forms clouds, precipitation brings water down, and collection gathers it again. Add runoff and groundwater to show that not all water returns by the same path.\n\nClose by asking students why the word cycle is important. They should say that the same water keeps moving and changing form. Connect this to water conservation: even though water cycles, clean usable water is limited.",
+    "classroomActivity": "Create six floor stations: sun, evaporation, cloud, rain, river, and groundwater. Students move as water drops and announce the process at each station.",
+    "worksheet": [
+      "Define evaporation with an example.",
+      "How are clouds formed?",
+      "What is precipitation?",
+      "Give two places where water collects after rain.",
+      "Why is the water cycle called a cycle?",
+      "How can runoff affect soil or roads after heavy rain?"
+    ],
+    "answerKey": [
+      "Liquid water changes to vapour, such as wet clothes drying.",
+      "Water vapour cools and condenses into tiny droplets.",
+      "Water falling from clouds as rain, snow, or hail.",
+      "Rivers, lakes, oceans, ponds, soil, or groundwater.",
+      "The same water moves repeatedly through steps.",
+      "It can carry soil away, fill drains, or cause waterlogging."
+    ],
+    "misconceptions": [
+      "Clouds are not smoke; they are made of tiny water droplets or ice crystals.",
+      "Evaporation can happen even when water is not boiling.",
+      "Rain does not mean water has disappeared from clouds forever.",
+      "Groundwater is part of the water cycle too."
+    ],
+    "differentiatedSupport": "Support: Use numbered process cards and ask students to arrange them in a circle.\nCore: Ask students to explain each stage using a local monsoon example.\nChallenge: Ask students to include runoff and groundwater in a more complete cycle diagram.",
+    "screenReaderSummary": "The water cycle is the continuous movement of water between Earth and the air. The sun causes evaporation, cooling causes condensation, clouds release precipitation, and water collects in oceans, rivers, lakes, soil, and underground spaces.",
+    "audioStudyScript": "Imagine one drop of water. The sun warms it and it evaporates. It rises as vapour, cools, and becomes part of a cloud. Later it falls as rain. It may collect in a river, soak into the ground, or flow back to the sea. Then the journey begins again.",
+    "visualDescription": "The diagram shows the sun heating a water body, arrows rising to clouds, rain falling to land, and rivers carrying water back to a larger water body.",
+    "stepByStepExplanation": "Step 1: The sun heats water. Step 2: Water evaporates into vapour. Step 3: Vapour cools and condenses into clouds. Step 4: Water falls as precipitation. Step 5: Water collects in different places. Step 6: Runoff and groundwater carry water back to larger water bodies.",
+    "vocabulary": [
+      {
+        "term": "Evaporation",
+        "meaning": "Liquid water changing into water vapour."
+      },
+      {
+        "term": "Condensation",
+        "meaning": "Water vapour cooling into tiny liquid drops."
+      },
+      {
+        "term": "Precipitation",
+        "meaning": "Water falling from clouds."
+      },
+      {
+        "term": "Runoff",
+        "meaning": "Water flowing over land."
+      },
+      {
+        "term": "Groundwater",
+        "meaning": "Water stored below the ground."
+      }
+    ],
+    "steps": [
+      "Find the sun as the energy source.",
+      "Follow arrows upward for evaporation.",
+      "Locate clouds for condensation.",
+      "Follow arrows downward for precipitation.",
+      "Trace water into rivers, soil, lakes, and oceans.",
+      "Explain why the path repeats."
+    ],
+    "practiceQuestions": [
+      "What provides energy for evaporation?",
+      "What is condensation?",
+      "Name three forms of precipitation.",
+      "Where can water collect?",
+      "Why is clean water still limited if water cycles?",
+      "What is runoff?"
+    ],
+    "selfCheckAnswers": [
+      "The sun.",
+      "Vapour cooling into droplets.",
+      "Rain, snow, hail, or sleet.",
+      "Rivers, lakes, oceans, soil, groundwater.",
+      "Usable clean water can be polluted or unavailable.",
+      "Water flowing over land."
+    ],
+    "homework": "Observe water after the next rain and write three places it collects or flows.",
+    "warnings": [
+      "Top label is partly cropped."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Approved",
+    "confidence": 86,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "cloud-formation-rainfall",
+    "title": "Cloud Formation and Rainfall",
+    "classroomId": "class-7a",
+    "classSubjectId": "subject-7a-science",
+    "chapterId": "science-water-cycle",
+    "chapterTitle": "Chapter 2: Water and Weather",
+    "topicId": "cloud-formation-rainfall",
+    "topicTitle": "Cloud Formation and Rainfall",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Slow Learner",
+    "sourceType": "Weather chart notes",
+    "detectedText": [
+      "Warm air rises",
+      "Cooling",
+      "Condensation",
+      "Cloud droplets",
+      "Rainfall"
+    ],
+    "diagramElements": [
+      "Hill slope",
+      "Rising warm air arrow",
+      "Cloud with droplets",
+      "Rain arrows",
+      "Cool air label"
+    ],
+    "confidenceNotes": [
+      "Process arrows are clear.",
+      "Cloud droplet labels are readable."
+    ],
+    "objective": "Students explain how water vapour cools to form clouds and why droplets eventually fall as rain.",
+    "keyConcepts": [
+      "Warm air can hold water vapour and often rises.",
+      "Air becomes cooler as it rises higher.",
+      "Cooling water vapour condenses into tiny droplets.",
+      "Millions of tiny droplets together form clouds.",
+      "Droplets join to become larger and heavier.",
+      "When droplets become too heavy to stay in the cloud, they fall as rain.",
+      "Rainfall can be affected by wind, temperature, and landforms."
+    ],
+    "teachingScript": "Start by asking students why bathroom mirrors become foggy after hot water is used. Use this familiar example to introduce condensation: warm water vapour touches a cooler surface and becomes tiny drops.\n\nNow move from the mirror to the sky. Warm moist air rises. Higher air is cooler, so water vapour condenses around dust particles into tiny droplets. These droplets are small enough to float as clouds.\n\nExplain rainfall as a size and weight change. Droplets collide and join. When they become heavy, gravity pulls them down as rain. Connect this to dark clouds before rain: more droplets make the cloud thicker and less light passes through.",
+    "classroomActivity": "Hold a cold steel plate over a cup of warm water for a short teacher demonstration. Let students observe droplets forming on the plate and connect the model to cloud formation.",
+    "worksheet": [
+      "Why does warm moist air rise?",
+      "What happens when water vapour cools?",
+      "How do tiny droplets become rain?",
+      "Why may rain clouds look dark?",
+      "Give one everyday example of condensation.",
+      "How is this topic part of the water cycle?"
+    ],
+    "answerKey": [
+      "Warm air is lighter and rises.",
+      "It condenses into tiny water droplets.",
+      "Droplets join, become heavy, and fall.",
+      "Many droplets block more light.",
+      "Foggy mirror or drops on a cold bottle.",
+      "Cloud formation is condensation and rainfall is precipitation."
+    ],
+    "misconceptions": [
+      "Clouds are not made of smoke or cotton.",
+      "Rain does not fall because clouds melt.",
+      "Condensation can happen without boiling.",
+      "Dark clouds are not dirty; they often contain many droplets."
+    ],
+    "differentiatedSupport": "Support: Use the mirror or cold-bottle example before using weather words.\nCore: Ask students to sequence warm air, cooling, condensation, cloud, rainfall.\nChallenge: Ask students to compare cloud formation with dew on grass or droplets on a cold bottle.",
+    "screenReaderSummary": "Clouds form when warm moist air rises and cools. Water vapour condenses into tiny droplets. When droplets join and become heavy, they fall to Earth as rain.",
+    "audioStudyScript": "Warm moist air rises. Higher up, the air is cooler. Water vapour changes into tiny drops. The drops gather as clouds. When many drops join and become heavy, rain falls.",
+    "visualDescription": "The chart shows warm air rising from land, cooling near a cloud, tiny droplets inside the cloud, and rain arrows falling back to Earth.",
+    "stepByStepExplanation": "First, water evaporates and adds vapour to air. Second, warm moist air rises. Third, the air cools. Fourth, vapour condenses into droplets. Fifth, droplets form clouds. Sixth, droplets join and fall as rainfall.",
+    "vocabulary": [
+      {
+        "term": "Condensation",
+        "meaning": "Water vapour changing into liquid droplets."
+      },
+      {
+        "term": "Droplet",
+        "meaning": "A very small drop of water."
+      },
+      {
+        "term": "Moist air",
+        "meaning": "Air containing water vapour."
+      },
+      {
+        "term": "Rainfall",
+        "meaning": "Water falling from clouds as rain."
+      },
+      {
+        "term": "Gravity",
+        "meaning": "The force that pulls heavy droplets downward."
+      }
+    ],
+    "steps": [
+      "Start with water vapour in warm air.",
+      "Let warm moist air rise.",
+      "Cool the air higher up.",
+      "Condense vapour into droplets.",
+      "Collect droplets as clouds.",
+      "Let heavy droplets fall as rain."
+    ],
+    "practiceQuestions": [
+      "What must happen before water vapour becomes droplets?",
+      "Why do clouds form high in the sky?",
+      "Why does rain fall from a cloud?",
+      "Name an everyday condensation example.",
+      "Which water-cycle stage is cloud formation?",
+      "Which stage is rainfall?"
+    ],
+    "selfCheckAnswers": [
+      "It must cool.",
+      "Rising air cools higher up.",
+      "Droplets join and become heavy.",
+      "Foggy mirror or cold bottle drops.",
+      "Condensation.",
+      "Precipitation."
+    ],
+    "homework": "Write a six-step story of one water droplet becoming part of a cloud and then rain."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Hosted Gemma",
+    "model": "Gemma hosted demo",
+    "latency": "1.3s",
+    "status": "Approved",
+    "confidence": 91,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "digestive-system",
+    "title": "Digestive System Overview",
+    "classroomId": "class-7b",
+    "classSubjectId": "subject-7b-science",
+    "chapterId": "science-human-body",
+    "chapterTitle": "Chapter 1: Human Body Systems",
+    "topicId": "digestive-system",
+    "topicTitle": "Digestive System",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Slow Learner",
+    "sourceType": "Biology slide diagram",
+    "detectedText": [
+      "Mouth",
+      "Oesophagus",
+      "Stomach",
+      "Small intestine",
+      "Large intestine",
+      "Anus"
+    ],
+    "diagramElements": [
+      "Human torso",
+      "Food pipe",
+      "Stomach pouch",
+      "Coiled small intestine",
+      "Large intestine outline"
+    ],
+    "confidenceNotes": [
+      "Major organ labels are detected.",
+      "Food path order is clear."
+    ],
+    "objective": "Students trace the path of food through the digestive system and state the main role of each organ.",
+    "keyConcepts": [
+      "Digestion breaks complex food into simpler usable substances.",
+      "The mouth starts mechanical digestion by chewing.",
+      "Saliva begins chemical digestion of starch.",
+      "The oesophagus pushes food to the stomach.",
+      "The stomach churns food and mixes it with digestive juices.",
+      "The small intestine completes digestion and absorbs most nutrients.",
+      "The large intestine absorbs water and forms waste for removal."
+    ],
+    "teachingScript": "Begin by asking students to imagine eating a piece of roti or rice. Ask: where does it go first, and does it remain the same? Use this question to introduce digestion as both a physical and chemical process.\n\nDraw the digestive tract as one continuous route. Move slowly from mouth to anus. At each stop, give one short job: mouth chews, oesophagus pushes, stomach churns, small intestine absorbs nutrients, large intestine absorbs water, anus removes waste.\n\nEmphasize that the digestive system is not a bag of separate organs. It is a connected tube with helper organs and juices. End with a quick oral recap where students say the organs in order without looking.",
+    "classroomActivity": "Use a long rope or chalk path as the digestive tract. Students hold organ cards in order and pass a food card along the path, announcing each organ job.",
+    "worksheet": [
+      "Write the organs of the digestive tract in order.",
+      "What is the difference between chewing and chemical digestion?",
+      "What does the oesophagus do?",
+      "Why is the small intestine important?",
+      "What does the large intestine absorb?",
+      "Why should we chew food well?"
+    ],
+    "answerKey": [
+      "Mouth, oesophagus, stomach, small intestine, large intestine, anus.",
+      "Chewing breaks food physically; chemical digestion uses juices to change food.",
+      "It pushes food to the stomach.",
+      "It absorbs most nutrients.",
+      "Water.",
+      "Chewing makes food smaller and mixes it with saliva."
+    ],
+    "misconceptions": [
+      "Food does not pass into the lungs during normal swallowing.",
+      "The stomach does not absorb most nutrients.",
+      "Digestion is not only chewing; chemical digestion also occurs.",
+      "The intestines are not just waste pipes; they absorb useful materials."
+    ],
+    "differentiatedSupport": "Support: Use organ cards and repeat the route aloud three times.\nCore: Ask students to match each organ with one function.\nChallenge: Ask students to compare mechanical and chemical digestion with examples.",
+    "screenReaderSummary": "The digestive system is a connected path that breaks food into simpler substances. Food moves from mouth to oesophagus, stomach, small intestine, large intestine, and anus. Nutrients are mostly absorbed in the small intestine.",
+    "audioStudyScript": "Food starts in the mouth. Teeth break it into smaller pieces and saliva begins digestion. The oesophagus pushes food down. The stomach churns it. The small intestine absorbs nutrients. The large intestine absorbs water and waste leaves the body.",
+    "visualDescription": "A torso diagram labels a continuous digestive path from the mouth down the food pipe to the stomach, small intestine, large intestine, and anus.",
+    "stepByStepExplanation": "Step 1: Food enters the mouth and is chewed. Step 2: Saliva mixes with food. Step 3: The oesophagus pushes food to the stomach. Step 4: The stomach churns food. Step 5: The small intestine absorbs nutrients. Step 6: The large intestine absorbs water. Step 7: Waste is removed.",
+    "vocabulary": [
+      {
+        "term": "Digestion",
+        "meaning": "Breaking food into simpler usable substances."
+      },
+      {
+        "term": "Oesophagus",
+        "meaning": "Tube carrying food from mouth to stomach."
+      },
+      {
+        "term": "Stomach",
+        "meaning": "Organ that churns food and mixes it with juices."
+      },
+      {
+        "term": "Small intestine",
+        "meaning": "Organ where most nutrients are absorbed."
+      },
+      {
+        "term": "Large intestine",
+        "meaning": "Organ that absorbs water from waste."
+      }
+    ],
+    "steps": [
+      "Name the organs in order.",
+      "Say one job for each organ.",
+      "Separate physical and chemical digestion.",
+      "Locate nutrient absorption.",
+      "Locate water absorption.",
+      "Explain waste removal."
+    ],
+    "practiceQuestions": [
+      "Where does digestion begin?",
+      "What does the oesophagus do?",
+      "Where are most nutrients absorbed?",
+      "Why is the small intestine long and folded?",
+      "What does the large intestine absorb?",
+      "Explain digestion in two sentences."
+    ],
+    "selfCheckAnswers": [
+      "Mouth.",
+      "Pushes food to the stomach.",
+      "Small intestine.",
+      "To provide more surface area for absorption.",
+      "Water.",
+      "It breaks food into simple substances and absorbs useful nutrients."
+    ],
+    "homework": "Make a route map of food through the body with one job written at each organ."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Local Ollama",
+    "model": "Gemma local proof",
+    "latency": "2.1s",
+    "status": "Approved",
+    "confidence": 88,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "teeth-saliva-enzymes",
+    "title": "Teeth, Saliva, and Enzymes",
+    "classroomId": "class-7b",
+    "classSubjectId": "subject-7b-science",
+    "chapterId": "science-human-body",
+    "chapterTitle": "Chapter 1: Human Body Systems",
+    "topicId": "teeth-saliva-enzymes",
+    "topicTitle": "Teeth, Saliva, and Enzymes",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Dyslexia Friendly",
+    "sourceType": "Mouth diagram and notes",
+    "detectedText": [
+      "Incisors",
+      "Canines",
+      "Molars",
+      "Saliva",
+      "Amylase",
+      "Starch digestion"
+    ],
+    "diagramElements": [
+      "Tooth types diagram",
+      "Salivary glands",
+      "Food bolus",
+      "Tongue label"
+    ],
+    "confidenceNotes": [
+      "Tooth labels are readable.",
+      "Enzyme note is clear."
+    ],
+    "objective": "Students explain how teeth, tongue, saliva, and enzymes begin digestion in the mouth.",
+    "keyConcepts": [
+      "Digestion begins in the mouth, not the stomach.",
+      "Different teeth have different shapes and jobs.",
+      "Incisors cut food and canines tear food.",
+      "Premolars and molars crush and grind food.",
+      "Saliva moistens food and helps form a soft bolus.",
+      "The enzyme amylase begins digestion of starch.",
+      "The tongue helps mix food with saliva and pushes it for swallowing."
+    ],
+    "teachingScript": "Start by asking students to eat one imaginary bite slowly. What happens before swallowing? List cutting, grinding, wetting, mixing, tasting, and pushing. Use this list to show that the mouth is an active digestive organ.\n\nDraw four tooth types and connect shape to function. Incisors are sharp like a cutter. Canines are pointed for tearing. Molars are broad for grinding. Students should understand that structure helps function.\n\nThen introduce saliva. It is not just water; it moistens food and contains amylase, an enzyme that begins breaking down starch. Keep the enzyme explanation simple: enzymes are helpers that speed up digestion. Link this to why chewing well makes digestion easier.",
+    "classroomActivity": "Give students food-job cards such as cut, tear, grind, moisten, mix, and swallow. They match each job to incisors, canines, molars, saliva, or tongue.",
+    "worksheet": [
+      "Name two types of teeth and their jobs.",
+      "What is saliva?",
+      "How does the tongue help during digestion?",
+      "What is an enzyme?",
+      "Which enzyme in saliva starts starch digestion?",
+      "Why is chewing food properly important?"
+    ],
+    "answerKey": [
+      "Incisors cut, canines tear, molars grind.",
+      "A liquid in the mouth that moistens food and contains enzymes.",
+      "It mixes food and helps push it for swallowing.",
+      "A substance that helps speed up chemical digestion.",
+      "Amylase.",
+      "It makes food smaller and mixes it with saliva."
+    ],
+    "misconceptions": [
+      "Saliva is not useless water; it helps digestion.",
+      "All teeth do not have the same job.",
+      "Enzymes do not chew food; they help chemical breakdown.",
+      "Digestion begins before food reaches the stomach."
+    ],
+    "differentiatedSupport": "Support: Use pictures of tooth shapes and one action word for each.\nCore: Ask students to explain how chewing and saliva work together.\nChallenge: Ask students to predict what happens if food is swallowed without chewing well.",
+    "screenReaderSummary": "The mouth starts digestion. Teeth cut, tear, and grind food. Saliva moistens food and contains amylase, an enzyme that starts starch digestion. The tongue mixes food and helps swallowing.",
+    "audioStudyScript": "Digestion begins as soon as food enters the mouth. Teeth make food smaller. Saliva wets it and begins chemical digestion. The tongue mixes the food and pushes it toward the food pipe.",
+    "visualDescription": "The notes show tooth types with labels for incisors, canines, premolars, and molars, plus salivary glands releasing saliva into the mouth.",
+    "stepByStepExplanation": "First, incisors cut food. Second, canines tear food if needed. Third, molars grind food into smaller pieces. Fourth, saliva moistens the pieces. Fifth, amylase starts breaking starch. Sixth, the tongue forms and pushes a bolus for swallowing.",
+    "vocabulary": [
+      {
+        "term": "Incisors",
+        "meaning": "Front teeth used for cutting."
+      },
+      {
+        "term": "Canines",
+        "meaning": "Pointed teeth used for tearing."
+      },
+      {
+        "term": "Molars",
+        "meaning": "Back teeth used for grinding."
+      },
+      {
+        "term": "Saliva",
+        "meaning": "Liquid in the mouth that moistens food and helps digestion."
+      },
+      {
+        "term": "Enzyme",
+        "meaning": "A helper substance that speeds chemical digestion."
+      }
+    ],
+    "steps": [
+      "Identify tooth types.",
+      "Match each tooth to its job.",
+      "Explain saliva as moistening and chemical help.",
+      "Name amylase as the starch enzyme.",
+      "Explain the tongue role.",
+      "Connect chewing to easier digestion."
+    ],
+    "practiceQuestions": [
+      "Which teeth cut food?",
+      "What do molars do?",
+      "Why is saliva important?",
+      "What does amylase act on?",
+      "How does the tongue help swallowing?",
+      "Why does digestion begin in the mouth?"
+    ],
+    "selfCheckAnswers": [
+      "Incisors.",
+      "They grind food.",
+      "It moistens food and contains enzymes.",
+      "Starch.",
+      "It pushes the food bolus back.",
+      "Teeth and saliva start breaking food down."
+    ],
+    "homework": "Create a table with tooth type, shape, and job."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Hosted Gemma",
+    "model": "Gemma hosted demo",
+    "latency": "1.3s",
+    "status": "Needs Review",
+    "confidence": 85,
+    "unclearRegions": [
+      "One test-tube label is faint."
+    ],
+    "accessibilityWarnings": [],
+    "id": "acids-and-bases",
+    "title": "Acids, Bases, and Indicators",
+    "classroomId": "class-7b",
+    "classSubjectId": "subject-7b-science",
+    "chapterId": "science-acids-bases",
+    "chapterTitle": "Chapter 2: Acids, Bases, and Indicators",
+    "topicId": "acids-bases-indicators",
+    "topicTitle": "Acids and Bases",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Standard",
+    "sourceType": "Lab observation notes",
+    "detectedText": [
+      "Blue litmus",
+      "Red litmus",
+      "Acid",
+      "Base",
+      "Neutral",
+      "Do not taste"
+    ],
+    "diagramElements": [
+      "Test tubes",
+      "Litmus strips",
+      "Observation table",
+      "Safety symbol"
+    ],
+    "confidenceNotes": [
+      "Observation table is mostly legible.",
+      "One sample label needs teacher confirmation."
+    ],
+    "objective": "Students classify common substances as acidic, basic, or neutral using safe indicator tests.",
+    "keyConcepts": [
+      "Acids and bases are groups of substances with different properties.",
+      "Many acids taste sour, but tasting unknown substances is unsafe and not allowed.",
+      "Many bases feel slippery, but touching unknown substances is unsafe.",
+      "Indicators change colour to show whether a substance is acidic or basic.",
+      "Blue litmus turns red in an acid.",
+      "Red litmus turns blue in a base.",
+      "Neutral substances do not show acid or base colour changes with litmus."
+    ],
+    "teachingScript": "Begin with familiar safe examples: lemon juice, curd, soap solution, and baking soda solution. Make it very clear that students should not taste or touch unknown samples in a lab. Safety comes before testing.\n\nIntroduce litmus as an indicator. Demonstrate the two key rules slowly: acids turn blue litmus red, bases turn red litmus blue. Put these two rules in a small table and have students read it aloud.\n\nThen show how to record observations. A good observation table includes sample name, red litmus result, blue litmus result, and conclusion. Close by asking why indicators are better than guessing from smell or taste.",
+    "classroomActivity": "Use coloured paper strips as pretend litmus. Call out safe examples and ask students to hold up the expected colour-change card before revealing the answer.",
+    "worksheet": [
+      "What is an indicator?",
+      "What happens to blue litmus in an acid?",
+      "What happens to red litmus in a base?",
+      "Why should unknown substances not be tasted?",
+      "Classify lemon juice, soap solution, and pure water using litmus rules.",
+      "Design a four-column observation table for a litmus test."
+    ],
+    "answerKey": [
+      "A substance that changes colour to show acid or base.",
+      "It turns red.",
+      "It turns blue.",
+      "It may be harmful or corrosive.",
+      "Lemon juice: acid; soap solution: base; pure water: neutral.",
+      "Sample, red litmus, blue litmus, conclusion."
+    ],
+    "misconceptions": [
+      "Students must not identify acids by tasting in class.",
+      "A strong smell does not prove a substance is an acid.",
+      "Neutral means neither acidic nor basic, not useless.",
+      "Litmus tells acid/base nature but not exact strength in this lesson."
+    ],
+    "differentiatedSupport": "Support: Use a two-rule colour chart and repeat only one test at a time.\nCore: Ask students to fill a complete observation table for three samples.\nChallenge: Ask students to explain why safety rules are part of scientific method.",
+    "screenReaderSummary": "Acids and bases can be identified safely using indicators. Blue litmus turns red in acids, and red litmus turns blue in bases. Unknown substances should never be tasted or touched during testing.",
+    "audioStudyScript": "Remember two litmus rules. Acid changes blue litmus to red. Base changes red litmus to blue. If there is no acid or base change, the sample may be neutral. Always test safely.",
+    "visualDescription": "The lab notes show test tubes, red and blue litmus strips, and an observation table with columns for sample, litmus result, and conclusion.",
+    "stepByStepExplanation": "Step 1: Choose a safe labelled sample. Step 2: Place a drop on blue litmus and observe. Step 3: Place a drop on red litmus and observe. Step 4: Use colour-change rules. Step 5: Record acid, base, or neutral. Step 6: Wash hands and clean the area as instructed.",
+    "vocabulary": [
+      {
+        "term": "Acid",
+        "meaning": "A substance that turns blue litmus red."
+      },
+      {
+        "term": "Base",
+        "meaning": "A substance that turns red litmus blue."
+      },
+      {
+        "term": "Indicator",
+        "meaning": "A substance that changes colour in acid or base."
+      },
+      {
+        "term": "Neutral",
+        "meaning": "Neither acidic nor basic in this test."
+      },
+      {
+        "term": "Observation",
+        "meaning": "What is carefully noticed and recorded."
+      }
+    ],
+    "steps": [
+      "Follow safety rules.",
+      "Test with blue litmus.",
+      "Test with red litmus.",
+      "Compare with colour-change rules.",
+      "Write the conclusion.",
+      "Clean up safely."
+    ],
+    "practiceQuestions": [
+      "What is litmus?",
+      "Which litmus changes in acid?",
+      "Which litmus changes in base?",
+      "Why is tasting unsafe?",
+      "How would you test soap solution?",
+      "What does neutral mean?"
+    ],
+    "selfCheckAnswers": [
+      "An indicator.",
+      "Blue litmus turns red.",
+      "Red litmus turns blue.",
+      "Unknown substances may be harmful.",
+      "Use red and blue litmus and record colour changes.",
+      "Neither acid nor base in the test."
+    ],
+    "homework": "Make a safe examples list: two acids, two bases, and two neutral substances used at home.",
+    "warnings": [
+      "One test-tube label is faint and needs review."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Approved",
+    "confidence": 87,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "natural-indicators",
+    "title": "Natural Indicators",
+    "classroomId": "class-7b",
+    "classSubjectId": "subject-7b-science",
+    "chapterId": "science-acids-bases",
+    "chapterTitle": "Chapter 2: Acids, Bases, and Indicators",
+    "topicId": "natural-indicators",
+    "topicTitle": "Natural Indicators",
+    "grade": "Grade 7",
+    "subject": "Science",
+    "learnerNeed": "Multilingual",
+    "sourceType": "Turmeric and China rose activity notes",
+    "detectedText": [
+      "Turmeric indicator",
+      "China rose",
+      "Acid",
+      "Base",
+      "Colour change"
+    ],
+    "diagramElements": [
+      "Turmeric paper strip",
+      "Soap solution bowl",
+      "Lemon juice dropper",
+      "Colour-change table"
+    ],
+    "confidenceNotes": [
+      "Activity steps are readable.",
+      "Colour-change table needs teacher colour check."
+    ],
+    "objective": "Students explain how natural indicators such as turmeric and China rose can show acidic or basic nature through colour changes.",
+    "keyConcepts": [
+      "Indicators can be made from some natural materials.",
+      "Turmeric remains yellow in acids but turns reddish-brown in bases.",
+      "China rose extract shows different colours in acids and bases.",
+      "Natural indicators are useful for simple school demonstrations.",
+      "Colour observations must be recorded carefully.",
+      "Natural indicators should still be used with safe labelled samples.",
+      "A control sample helps compare whether a colour change really happened."
+    ],
+    "teachingScript": "Begin by connecting to litmus: litmus is one indicator, but not the only one. Ask students if kitchen materials can help in science. Introduce turmeric as a familiar material that changes colour with bases.\n\nExplain the turmeric paper test. A turmeric strip is yellow. If a basic solution such as soap water touches it, the strip becomes reddish-brown. Acidic lemon juice does not create the same change. Students should compare with an unused strip.\n\nThen introduce China rose as another natural indicator. Emphasize careful observation: colour words should be written immediately, and the sample must be labelled. End by discussing why natural indicators are useful but less precise than laboratory indicators.",
+    "classroomActivity": "Prepare paper cards coloured yellow and reddish-brown. Students classify pretend samples and place them in acid/base/neutral columns based on the indicator result.",
+    "worksheet": [
+      "What is a natural indicator?",
+      "What colour change does turmeric show in a base?",
+      "Why should we use labelled safe samples?",
+      "How does a control strip help?",
+      "Name two natural indicators.",
+      "Why might natural indicators be less exact than laboratory indicators?"
+    ],
+    "answerKey": [
+      "An indicator obtained from natural materials.",
+      "Yellow turmeric turns reddish-brown.",
+      "To avoid unsafe unknown chemicals.",
+      "It lets us compare the original colour.",
+      "Turmeric and China rose.",
+      "Colour shades can vary and may be harder to compare."
+    ],
+    "misconceptions": [
+      "Natural does not always mean safe to taste or touch.",
+      "Turmeric does not turn the same colour for every substance.",
+      "A faint colour change should be compared with a control.",
+      "Natural indicators show acid/base nature but not exact pH in this lesson."
+    ],
+    "differentiatedSupport": "Support: Use a simple before/after colour chart with large labels.\nCore: Ask students to write a complete observation table for turmeric paper.\nChallenge: Ask students to evaluate advantages and limitations of natural indicators.",
+    "screenReaderSummary": "Natural indicators are materials from plants or other natural sources that change colour in acids or bases. Turmeric is yellow but turns reddish-brown in bases. China rose extract can also show different colours in acidic and basic solutions.",
+    "audioStudyScript": "A natural indicator works like a colour signal. Turmeric is yellow. In a base like soap solution, turmeric can turn reddish-brown. Use a control strip and record the colour carefully.",
+    "visualDescription": "The activity sheet shows turmeric paper strips, labelled cups of lemon juice and soap solution, and a table for writing colour before and after testing.",
+    "stepByStepExplanation": "Step 1: Prepare a natural indicator such as turmeric paper. Step 2: Keep one strip as a control. Step 3: Add a safe labelled sample to another strip. Step 4: Observe the colour. Step 5: Compare with the control. Step 6: Record acid, base, or no clear change.",
+    "vocabulary": [
+      {
+        "term": "Natural indicator",
+        "meaning": "A natural material that changes colour in acid or base."
+      },
+      {
+        "term": "Turmeric",
+        "meaning": "A yellow spice that can act as an indicator."
+      },
+      {
+        "term": "China rose",
+        "meaning": "A flower whose extract can be used as an indicator."
+      },
+      {
+        "term": "Control",
+        "meaning": "A comparison sample kept unchanged."
+      },
+      {
+        "term": "Colour change",
+        "meaning": "A visible change used as evidence in a test."
+      }
+    ],
+    "steps": [
+      "Choose safe sample.",
+      "Prepare indicator.",
+      "Keep a control.",
+      "Apply sample.",
+      "Compare colour.",
+      "Record conclusion."
+    ],
+    "practiceQuestions": [
+      "What is a natural indicator?",
+      "What happens to turmeric in a base?",
+      "Why is a control useful?",
+      "Name one safe basic solution for demonstration.",
+      "What should be written in the observation table?",
+      "Why should unknown samples not be used?"
+    ],
+    "selfCheckAnswers": [
+      "A natural material showing acid/base by colour.",
+      "It turns reddish-brown.",
+      "It shows the original colour for comparison.",
+      "Soap solution or baking soda solution.",
+      "Sample, indicator, colour change, conclusion.",
+      "They may be unsafe."
+    ],
+    "homework": "Write a safety poster for using natural indicators in class."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Approved",
+    "confidence": 90,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "fractions",
+    "title": "Fractions on a Number Line",
+    "classroomId": "class-8a",
+    "classSubjectId": "subject-8a-math",
+    "chapterId": "math-fractions",
+    "chapterTitle": "Chapter 1: Fractions",
+    "topicId": "fractions-number-line",
+    "topicTitle": "Fractions on a Number Line",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Dyslexia Friendly",
+    "sourceType": "Math worksheet scan",
+    "detectedText": [
+      "0",
+      "1/4",
+      "1/2",
+      "3/4",
+      "1",
+      "Equal spaces"
+    ],
+    "diagramElements": [
+      "Horizontal number line",
+      "Tick marks",
+      "Fraction labels",
+      "Highlighted half point"
+    ],
+    "confidenceNotes": [
+      "Fraction labels are readable.",
+      "Equal spacing is visible."
+    ],
+    "objective": "Students place proper fractions between 0 and 1 on a number line by dividing the whole into equal intervals.",
+    "keyConcepts": [
+      "A number line shows numbers in order from left to right.",
+      "The interval from 0 to 1 represents one whole.",
+      "The denominator tells how many equal parts the whole is divided into.",
+      "The numerator tells how many parts to count from 0.",
+      "Fractions must be placed on spaces, not by counting tick marks incorrectly.",
+      "Equal spacing is necessary for accurate placement.",
+      "Number lines help compare fractions by position."
+    ],
+    "teachingScript": "Draw a large line from 0 to 1. Ask students what the whole is. Explain that the whole is the full distance from 0 to 1, not just the marks.\n\nFor fourths, divide the distance into four equal spaces. Count spaces aloud: one-fourth, two-fourths, three-fourths, four-fourths. Mark one-half at two-fourths and show that it is exactly midway.\n\nThen address the common mistake: students often count tick marks instead of spaces. Circle the spaces and have the class count them. Close by comparing one-fourth, one-half, and three-fourths by their positions from left to right.",
+    "classroomActivity": "Use floor tape as a number line from 0 to 1. Four students hold interval cards and stand at one-fourth, one-half, three-fourths, and one whole.",
+    "worksheet": [
+      "Draw a number line from 0 to 1 and mark one-half.",
+      "Mark one-fourth and three-fourths.",
+      "Explain why spaces must be equal.",
+      "Which is larger: one-half or one-fourth?",
+      "Show that two-fourths and one-half are at the same point.",
+      "Write a mistake someone might make when marking thirds."
+    ],
+    "answerKey": [
+      "One-half is midway between 0 and 1.",
+      "One-fourth is after the first of four equal spaces; three-fourths after the third.",
+      "Unequal spaces give wrong values.",
+      "One-half.",
+      "Both are at the middle point.",
+      "Counting tick marks instead of spaces is a common mistake."
+    ],
+    "misconceptions": [
+      "A larger denominator does not automatically mean a larger fraction.",
+      "Tick marks and spaces are not the same thing.",
+      "One-half is not always drawn larger; its position shows its value.",
+      "Fractions on number lines need equal intervals."
+    ],
+    "differentiatedSupport": "Support: Count spaces aloud and use colour for each equal interval.\nCore: Ask students to place halves, fourths, and thirds and explain the denominator.\nChallenge: Ask students to prove equivalent positions such as one-half and two-fourths.",
+    "screenReaderSummary": "A fraction can be placed on a number line by dividing the distance from 0 to 1 into equal spaces. The denominator tells the number of spaces, and the numerator tells how many spaces to count from 0.",
+    "audioStudyScript": "Start at zero. The whole distance to one is one whole. If the denominator is four, split the distance into four equal spaces. To mark three-fourths, count three spaces from zero.",
+    "visualDescription": "The worksheet shows a horizontal number line from 0 to 1 divided into four equal parts with labels one-fourth, one-half, and three-fourths.",
+    "stepByStepExplanation": "Step 1: Draw 0 and 1. Step 2: Read the denominator. Step 3: Split the whole into that many equal spaces. Step 4: Read the numerator. Step 5: Count that many spaces from 0. Step 6: Mark the fraction point.",
+    "vocabulary": [
+      {
+        "term": "Numerator",
+        "meaning": "Top number showing counted parts."
+      },
+      {
+        "term": "Denominator",
+        "meaning": "Bottom number showing equal parts in the whole."
+      },
+      {
+        "term": "Interval",
+        "meaning": "Space between two marks on a number line."
+      },
+      {
+        "term": "Proper fraction",
+        "meaning": "A fraction less than 1."
+      },
+      {
+        "term": "Equivalent fractions",
+        "meaning": "Fractions that have the same value."
+      }
+    ],
+    "steps": [
+      "Draw the whole from 0 to 1.",
+      "Divide into equal spaces.",
+      "Count spaces from 0.",
+      "Mark the fraction.",
+      "Compare positions.",
+      "Check if spacing is equal."
+    ],
+    "practiceQuestions": [
+      "How many equal spaces are needed for fifths?",
+      "Where is one-half on a number line?",
+      "Why is two-fourths equal to one-half?",
+      "Which is greater: three-fourths or one-fourth?",
+      "What mistake happens if you count tick marks?",
+      "Place two-thirds in words."
+    ],
+    "selfCheckAnswers": [
+      "Five.",
+      "Midway between 0 and 1.",
+      "They are at the same point.",
+      "Three-fourths.",
+      "You may mark the wrong position.",
+      "Divide into three equal spaces and count two from 0."
+    ],
+    "homework": "Draw number lines for thirds, fourths, and fifths and mark two fractions on each."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Local Ollama",
+    "model": "Gemma local proof",
+    "latency": "1.7s",
+    "status": "Approved",
+    "confidence": 89,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "equivalent-fractions",
+    "title": "Equivalent Fractions",
+    "classroomId": "class-8a",
+    "classSubjectId": "subject-8a-math",
+    "chapterId": "math-fractions",
+    "chapterTitle": "Chapter 1: Fractions",
+    "topicId": "equivalent-fractions",
+    "topicTitle": "Equivalent Fractions",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Standard",
+    "sourceType": "Fraction strip worksheet",
+    "detectedText": [
+      "1/2 = 2/4 = 4/8",
+      "Multiply numerator and denominator",
+      "Simplest form"
+    ],
+    "diagramElements": [
+      "Fraction strips",
+      "Equal shaded lengths",
+      "Multiplication arrows"
+    ],
+    "equations": [
+      "1/2 = 2/4 = 4/8"
+    ],
+    "confidenceNotes": [
+      "Equivalent fraction chain is readable.",
+      "Fraction strips show equal lengths."
+    ],
+    "objective": "Students identify and create equivalent fractions using visual models and multiplication or division of numerator and denominator.",
+    "keyConcepts": [
+      "Equivalent fractions represent the same value.",
+      "Different numerators and denominators can name the same amount.",
+      "Multiplying numerator and denominator by the same non-zero number creates an equivalent fraction.",
+      "Dividing numerator and denominator by the same common factor simplifies a fraction.",
+      "Fraction strips can show equivalence visually.",
+      "Equivalent fractions occupy the same point on a number line.",
+      "Simplest form has no common factor except 1."
+    ],
+    "teachingScript": "Start with fraction strips: shade one-half, two-fourths, and four-eighths using strips of the same length. Ask students what they notice. Guide them to say the shaded length is the same even though the numbers are different.\n\nThen move to the rule. If the numerator and denominator are both multiplied by the same number, the size of the fraction does not change because the whole is split into smaller equal parts and more parts are counted.\n\nFinally, reverse the process to simplify. Show four-eighths divided by 4 over 4 to get one-half. Make students say: whatever I do to the numerator, I must do to the denominator.",
+    "classroomActivity": "Give groups paper strips folded into halves, fourths, and eighths. They shade matching amounts and write all equivalent fraction names they can see.",
+    "worksheet": [
+      "Write two fractions equivalent to one-half.",
+      "Fill in: 3/5 = ?/10.",
+      "Simplify 6/9.",
+      "Explain using a diagram why 2/4 equals 1/2.",
+      "Which is not equivalent to 3/4: 6/8, 9/12, 4/5?",
+      "Create an equivalent fraction for 5/6 with denominator 18."
+    ],
+    "answerKey": [
+      "Examples: 2/4 and 4/8.",
+      "6/10.",
+      "2/3.",
+      "Both cover the same amount of the same whole.",
+      "4/5.",
+      "15/18."
+    ],
+    "misconceptions": [
+      "Changing only the numerator changes the value.",
+      "Equivalent fractions are not always visually larger because numbers are larger.",
+      "Simplest form does not mean smallest numerator only.",
+      "The same whole must be used when comparing fraction diagrams."
+    ],
+    "differentiatedSupport": "Support: Use fraction strips before symbolic rules.\nCore: Ask students to generate equivalents with multiplication and check visually.\nChallenge: Ask students to explain equivalence using both number line and fraction strip models.",
+    "screenReaderSummary": "Equivalent fractions have the same value even when their numbers look different. Multiplying or dividing the numerator and denominator by the same non-zero number keeps the fraction equivalent.",
+    "audioStudyScript": "One-half, two-fourths, and four-eighths can all show the same amount. The rule is simple: multiply or divide the top and bottom by the same number. The value stays the same.",
+    "visualDescription": "Fraction strips of equal length show one-half, two-fourths, and four-eighths shaded to the same length.",
+    "stepByStepExplanation": "Step 1: Start with a fraction. Step 2: Choose the same multiplier for top and bottom. Step 3: Multiply numerator. Step 4: Multiply denominator. Step 5: Compare with a visual or number line. Step 6: To simplify, divide top and bottom by a common factor.",
+    "vocabulary": [
+      {
+        "term": "Equivalent fractions",
+        "meaning": "Fractions with the same value."
+      },
+      {
+        "term": "Simplify",
+        "meaning": "Write a fraction in a smaller equivalent form."
+      },
+      {
+        "term": "Common factor",
+        "meaning": "A number that divides both numerator and denominator."
+      },
+      {
+        "term": "Fraction strip",
+        "meaning": "A visual strip used to compare fractions."
+      },
+      {
+        "term": "Simplest form",
+        "meaning": "A fraction with no common factor except 1."
+      }
+    ],
+    "steps": [
+      "Use a same-size whole.",
+      "Make or find equal shaded amount.",
+      "Multiply top and bottom by same number.",
+      "Divide top and bottom by same factor to simplify.",
+      "Check value with a model.",
+      "Write the final equivalent fraction."
+    ],
+    "practiceQuestions": [
+      "Why is 2/4 equivalent to 1/2?",
+      "Find an equivalent fraction for 2/3 with denominator 12.",
+      "Simplify 8/12.",
+      "Which rule keeps the fraction value same?",
+      "What is simplest form?",
+      "Show 3/6 on a number line and name its simpler form."
+    ],
+    "selfCheckAnswers": [
+      "They show the same amount.",
+      "8/12.",
+      "2/3.",
+      "Multiply or divide numerator and denominator by the same non-zero number.",
+      "No common factor except 1.",
+      "It is at one-half, so simpler form is 1/2."
+    ],
+    "homework": "Make a table of five fractions and two equivalent fractions for each."
+  },
+  {
+    "language": "Hindi + English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Needs Review",
+    "confidence": 84,
+    "unclearRegions": [
+      "The second solution line is faint because of low light."
+    ],
+    "accessibilityWarnings": [],
+    "id": "linear-equations",
+    "title": "Linear Equations",
+    "classroomId": "class-8a",
+    "classSubjectId": "subject-8a-math",
+    "chapterId": "math-algebra",
+    "chapterTitle": "Chapter 2: Algebra Basics",
+    "topicId": "linear-equations",
+    "topicTitle": "Solving Linear Equations",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Multilingual",
+    "sourceType": "Worked algebra worksheet",
+    "detectedText": [
+      "2x + 3 = 7",
+      "2x = 4",
+      "x = 2",
+      "Check: 2(2)+3=7"
+    ],
+    "diagramElements": [
+      "Equation box",
+      "Balance scale sketch",
+      "Step-by-step solution"
+    ],
+    "equations": [
+      "2x + 3 = 7",
+      "x = 2"
+    ],
+    "confidenceNotes": [
+      "Main equation and answer are readable.",
+      "One intermediate line needs teacher review."
+    ],
+    "objective": "Students solve one-step and two-step linear equations by applying inverse operations equally to both sides.",
+    "keyConcepts": [
+      "An equation says two expressions are equal.",
+      "A variable represents an unknown number.",
+      "Solving means finding the value that makes the equation true.",
+      "Both sides must stay balanced after every operation.",
+      "Inverse operations undo each other.",
+      "For two-step equations, remove addition or subtraction before multiplication or division.",
+      "Checking the answer confirms that the solution is correct."
+    ],
+    "teachingScript": "Begin with a balance idea. If two sides are equal and we remove the same weight from both sides, they remain equal. Connect this physical image to equations: whatever operation we do to one side, we must do to the other.\n\nSolve 2x + 3 = 7 slowly. First subtract 3 from both sides to isolate 2x. Then divide both sides by 2 to isolate x. Write every line vertically so students can see the equation changing step by step.\n\nFinish with checking. Substitute x = 2 into the original equation: 2 times 2 plus 3 equals 7. Because the left side becomes 7 and the right side is 7, the solution is correct.",
+    "classroomActivity": "Draw a balance scale on the board. Students suggest the same operation for both pans while solving equations written on sticky notes.",
+    "worksheet": [
+      "Solve x + 5 = 12.",
+      "Solve 3x = 18.",
+      "Solve 2x + 3 = 11.",
+      "Solve 5x - 4 = 16.",
+      "Check whether x = 3 solves 4x + 1 = 13.",
+      "Explain why doing an operation on only one side is wrong."
+    ],
+    "answerKey": [
+      "x = 7.",
+      "x = 6.",
+      "x = 4.",
+      "x = 4.",
+      "Yes, because 4(3)+1=13.",
+      "It breaks equality and makes the equation unbalanced."
+    ],
+    "misconceptions": [
+      "Students may change only one side of the equation.",
+      "Students may divide before removing the added constant.",
+      "The check must use the original equation, not only the last line.",
+      "The variable is not always x; any letter can represent the unknown."
+    ],
+    "differentiatedSupport": "Support: Use bilingual operation words: add/jodo, subtract/ghatao, divide/bhaag.\nCore: Ask students to write one operation per line and say why equality remains true.\nChallenge: Ask students to create an equation for a partner and include a check step.",
+    "screenReaderSummary": "A linear equation can be solved by keeping both sides balanced. Use inverse operations to isolate the variable, then substitute the answer into the original equation to check it.",
+    "audioStudyScript": "For 2x plus 3 equals 7, first subtract 3 from both sides. Now 2x equals 4. Divide both sides by 2. x equals 2. Check in the original equation.",
+    "visualDescription": "The worksheet shows a balance-scale sketch next to the equation 2x plus 3 equals 7 and a vertical worked solution.",
+    "stepByStepExplanation": "Step 1: Identify the variable term. Step 2: Undo addition or subtraction on both sides. Step 3: Undo multiplication or division on both sides. Step 4: Write the variable value. Step 5: Substitute it into the original equation. Step 6: Confirm both sides match.",
+    "vocabulary": [
+      {
+        "term": "Equation",
+        "meaning": "A statement that two expressions are equal."
+      },
+      {
+        "term": "Variable",
+        "meaning": "A symbol for an unknown number."
+      },
+      {
+        "term": "Inverse operation",
+        "meaning": "An operation that undoes another operation."
+      },
+      {
+        "term": "Solution",
+        "meaning": "A value that makes an equation true."
+      },
+      {
+        "term": "Check",
+        "meaning": "Substituting the answer to verify it works."
+      }
+    ],
+    "steps": [
+      "Copy the equation.",
+      "Undo addition or subtraction.",
+      "Undo multiplication or division.",
+      "Write the value of the variable.",
+      "Check in the original equation.",
+      "State the answer clearly."
+    ],
+    "practiceQuestions": [
+      "Why must both sides get the same operation?",
+      "Solve x - 4 = 9.",
+      "Solve 4x = 20.",
+      "Solve 3x + 2 = 14.",
+      "How do you check x = 4 for 3x + 2 = 14?",
+      "What is an inverse operation?"
+    ],
+    "selfCheckAnswers": [
+      "To keep equality balanced.",
+      "x = 13.",
+      "x = 5.",
+      "x = 4.",
+      "Substitute: 3(4)+2=14.",
+      "An operation that undoes another."
+    ],
+    "homework": "Solve five two-step equations and show the check for two of them.",
+    "localLanguageSupport": "Hindi support: dono taraf same operation karo; pehle plus/minus hatao, phir multiply/divide hatao.",
+    "warnings": [
+      "Low lighting may affect OCR accuracy."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Approved",
+    "confidence": 86,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "word-problems-equations",
+    "title": "Word Problems to Equations",
+    "classroomId": "class-8a",
+    "classSubjectId": "subject-8a-math",
+    "chapterId": "math-algebra",
+    "chapterTitle": "Chapter 2: Algebra Basics",
+    "topicId": "word-problems-equations",
+    "topicTitle": "Word Problems to Equations",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Slow Learner",
+    "sourceType": "Word problem worksheet",
+    "detectedText": [
+      "A number increased by 5 is 17",
+      "Three times a number is 24",
+      "Let the number be x"
+    ],
+    "diagramElements": [
+      "Sentence-to-equation table",
+      "Underline key words",
+      "Equation column"
+    ],
+    "equations": [
+      "x + 5 = 17",
+      "3x = 24"
+    ],
+    "confidenceNotes": [
+      "Word problem examples are clear.",
+      "Equation column is readable."
+    ],
+    "objective": "Students translate simple word problems into linear equations and solve them using a defined variable.",
+    "keyConcepts": [
+      "A word problem must be read for meaning before solving.",
+      "The unknown quantity should be named with a variable.",
+      "Words such as increased by, more than, total, and times suggest operations.",
+      "The phrase is or equals usually tells where the equal sign belongs.",
+      "A sentence can become an equation when relationships are written mathematically.",
+      "The solution must answer the original question, not only give x.",
+      "Checking in words helps confirm that the answer makes sense."
+    ],
+    "teachingScript": "Start with a short sentence: A number increased by 5 is 17. Ask students what is unknown. Write: let the number be x. Underline increased by 5 and translate it to x + 5. Underline is 17 and write equals 17.\n\nSolve the equation only after the translation is clear. x + 5 = 17 gives x = 12. Then read the original sentence again: 12 increased by 5 is 17. This checks both the equation and the answer.\n\nRepeat with multiplication language such as three times a number is 24. Emphasize that students should not rush to calculate before defining the variable and writing the equation.",
+    "classroomActivity": "Students work in pairs with sentence cards. One partner underlines operation words, the other writes the equation. They swap cards and check each other.",
+    "worksheet": [
+      "Translate: A number increased by 6 is 20.",
+      "Translate: Four times a number is 28.",
+      "Solve: x + 6 = 20.",
+      "Solve: 4x = 28.",
+      "A number decreased by 3 is 15. Write and solve.",
+      "The cost of 3 notebooks is Rs 45. Write an equation for one notebook cost and solve."
+    ],
+    "answerKey": [
+      "x + 6 = 20.",
+      "4x = 28.",
+      "x = 14.",
+      "x = 7.",
+      "x - 3 = 15, so x = 18.",
+      "3x = 45, so x = 15."
+    ],
+    "misconceptions": [
+      "Students may write numbers in the order they appear without reading meaning.",
+      "Times means multiplication, not addition.",
+      "The answer should include what the variable represents.",
+      "Some phrases need careful reading, especially decreased by and less than."
+    ],
+    "differentiatedSupport": "Support: Use a three-column table: words, operation, equation.\nCore: Ask students to define x and underline operation phrases before solving.\nChallenge: Ask students to write their own word problem for a given equation.",
+    "screenReaderSummary": "To solve a word problem with equations, first decide what is unknown and name it with a variable. Then translate operation words into symbols, write an equation, solve it, and check the answer in the original sentence.",
+    "audioStudyScript": "Read the sentence slowly. Ask: what is unknown? Let it be x. Translate the words into maths. Increased by means plus. Times means multiply. Is means equals. Then solve and check in the sentence.",
+    "visualDescription": "The worksheet has a table with word phrases on the left, operation symbols in the middle, and equations on the right.",
+    "stepByStepExplanation": "Step 1: Read the full problem. Step 2: Choose the unknown. Step 3: Write let the unknown be x. Step 4: Underline operation words. Step 5: Write the equation. Step 6: Solve. Step 7: Answer in words and check.",
+    "vocabulary": [
+      {
+        "term": "Translate",
+        "meaning": "Change words into mathematical symbols."
+      },
+      {
+        "term": "Variable",
+        "meaning": "A letter for an unknown amount."
+      },
+      {
+        "term": "Increased by",
+        "meaning": "A phrase often meaning addition."
+      },
+      {
+        "term": "Times",
+        "meaning": "A phrase meaning multiplication."
+      },
+      {
+        "term": "Equation",
+        "meaning": "A mathematical sentence with an equal sign."
+      }
+    ],
+    "steps": [
+      "Read carefully.",
+      "Name the unknown.",
+      "Underline key words.",
+      "Write equation.",
+      "Solve equation.",
+      "Check in words.",
+      "State the final answer."
+    ],
+    "practiceQuestions": [
+      "What should you do before writing an equation?",
+      "Translate: a number plus 9 is 30.",
+      "Translate: five times a number is 40.",
+      "Solve x - 8 = 12.",
+      "Why should the answer be checked in words?",
+      "Write a word problem for 2x + 3 = 15."
+    ],
+    "selfCheckAnswers": [
+      "Read and identify the unknown.",
+      "x + 9 = 30.",
+      "5x = 40.",
+      "x = 20.",
+      "To ensure it answers the original question.",
+      "Example: Twice a number plus 3 is 15."
+    ],
+    "homework": "Write three word problems from daily life and solve them using equations."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Local Ollama",
+    "model": "Gemma local proof",
+    "latency": "1.9s",
+    "status": "Approved",
+    "confidence": 91,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "area-perimeter",
+    "title": "Area and Perimeter of Rectangles",
+    "classroomId": "class-8b",
+    "classSubjectId": "subject-8b-math",
+    "chapterId": "math-measurement",
+    "chapterTitle": "Chapter 1: Measurement",
+    "topicId": "area-perimeter",
+    "topicTitle": "Area and Perimeter",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Slow Learner",
+    "sourceType": "Notebook worked example",
+    "detectedText": [
+      "Area = length x breadth",
+      "Perimeter = 2(l + b)",
+      "8 cm",
+      "5 cm",
+      "square cm"
+    ],
+    "diagramElements": [
+      "Rectangle",
+      "Length label",
+      "Breadth label",
+      "Formula box",
+      "Unit note"
+    ],
+    "equations": [
+      "Area = l x b",
+      "Perimeter = 2(l + b)"
+    ],
+    "confidenceNotes": [
+      "Dimensions and formulas are readable.",
+      "Rectangle drawing is clear."
+    ],
+    "objective": "Students distinguish area from perimeter and calculate both for rectangles using correct units.",
+    "keyConcepts": [
+      "Area measures the space covered inside a closed shape.",
+      "Perimeter measures the total distance around a closed shape.",
+      "Rectangle area is length multiplied by breadth.",
+      "Rectangle perimeter is 2 times the sum of length and breadth.",
+      "Area uses square units because it counts unit squares.",
+      "Perimeter uses linear units because it measures boundary length.",
+      "The same rectangle has both area and perimeter, but they answer different questions."
+    ],
+    "teachingScript": "Hold up a notebook. Ask students to point to the inside cover and then trace the outside edge. Name the inside measure area and the outside boundary measure perimeter. This physical contrast helps prevent formula mixing.\n\nDraw a rectangle labelled 8 cm and 5 cm. For area, shade the inside and explain that we are counting square centimetres. Calculate 8 x 5 = 40 square cm. For perimeter, trace the border and add all sides or use 2(l+b): 2(8+5)=26 cm.\n\nEnd with unit checking. If the answer describes covered space, it needs square units. If it describes distance around, it needs cm, m, or another length unit.",
+    "classroomActivity": "Students measure a rectangular notebook, desk tile, or paper sheet. They calculate area and perimeter, then explain which result needs square units.",
+    "worksheet": [
+      "Find the area of a rectangle 8 cm by 5 cm.",
+      "Find the perimeter of the same rectangle.",
+      "A rectangle is 12 m long and 4 m wide. Find its area.",
+      "Find its perimeter.",
+      "Which measure would you use for painting a wall?",
+      "Which measure would you use for fencing a garden?"
+    ],
+    "answerKey": [
+      "40 square cm.",
+      "26 cm.",
+      "48 square m.",
+      "32 m.",
+      "Area.",
+      "Perimeter."
+    ],
+    "misconceptions": [
+      "Area and perimeter are not interchangeable.",
+      "Perimeter does not use square units.",
+      "Area is not found by adding all sides.",
+      "A larger perimeter does not always mean a larger area without checking dimensions."
+    ],
+    "differentiatedSupport": "Support: Colour the inside for area and outline the boundary for perimeter.\nCore: Ask students to solve two examples and explain units aloud.\nChallenge: Ask students to compare rectangles with same perimeter but different areas.",
+    "screenReaderSummary": "Area is the amount of space inside a rectangle. Perimeter is the distance around it. Area of a rectangle is length times breadth and uses square units. Perimeter is the sum of all sides and uses length units.",
+    "audioStudyScript": "For area, think inside the rectangle. Multiply length by breadth. For perimeter, think around the rectangle. Add all four sides, or use two times length plus breadth. Always check the unit.",
+    "visualDescription": "The notes show a rectangle labelled 8 cm by 5 cm. The inside is shaded for area and the border is highlighted for perimeter.",
+    "stepByStepExplanation": "Step 1: Identify length and breadth. Step 2: Decide whether the question asks inside space or boundary distance. Step 3: For area, multiply length by breadth. Step 4: For perimeter, add all sides or use 2(l+b). Step 5: Write square units for area and length units for perimeter.",
+    "vocabulary": [
+      {
+        "term": "Area",
+        "meaning": "Space inside a closed shape."
+      },
+      {
+        "term": "Perimeter",
+        "meaning": "Distance around a closed shape."
+      },
+      {
+        "term": "Length",
+        "meaning": "Longer side of a rectangle."
+      },
+      {
+        "term": "Breadth",
+        "meaning": "Shorter side or width of a rectangle."
+      },
+      {
+        "term": "Square unit",
+        "meaning": "A unit used to measure area."
+      }
+    ],
+    "steps": [
+      "Read what is asked.",
+      "Mark length and breadth.",
+      "Choose area or perimeter formula.",
+      "Substitute values.",
+      "Calculate carefully.",
+      "Write correct unit."
+    ],
+    "practiceQuestions": [
+      "What does area measure?",
+      "What does perimeter measure?",
+      "Find area of 10 cm by 6 cm.",
+      "Find perimeter of 10 cm by 6 cm.",
+      "Why does area use square units?",
+      "Give a real-life use of perimeter."
+    ],
+    "selfCheckAnswers": [
+      "Inside space.",
+      "Distance around.",
+      "60 square cm.",
+      "32 cm.",
+      "It counts unit squares.",
+      "Fencing or border length."
+    ],
+    "homework": "Measure one rectangular object at home and find both area and perimeter."
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Hosted Gemma",
+    "model": "Gemma hosted demo",
+    "latency": "1.5s",
+    "status": "Approved",
+    "confidence": 88,
+    "unclearRegions": [
+      "One shorter side length is lightly written."
+    ],
+    "accessibilityWarnings": [],
+    "id": "composite-rectangles",
+    "title": "Composite Rectangles",
+    "classroomId": "class-8b",
+    "classSubjectId": "subject-8b-math",
+    "chapterId": "math-measurement",
+    "chapterTitle": "Chapter 1: Measurement",
+    "topicId": "composite-rectangles",
+    "topicTitle": "Composite Rectangles",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Blind / Low Vision",
+    "sourceType": "L-shaped floor-plan worksheet",
+    "detectedText": [
+      "Split into rectangles",
+      "Area A",
+      "Area B",
+      "Total area",
+      "Missing side"
+    ],
+    "diagramElements": [
+      "L-shaped figure",
+      "Dashed split line",
+      "Two rectangles",
+      "Side labels",
+      "Area table"
+    ],
+    "equations": [
+      "Total area = Area A + Area B"
+    ],
+    "confidenceNotes": [
+      "Overall L-shape is clear.",
+      "A small side label should be verified."
+    ],
+    "objective": "Students find the area of composite rectilinear shapes by splitting them into rectangles and adding the parts.",
+    "keyConcepts": [
+      "A composite shape is made from two or more simple shapes.",
+      "An L-shaped rectilinear figure can be split into rectangles.",
+      "Each rectangle area is found using length times breadth.",
+      "The total area is the sum of the non-overlapping parts.",
+      "A missing side can often be found by subtracting known lengths.",
+      "A clear split line prevents double-counting or missing a part.",
+      "Units remain square units for total area."
+    ],
+    "teachingScript": "Show an L-shaped figure and ask why the simple rectangle formula cannot be used on the full outline directly. Guide students to see that the shape is not one complete rectangle.\n\nDraw a dashed line that splits the L-shape into two rectangles. Label them A and B. Calculate each area separately and write the results in a small table. Add the two areas only after checking that the rectangles do not overlap.\n\nDiscuss missing sides. If the total length is 10 cm and one part is 4 cm, the missing part is 6 cm. Students should find missing lengths before calculating area. Close with a warning: do not add all side lengths when the question asks area.",
+    "classroomActivity": "Give groups grid-paper L-shapes. Students draw one split line, label rectangles, count grid squares to estimate area, then use multiplication to confirm.",
+    "worksheet": [
+      "What is a composite shape?",
+      "Split an L-shape into two rectangles and label them A and B.",
+      "Rectangle A is 8 cm by 3 cm. Find its area.",
+      "Rectangle B is 4 cm by 5 cm. Find its area.",
+      "Find the total area from A and B.",
+      "If a total side is 12 cm and one part is 7 cm, find the missing part."
+    ],
+    "answerKey": [
+      "A shape made from simpler shapes.",
+      "Any correct non-overlapping split is acceptable.",
+      "24 square cm.",
+      "20 square cm.",
+      "44 square cm.",
+      "5 cm."
+    ],
+    "misconceptions": [
+      "Adding all boundary sides gives perimeter, not area.",
+      "Overlapping rectangles should not both be counted.",
+      "A missing side is not guessed; it is calculated from known lengths.",
+      "The split line should create simple rectangles."
+    ],
+    "differentiatedSupport": "Support: Use grid paper and tactile tracing of the two rectangles.\nCore: Ask students to complete an area table before adding.\nChallenge: Ask students to solve the same shape using two different splits and compare totals.",
+    "screenReaderSummary": "Composite rectangles are shapes made from more than one rectangle. To find area, split the shape into non-overlapping rectangles, calculate each rectangle area, and add the areas together.",
+    "audioStudyScript": "Do not try one formula for the whole L-shape. Split it into rectangles. Find area A. Find area B. Add them. If a side is missing, subtract known lengths first.",
+    "visualDescription": "The worksheet shows an L-shaped figure with a dashed line dividing it into two labelled rectangles. A side-length table is written beside the shape.",
+    "stepByStepExplanation": "Step 1: Look for a way to split the shape into rectangles. Step 2: Draw a dashed split line. Step 3: Find any missing side lengths. Step 4: Calculate each rectangle area. Step 5: Add the areas. Step 6: Write the answer in square units.",
+    "vocabulary": [
+      {
+        "term": "Composite shape",
+        "meaning": "A shape made of two or more simpler shapes."
+      },
+      {
+        "term": "Rectilinear",
+        "meaning": "Made from straight horizontal and vertical sides."
+      },
+      {
+        "term": "Split line",
+        "meaning": "A helper line used to divide a shape."
+      },
+      {
+        "term": "Total area",
+        "meaning": "Sum of all non-overlapping part areas."
+      },
+      {
+        "term": "Missing side",
+        "meaning": "A side length that must be calculated from given lengths."
+      }
+    ],
+    "steps": [
+      "Trace the full shape.",
+      "Choose a split line.",
+      "Label each rectangle.",
+      "Find missing sides.",
+      "Calculate part areas.",
+      "Add part areas.",
+      "Write square units."
+    ],
+    "practiceQuestions": [
+      "Why split a composite shape?",
+      "What formula is used for each rectangle?",
+      "How do you avoid double-counting?",
+      "Find total area if parts are 18 and 25 square cm.",
+      "How can a missing side be found?",
+      "Why is the final unit square cm or square m?"
+    ],
+    "selfCheckAnswers": [
+      "To make simple rectangles.",
+      "Length times breadth.",
+      "Use non-overlapping parts.",
+      "43 square cm.",
+      "By subtracting known lengths from total lengths.",
+      "Area measures square units."
+    ],
+    "homework": "Draw an L-shaped room plan, label side lengths, split it, and find total area.",
+    "warnings": [
+      "One side label is lightly written and needs teacher review."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Demo Fixture",
+    "model": "Mock JSON fallback",
+    "latency": "0.1s",
+    "status": "Draft",
+    "confidence": 88,
+    "unclearRegions": [
+      "The y-axis title is faint."
+    ],
+    "accessibilityWarnings": [],
+    "id": "data-handling",
+    "title": "Reading Bar Graphs",
+    "classroomId": "class-8b",
+    "classSubjectId": "subject-8b-math",
+    "chapterId": "math-data-handling",
+    "chapterTitle": "Chapter 2: Data Handling",
+    "topicId": "bar-graphs",
+    "topicTitle": "Reading Bar Graphs",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Standard",
+    "sourceType": "Chart worksheet",
+    "detectedText": [
+      "Favourite fruits",
+      "Mango",
+      "Banana",
+      "Apple",
+      "Scale: 1 box = 2 students"
+    ],
+    "diagramElements": [
+      "Bar graph",
+      "X-axis labels",
+      "Y-axis scale",
+      "Three bars",
+      "Title box"
+    ],
+    "confidenceNotes": [
+      "Bar heights are readable.",
+      "Axis title should be checked."
+    ],
+    "objective": "Students read and interpret bar graphs using title, axes, scale, labels, and bar heights.",
+    "keyConcepts": [
+      "A bar graph compares quantities across categories.",
+      "The title tells what data is shown.",
+      "The x-axis usually lists categories.",
+      "The y-axis shows numbers or frequency.",
+      "The scale tells the value of each step.",
+      "Bar height represents the quantity for a category.",
+      "Correct comparison requires reading the scale carefully."
+    ],
+    "teachingScript": "Show the graph without asking calculation questions first. Ask students to identify the title, x-axis, y-axis, and scale. This builds graph-reading habits before answers.\n\nNext, choose one bar and model how to read its value. Start at the category label, move up to the top of the bar, then across to the y-axis scale. Remind students that each square may represent more than one item.\n\nFinally, ask comparison questions: tallest bar, shortest bar, difference between two bars, and total for selected categories. Close by asking students to write one sentence conclusion from the graph.",
+    "classroomActivity": "Students vote for a favourite fruit or game. Build a live bar graph using sticky notes, then ask students to read values and comparisons.",
+    "worksheet": [
+      "What does the graph title tell us?",
+      "Which axis has category names?",
+      "What does the scale mean?",
+      "Which bar is tallest?",
+      "How do you find the difference between two bars?",
+      "Write one conclusion from the graph."
+    ],
+    "answerKey": [
+      "It tells the topic of the data.",
+      "The x-axis.",
+      "The value of each step or box.",
+      "The bar with the greatest height.",
+      "Read both values and subtract.",
+      "Any accurate conclusion based on the data."
+    ],
+    "misconceptions": [
+      "Students may ignore the scale and count boxes as 1 each.",
+      "The tallest bar must still be read using the y-axis.",
+      "A graph conclusion should come from data, not personal opinion.",
+      "Different graphs can use different scales."
+    ],
+    "differentiatedSupport": "Support: Use finger tracking from category to bar top to scale.\nCore: Ask students to answer value, comparison, and conclusion questions.\nChallenge: Ask students to critique whether a graph scale is easy or misleading.",
+    "screenReaderSummary": "A bar graph compares quantities using bars. Read the title, axes, category labels, and scale before answering. Bar height shows the value, but the scale tells how much each step represents.",
+    "audioStudyScript": "First read the title. Then read the x-axis categories and y-axis scale. Pick a bar, go to its top, and read the value from the scale. Use values to compare bars.",
+    "visualDescription": "The worksheet shows a bar graph about favourite fruits with mango, banana, and apple on the x-axis and number of students on the y-axis.",
+    "stepByStepExplanation": "Step 1: Read the title. Step 2: Read both axes. Step 3: Check the scale. Step 4: Find the category. Step 5: Read the bar height. Step 6: Compare or calculate using the values. Step 7: Write a data-based conclusion.",
+    "vocabulary": [
+      {
+        "term": "Bar graph",
+        "meaning": "A graph that uses bars to compare categories."
+      },
+      {
+        "term": "Scale",
+        "meaning": "The value represented by each step on an axis."
+      },
+      {
+        "term": "Axis",
+        "meaning": "A reference line on a graph."
+      },
+      {
+        "term": "Category",
+        "meaning": "A group being compared."
+      },
+      {
+        "term": "Frequency",
+        "meaning": "How many times something occurs."
+      }
+    ],
+    "steps": [
+      "Read title.",
+      "Read axes.",
+      "Check scale.",
+      "Read bar value.",
+      "Compare bars.",
+      "Calculate difference if needed.",
+      "Write conclusion."
+    ],
+    "practiceQuestions": [
+      "Why should you read the title first?",
+      "What does the y-axis show?",
+      "What does scale mean?",
+      "How do you find the tallest category?",
+      "How do you find the difference between two bars?",
+      "Write one conclusion from a fruit graph."
+    ],
+    "selfCheckAnswers": [
+      "It tells what data is shown.",
+      "Numbers or frequency.",
+      "Value of each step.",
+      "Compare bar heights and read values.",
+      "Subtract smaller value from larger value.",
+      "Example: Mango was chosen by the most students."
+    ],
+    "homework": "Survey five people at home and draw a small bar graph from the data.",
+    "warnings": [
+      "The y-axis title is faint and needs review."
+    ]
+  },
+  {
+    "language": "English",
+    "runtimeMode": "Hosted Gemma",
+    "model": "Gemma hosted demo",
+    "latency": "1.4s",
+    "status": "Approved",
+    "confidence": 89,
+    "unclearRegions": [],
+    "accessibilityWarnings": [],
+    "id": "mean-median-mode",
+    "title": "Mean, Median, and Mode",
+    "classroomId": "class-8b",
+    "classSubjectId": "subject-8b-math",
+    "chapterId": "math-data-handling",
+    "chapterTitle": "Chapter 2: Data Handling",
+    "topicId": "mean-median-mode",
+    "topicTitle": "Mean, Median, and Mode",
+    "grade": "Grade 8",
+    "subject": "Math",
+    "learnerNeed": "Dyslexia Friendly",
+    "sourceType": "Statistics notebook examples",
+    "detectedText": [
+      "Mean = sum / count",
+      "Median = middle value",
+      "Mode = most frequent",
+      "Data: 4, 6, 6, 8, 10"
+    ],
+    "diagramElements": [
+      "Ordered number list",
+      "Middle value circle",
+      "Frequency tally",
+      "Formula box"
+    ],
+    "equations": [
+      "Mean = sum of values / number of values"
+    ],
+    "confidenceNotes": [
+      "Formula and data set are readable.",
+      "Middle value is clearly circled."
+    ],
+    "objective": "Students calculate mean, median, and mode for a small data set and explain what each measure tells about the data.",
+    "keyConcepts": [
+      "Data are collected values or observations.",
+      "Mean is the arithmetic average found by total divided by count.",
+      "Median is the middle value after data are arranged in order.",
+      "Mode is the value that occurs most often.",
+      "A data set can have no mode or more than one mode.",
+      "Mean is affected by very large or very small values.",
+      "Choosing a measure depends on what question we want to answer."
+    ],
+    "teachingScript": "Start with a small familiar data set: marks of five students or number of books read. Write the numbers clearly and ask what one number could represent the group. Introduce mean, median, and mode as three different summary measures.\n\nFor mean, add all values and divide by the number of values. For median, arrange values in order and find the middle. For mode, look for the value that repeats most. Work the same data set through all three measures so students can compare them.\n\nDiscuss meaning, not only calculation. Mean balances the total equally. Median shows the middle position. Mode shows the most common value. Use a data set with an unusually high value to show why mean can change a lot.",
+    "classroomActivity": "Collect the number of siblings or books read by students in one row. Calculate mean, median, and mode together, then ask which measure best describes the row.",
+    "worksheet": [
+      "Find the mean of 4, 6, 6, 8, 10.",
+      "Find the median of 4, 6, 6, 8, 10.",
+      "Find the mode of 4, 6, 6, 8, 10.",
+      "Why must data be ordered before finding median?",
+      "Find the mode of 2, 3, 4, 5.",
+      "Which measure is most affected by one very large value?"
+    ],
+    "answerKey": [
+      "Mean = 34/5 = 6.8.",
+      "6.",
+      "6.",
+      "The middle value depends on order.",
+      "No mode.",
+      "Mean."
+    ],
+    "misconceptions": [
+      "Median is not found by adding and dividing.",
+      "Mode is not always the largest number.",
+      "Data must be ordered before finding median.",
+      "Mean can be a decimal even when all data values are whole numbers."
+    ],
+    "differentiatedSupport": "Support: Use three labelled boxes: average, middle, most common.\nCore: Ask students to calculate all three for the same ordered data set.\nChallenge: Ask students to decide which measure is best for a data story with an outlier.",
+    "screenReaderSummary": "Mean, median, and mode are three ways to summarize data. Mean is total divided by count. Median is the middle value after ordering. Mode is the value that appears most often.",
+    "audioStudyScript": "Mean means share the total equally. Median means middle after ordering. Mode means most often. Use the same data set and calculate each one carefully.",
+    "visualDescription": "The notes show a data list in order, a circled middle value for median, a repeated value for mode, and a formula box for mean.",
+    "stepByStepExplanation": "Step 1: Write the data set. Step 2: For mean, add all values and divide by count. Step 3: For median, order values and find the middle. Step 4: For mode, find the most repeated value. Step 5: Write what each measure means in the context.",
+    "vocabulary": [
+      {
+        "term": "Data",
+        "meaning": "Collected values or observations."
+      },
+      {
+        "term": "Mean",
+        "meaning": "Average found by total divided by count."
+      },
+      {
+        "term": "Median",
+        "meaning": "Middle value after ordering."
+      },
+      {
+        "term": "Mode",
+        "meaning": "Most frequent value."
+      },
+      {
+        "term": "Outlier",
+        "meaning": "A value very different from the others."
+      }
+    ],
+    "steps": [
+      "Copy data accurately.",
+      "Order data for median.",
+      "Add and divide for mean.",
+      "Find middle for median.",
+      "Count repeats for mode.",
+      "Interpret the result."
+    ],
+    "practiceQuestions": [
+      "Find mean of 2, 4, 6.",
+      "Find median of 7, 3, 5.",
+      "Find mode of 1, 2, 2, 3, 4.",
+      "Can a data set have no mode?",
+      "Which measure uses all values?",
+      "Why can an outlier affect mean?"
+    ],
+    "selfCheckAnswers": [
+      "4.",
+      "5.",
+      "2.",
+      "Yes.",
+      "Mean.",
+      "It changes the total before division."
+    ],
+    "homework": "Collect five numbers from a small survey and calculate mean, median, and mode."
+  }
+]

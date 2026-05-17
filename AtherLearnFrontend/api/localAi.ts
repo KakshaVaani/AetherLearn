@@ -1,9 +1,9 @@
 import { localModelCatalog, preferredLocalModels } from "@/api/modelCatalog";
 import {
-  generateWithNativeGemma,
+  generateWithGemma,
   getDeviceCapabilities,
   getModelStatus
-} from "@/api/nativeGemma";
+} from "@/api/gemmaRuntime";
 import { queueLocalOperation, saveLocalEntity } from "@/api/localStore";
 import {
   AccessibilityMode,
@@ -11,7 +11,8 @@ import {
   AssignmentQuestion,
   LessonPack,
   Lecture,
-  ModelPreference
+  ModelPreference,
+  RuntimeMode
 } from "@/types";
 
 export type AskLessonResponse = {
@@ -41,7 +42,7 @@ export class LocalModelUnavailableError extends Error {
 }
 
 const SYSTEM_INSTRUCTION = [
-  "You are AetherLearn's on-device classroom assistant.",
+  "You are AetherLearn's local classroom assistant.",
   "Use only the provided lesson/source content.",
   "Return JSON only when asked for JSON.",
   "Keep accessibility and teacher review requirements explicit."
@@ -89,27 +90,37 @@ function extractJsonObject<T>(text: string): T | null {
 
 async function selectLocalModel(preference: ModelPreference) {
   const capabilities = await getDeviceCapabilities();
-  if (!capabilities.nativeBridgeAvailable) {
-    throw new LocalModelUnavailableError("On-device Gemma needs an Android development build with the native bridge.");
+  if (capabilities.runtimeKind === "unavailable") {
+    const message =
+      capabilities.platform === "web"
+        ? "Browser Gemma needs WebGPU. Open this demo in a current Chrome or Edge browser with hardware acceleration enabled."
+        : "On-device Gemma needs an Android development build with the native bridge.";
+    throw new LocalModelUnavailableError(message);
   }
-  if (capabilities.androidSdk < 31) {
+  if (capabilities.runtimeKind === "android-native" && capabilities.androidSdk < 31) {
     throw new LocalModelUnavailableError("On-device Gemma needs Android 12 or newer.");
   }
 
   for (const modelId of preferredLocalModels(preference)) {
     const model = localModelCatalog[modelId];
     const totalMemoryGb = capabilities.totalMemoryBytes / 1_000_000_000;
-    if (totalMemoryGb < model.minDeviceMemoryGb) continue;
+    if (totalMemoryGb > 0 && totalMemoryGb < model.minDeviceMemoryGb) continue;
     const status = await getModelStatus(model);
-    if (status.downloaded) return { model, capabilities, status };
+    if (capabilities.runtimeKind === "browser-webgpu" || status.downloaded) {
+      return { model, capabilities, status };
+    }
   }
 
-  throw new LocalModelUnavailableError("No eligible downloaded local Gemma model is ready. Download E2B or E4B in Settings, or choose Remote Gemini.");
+  const detail =
+    capabilities.runtimeKind === "browser-webgpu"
+      ? "No eligible browser Gemma model fits this device. Try E2B or choose Remote Gemini."
+      : "No eligible downloaded local Gemma model is ready. Download E2B or E4B in Settings, or choose Remote Gemini.";
+  throw new LocalModelUnavailableError(detail);
 }
 
 async function runLocalPrompt(preference: ModelPreference, prompt: string, expectedJson = true) {
   const selected = await selectLocalModel(preference);
-  const result = await generateWithNativeGemma(selected.model, {
+  const result = await generateWithGemma(selected.model, {
     prompt,
     systemInstruction: SYSTEM_INSTRUCTION,
     expectedJson
@@ -127,6 +138,8 @@ function fallbackLesson(input: {
   language?: string;
   modelLabel: string;
   latencyMs: number;
+  runtimeMode: RuntimeMode;
+  traceRuntime: string;
 }): LessonPack {
   const facts = sourceFacts(input.text);
   const title = input.title || facts[0] || "Local Lesson";
@@ -151,7 +164,7 @@ function fallbackLesson(input: {
     learnerNeed: "Local-first accessible draft",
     outputType: "Teacher + Student + Trust Packs",
     status: "Needs Review",
-    runtimeMode: "On-device Gemma",
+    runtimeMode: input.runtimeMode,
     qualityChecks: [
       { label: "Focus", status: "Good" },
       { label: "Lighting", status: "Good" },
@@ -165,7 +178,7 @@ function fallbackLesson(input: {
       diagramElements: [],
       equations: [],
       unclearRegions: facts.length ? [] : ["Source text was very short."],
-      confidenceNotes: ["Generated locally on the device; teacher review is required."]
+      confidenceNotes: ["Generated locally; teacher review is required."]
     },
     teacherPack: {
       objective: `Students will be able to explain ${title}.`,
@@ -188,7 +201,7 @@ function fallbackLesson(input: {
       selfCheckAnswers: questions.map(() => "Check your answer against the lesson notes.")
     },
     trustPack: {
-      runtimeMode: "On-device Gemma",
+      runtimeMode: input.runtimeMode,
       model: input.modelLabel,
       latency: `${input.latencyMs} ms`,
       schemaStatus: "Valid",
@@ -202,7 +215,7 @@ function fallbackLesson(input: {
       teacherReviewRequired: true
     },
     trace: {
-      runtime: "on-device",
+      runtime: input.traceRuntime,
       model: input.modelLabel,
       localOnly: true,
       hostedApiUsed: false,
@@ -246,8 +259,10 @@ export async function generateLocalLessonFromText(
   const lesson = fallbackLesson({
     ...input,
     title: parsed?.title ?? input.title,
-    modelLabel: model.label,
-    latencyMs: result.latencyMs
+    modelLabel: result.modelLabel || model.label,
+    latencyMs: result.latencyMs,
+    runtimeMode: result.runtimeMode,
+    traceRuntime: result.runtimeKind
   });
   if (parsed?.detectedText?.length) lesson.sourceCard.detectedText = parsed.detectedText.slice(0, 10);
   if (parsed?.keyConcepts?.length) lesson.teacherPack.keyConcepts = parsed.keyConcepts.slice(0, 8);

@@ -1,42 +1,66 @@
 import { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
-import { fetchTeacherClassrooms } from "@/api/backend";
+import { fetchTeacherClassroomsWithSource } from "@/api/backend";
 import { Badge } from "@/components/Badge";
 import { ClassroomCard } from "@/components/ClassroomCard";
 import { Header } from "@/components/Header";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
-import { classrooms } from "@/data/classrooms";
+import { colors, spacing } from "@/constants/theme";
 import { Classroom } from "@/types";
 
+type ClassroomSource = "backend" | "local" | "demo";
+
 export default function TeacherClassroomsScreen() {
-  const [items, setItems] = useState<Classroom[]>(classrooms);
-  const [connected, setConnected] = useState(false);
+  const [items, setItems] = useState<Classroom[]>([]);
+  const [source, setSource] = useState<ClassroomSource | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    fetchTeacherClassrooms()
-      .then((data) => {
-        if (!mounted || data.length === 0) return;
-        setItems(data);
-        setConnected(true);
+    fetchTeacherClassroomsWithSource()
+      .then((result) => {
+        if (!mounted) return;
+        setItems(result.classes);
+        setSource(result.source);
       })
       .catch(() => {
-        if (mounted) setConnected(false);
+        if (!mounted) return;
+        setItems([]);
+        setSource(null);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
       });
     return () => {
       mounted = false;
     };
   }, []);
 
+  const connected = source === "backend";
+  const badgeLabel = loading
+    ? "Loading classes"
+    : source === "backend"
+      ? "Backend synced"
+      : source === "local"
+        ? "Offline cache"
+        : "Local demo";
+
   return (
     <ScreenContainer>
       <Header title="Classrooms" subtitle="Manage inclusive learning groups." />
-      <Badge label={connected ? "Backend synced" : "Local demo"} tone={connected ? "success" : "warning"} />
+      <Badge label={badgeLabel} tone={connected ? "success" : "warning"} />
       <SectionHeader
         title="Your classrooms"
         subtitle="Each class tracks subjects, codes, and learner access profiles."
       />
+      {loading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.loadingText}>Loading backend classes...</Text>
+        </View>
+      ) : null}
       {items.map((classroom) => (
         <ClassroomCard
           key={classroom.id}
@@ -49,3 +73,17 @@ export default function TeacherClassroomsScreen() {
     </ScreenContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingState: {
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.xl
+  },
+  loadingText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20
+  }
+});

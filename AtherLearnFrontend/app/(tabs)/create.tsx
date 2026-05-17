@@ -28,7 +28,8 @@ export default function CreateScreen() {
           lessonId: lesson.id,
           title: lesson.title,
           grade: lesson.grade,
-          subject: lesson.subject
+          subject: lesson.subject,
+          mode: "generated"
         }
       });
     } catch {
@@ -43,7 +44,7 @@ export default function CreateScreen() {
     <ScreenContainer>
       <Header title="Capture Lesson" subtitle="Mock camera preview for the first frontend draft." showSettings={false} />
 
-      <LessonSourcePreview />
+      <LessonSourcePreview lesson={featuredLessonPack} />
 
       <SectionHeader title="Image quality" subtitle="The app will flag weak captures before analysis." />
       <Text style={styles.statusText}>{message}</Text>

@@ -10,6 +10,8 @@ type ReviewParams = {
   title?: string;
   grade?: string;
   subject?: string;
+  mode?: "generated" | "view";
+  origin?: "classroom" | "library";
 };
 
 type ReviewTabsProps = {

@@ -28,6 +28,9 @@ class AssignmentRepository:
     async def get(self, assignment_id: str) -> dict | None:
         return await self.repo.get(assignment_id)
 
+    async def delete(self, assignment_id: str) -> bool:
+        return await self.repo.delete(assignment_id)
+
     async def list_for_teacher(self, teacher_id: str) -> list[dict]:
         return await self.repo.list(teacherId=teacher_id)
 

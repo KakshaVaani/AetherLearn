@@ -19,8 +19,17 @@ export const teachers: DemoTeacher[] = [
     role: "teacher",
     avatarInitials: "AS",
     email: "teacher@aetherlearn.demo",
-    subjects: ["Science", "Social Studies"],
-    classroomIds: ["grade-7-inclusive", "grade-8-a", "grade-9-science"]
+    subjects: ["Science", "Math"],
+    classroomIds: ["class-7a", "class-7b", "class-8a", "class-8b"]
+  },
+  {
+    id: "teacher-leela",
+    name: "Leela Nair",
+    role: "teacher",
+    avatarInitials: "LN",
+    email: "leela@aetherlearn.demo",
+    subjects: ["Science"],
+    classroomIds: ["class-7a", "class-7b"]
   },
   {
     id: "teacher-raj",
@@ -29,16 +38,7 @@ export const teachers: DemoTeacher[] = [
     avatarInitials: "RM",
     email: "raj@aetherlearn.demo",
     subjects: ["Math"],
-    classroomIds: ["grade-8-a"]
-  },
-  {
-    id: "teacher-farah",
-    name: "Farah Khan",
-    role: "teacher",
-    avatarInitials: "FK",
-    email: "farah@aetherlearn.demo",
-    subjects: ["English", "Science"],
-    classroomIds: ["grade-7-inclusive", "grade-9-science"]
+    classroomIds: ["class-8a", "class-8b"]
   }
 ];
 
@@ -53,18 +53,7 @@ export const students: DemoStudent[] = [
     accessibilityMode: "Blind / Low Vision",
     preferredLanguage: "Hindi + English",
     email: "student@aetherlearn.demo",
-    classroomIds: ["grade-7-inclusive"],
-    readingLevel: "On Track"
-  },
-  {
-    id: "student-aarav",
-    name: "Aarav Singh",
-    role: "student",
-    avatarInitials: "AS",
-    accessibilityMode: "Dyslexia Friendly",
-    preferredLanguage: "English",
-    email: "aarav@aetherlearn.demo",
-    classroomIds: ["grade-8-a"],
+    classroomIds: ["class-7a"],
     readingLevel: "On Track"
   },
   {
@@ -72,22 +61,11 @@ export const students: DemoStudent[] = [
     name: "Meera Nair",
     role: "student",
     avatarInitials: "MN",
-    accessibilityMode: "Blind / Low Vision",
+    accessibilityMode: "Standard",
     preferredLanguage: "English",
     email: "meera@aetherlearn.demo",
-    classroomIds: ["grade-7-inclusive"],
+    classroomIds: ["class-7a"],
     readingLevel: "Advanced"
-  },
-  {
-    id: "student-rafiq",
-    name: "Rafiq Ansari",
-    role: "student",
-    avatarInitials: "RA",
-    accessibilityMode: "Multilingual",
-    preferredLanguage: "Hindi + English",
-    email: "rafiq@aetherlearn.demo",
-    classroomIds: ["grade-8-a"],
-    readingLevel: "On Track"
   },
   {
     id: "student-neha",
@@ -97,40 +75,7 @@ export const students: DemoStudent[] = [
     accessibilityMode: "Slow Learner",
     preferredLanguage: "English",
     email: "neha@aetherlearn.demo",
-    classroomIds: ["grade-7-inclusive"],
-    readingLevel: "Emerging"
-  },
-  {
-    id: "student-kiran",
-    name: "Kiran Patel",
-    role: "student",
-    avatarInitials: "KP",
-    accessibilityMode: "Standard",
-    preferredLanguage: "English",
-    email: "kiran@aetherlearn.demo",
-    classroomIds: ["grade-8-a"],
-    readingLevel: "Advanced"
-  },
-  {
-    id: "student-ishita",
-    name: "Ishita Rao",
-    role: "student",
-    avatarInitials: "IR",
-    accessibilityMode: "Dyslexia Friendly",
-    preferredLanguage: "English",
-    email: "ishita@aetherlearn.demo",
-    classroomIds: ["grade-9-science"],
-    readingLevel: "On Track"
-  },
-  {
-    id: "student-dev",
-    name: "Dev Malhotra",
-    role: "student",
-    avatarInitials: "DM",
-    accessibilityMode: "Slow Learner",
-    preferredLanguage: "Hindi + English",
-    email: "dev@aetherlearn.demo",
-    classroomIds: ["grade-9-science"],
+    classroomIds: ["class-7a"],
     readingLevel: "Emerging"
   },
   {
@@ -141,8 +86,63 @@ export const students: DemoStudent[] = [
     accessibilityMode: "Multilingual",
     preferredLanguage: "Urdu + English",
     email: "zoya@aetherlearn.demo",
-    classroomIds: ["grade-7-inclusive"],
+    classroomIds: ["class-7b"],
     readingLevel: "On Track"
+  },
+  {
+    id: "student-ishita",
+    name: "Ishita Rao",
+    role: "student",
+    avatarInitials: "IR",
+    accessibilityMode: "Dyslexia Friendly",
+    preferredLanguage: "English",
+    email: "ishita@aetherlearn.demo",
+    classroomIds: ["class-7b"],
+    readingLevel: "On Track"
+  },
+  {
+    id: "student-aarav",
+    name: "Aarav Singh",
+    role: "student",
+    avatarInitials: "AS",
+    accessibilityMode: "Dyslexia Friendly",
+    preferredLanguage: "English",
+    email: "aarav@aetherlearn.demo",
+    classroomIds: ["class-8a"],
+    readingLevel: "On Track"
+  },
+  {
+    id: "student-rafiq",
+    name: "Rafiq Ansari",
+    role: "student",
+    avatarInitials: "RA",
+    accessibilityMode: "Multilingual",
+    preferredLanguage: "Hindi + English",
+    email: "rafiq@aetherlearn.demo",
+    classroomIds: ["class-8a"],
+    readingLevel: "On Track"
+  },
+  {
+    id: "student-kiran",
+    name: "Kiran Patel",
+    role: "student",
+    avatarInitials: "KP",
+    accessibilityMode: "Standard",
+    preferredLanguage: "English",
+    email: "kiran@aetherlearn.demo",
+    classroomIds: ["class-8a"],
+    readingLevel: "Advanced"
+  },
+  {
+    id: "student-dev",
+    name: "Dev Malhotra",
+    role: "student",
+    avatarInitials: "DM",
+    accessibilityMode: "Slow Learner",
+    preferredLanguage: "Hindi + English",
+    email: "dev@aetherlearn.demo",
+    classroomIds: ["class-8b"],
+    readingLevel: "Emerging"
   },
   {
     id: "student-tara",
@@ -152,15 +152,16 @@ export const students: DemoStudent[] = [
     accessibilityMode: "Standard",
     preferredLanguage: "English",
     email: "tara@aetherlearn.demo",
-    classroomIds: ["grade-9-science"],
+    classroomIds: ["class-8b"],
     readingLevel: "Advanced"
   }
 ];
 
 export const classRosters: Record<string, string[]> = {
-  "grade-7-inclusive": ["student-demo", "student-meera", "student-neha", "student-zoya"],
-  "grade-8-a": ["student-aarav", "student-rafiq", "student-kiran"],
-  "grade-9-science": ["student-ishita", "student-dev", "student-tara"]
+  "class-7a": ["student-demo", "student-meera", "student-neha"],
+  "class-7b": ["student-zoya", "student-ishita"],
+  "class-8a": ["student-aarav", "student-rafiq", "student-kiran"],
+  "class-8b": ["student-dev", "student-tara"]
 };
 
 export const teacherClassrooms: Record<string, string[]> = teachers.reduce<Record<string, string[]>>((acc, item) => {

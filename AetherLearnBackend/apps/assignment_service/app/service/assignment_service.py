@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from shared_schemas import Assignment, CreateAssignmentRequest
+from shared_utils.errors import ForbiddenError, NotFoundError
 
 from ..repository.assignment_repository import AssignmentRepository
 from ..repository.progress_repository import ProgressRepository
@@ -48,3 +49,20 @@ class AssignmentService:
             Assignment.model_validate(item)
             for item in await self.assignments.list_for_student(student_id, classroom_ids)
         ]
+
+    async def delete_for_teacher(
+        self,
+        teacher_id: str,
+        assignment_id: str,
+        role: str = "teacher",
+    ) -> dict:
+        assignment = await self.assignments.get(assignment_id)
+        if not assignment:
+            raise NotFoundError("Assignment not found")
+        if (
+            assignment.get("teacherId") != teacher_id
+            and role not in {"school_admin", "platform_admin"}
+        ):
+            raise ForbiddenError("Assignment owner required")
+        deleted = await self.assignments.delete(assignment_id)
+        return {"deleted": deleted}

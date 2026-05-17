@@ -2,42 +2,53 @@ import { Classroom } from "@/types";
 
 export const classrooms: Classroom[] = [
   {
-    id: "grade-7-inclusive",
-    title: "Grade 7 - Inclusive Learning",
+    id: "class-7a",
+    title: "Class 7A",
     grade: "Grade 7",
-    section: "Inclusive Learning",
+    section: "A",
     schoolId: "school-gms",
-    classCode: "G7I-503",
-    students: 4,
-    subjects: ["Science", "English", "Social Studies"],
-    classSubjects: [
-      { id: "grade-7-inclusive-science", subject: "Science", teacherId: "teacher-demo" },
-      { id: "grade-7-inclusive-english", subject: "English", teacherId: "teacher-farah" },
-      { id: "grade-7-inclusive-social-studies", subject: "Social Studies", teacherId: "teacher-demo" }
-    ],
-    accessibilityProfiles: 4,
+    classCode: "CLASS7A",
+    students: 3,
+    subjects: ["Science"],
+    classSubjects: [{ id: "subject-7a-science", subject: "Science", teacherId: "teacher-demo" }],
+    accessibilityProfiles: 2,
     accessibilityBreakdown: {
-      "Blind / Low Vision": 2,
+      "Blind / Low Vision": 1,
       "Dyslexia Friendly": 0,
-      Multilingual: 1,
+      Multilingual: 0,
       "Slow Learner": 1,
+      Standard: 1
+    }
+  },
+  {
+    id: "class-7b",
+    title: "Class 7B",
+    grade: "Grade 7",
+    section: "B",
+    schoolId: "school-gms",
+    classCode: "CLASS7B",
+    students: 2,
+    subjects: ["Science"],
+    classSubjects: [{ id: "subject-7b-science", subject: "Science", teacherId: "teacher-demo" }],
+    accessibilityProfiles: 2,
+    accessibilityBreakdown: {
+      "Blind / Low Vision": 0,
+      "Dyslexia Friendly": 1,
+      Multilingual: 1,
+      "Slow Learner": 0,
       Standard: 0
     }
   },
   {
-    id: "grade-8-a",
-    title: "Grade 8 - Section A",
+    id: "class-8a",
+    title: "Class 8A",
     grade: "Grade 8",
     section: "A",
     schoolId: "school-gms",
-    classCode: "G8A-204",
+    classCode: "CLASS8A",
     students: 3,
-    subjects: ["Science", "Math", "English"],
-    classSubjects: [
-      { id: "grade-8-a-science", subject: "Science", teacherId: "teacher-demo" },
-      { id: "grade-8-a-math", subject: "Math", teacherId: "teacher-raj" },
-      { id: "grade-8-a-english", subject: "English", teacherId: "teacher-farah" }
-    ],
+    subjects: ["Math"],
+    classSubjects: [{ id: "subject-8a-math", subject: "Math", teacherId: "teacher-demo" }],
     accessibilityProfiles: 2,
     accessibilityBreakdown: {
       "Blind / Low Vision": 0,
@@ -48,21 +59,19 @@ export const classrooms: Classroom[] = [
     }
   },
   {
-    id: "grade-9-science",
-    title: "Grade 9 - Science",
-    grade: "Grade 9",
-    section: "Science",
+    id: "class-8b",
+    title: "Class 8B",
+    grade: "Grade 8",
+    section: "B",
     schoolId: "school-gms",
-    classCode: "G9S-118",
-    students: 3,
-    subjects: ["Science"],
-    classSubjects: [
-      { id: "grade-9-science-science", subject: "Science", teacherId: "teacher-farah" }
-    ],
-    accessibilityProfiles: 2,
+    classCode: "CLASS8B",
+    students: 2,
+    subjects: ["Math"],
+    classSubjects: [{ id: "subject-8b-math", subject: "Math", teacherId: "teacher-demo" }],
+    accessibilityProfiles: 1,
     accessibilityBreakdown: {
       "Blind / Low Vision": 0,
-      "Dyslexia Friendly": 1,
+      "Dyslexia Friendly": 0,
       Multilingual: 0,
       "Slow Learner": 1,
       Standard: 1

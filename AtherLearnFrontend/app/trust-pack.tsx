@@ -1,6 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { publishTeacherLessonChanges } from "@/api/backend";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -9,6 +10,13 @@ import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
+import {
+  lessonOriginRoute,
+  lessonStateLabel,
+  resolveLessonOrigin,
+  resolveLessonReviewMode
+} from "@/utils/lessonReview";
+import { useState } from "react";
 
 function TrustRow({
   icon,
@@ -39,21 +47,72 @@ export default function TrustPackScreen() {
     title?: string;
     grade?: string;
     subject?: string;
+    mode?: "generated" | "view";
+    origin?: "classroom" | "library";
   }>();
-  const { lesson } = useLessonPackReview(params.lessonId);
+  const [publishing, setPublishing] = useState(false);
+  const { lesson, loading, notFound, source: lessonSource, replaceLesson } = useLessonPackReview(params.lessonId);
+
+  if (loading || !lesson) {
+    return (
+      <ScreenContainer>
+        <Header
+          title={notFound ? "Lesson not found" : "Loading Trust Pack"}
+          subtitle={notFound ? "This lesson is not available in the current workspace." : "Fetching the selected lesson."}
+          showBack
+        />
+        <Card style={styles.stateCard}>
+          {notFound ? (
+            <Ionicons name="alert-circle-outline" size={24} color={colors.warning} />
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )}
+          <Text style={styles.stateText}>
+            {notFound ? "Return to the class and open a synced lesson." : "Loading topic-specific trust details..."}
+          </Text>
+        </Card>
+      </ScreenContainer>
+    );
+  }
+
   const trust = lesson.trustPack;
   const reviewParams = {
     lessonId: params.lessonId ?? lesson.id,
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
     title: params.title ?? lesson.title,
     grade: params.grade ?? lesson.grade,
-    subject: params.subject ?? lesson.subject
+    subject: params.subject ?? lesson.subject,
+    mode: resolveLessonReviewMode(params.mode, params.lessonId),
+    origin: resolveLessonOrigin(params.origin, params.classroomId ?? lesson.classroomId ?? undefined)
   };
+  const isViewMode = reviewParams.mode === "view";
+  const statusLabel = lessonStateLabel(lesson);
+  const needsPublish = isViewMode && lesson.status === "Needs Review";
   const warningCount = trust.accessibilityWarnings.length;
+
+  function goBackToOrigin() {
+    router.replace(lessonOriginRoute(reviewParams.origin, reviewParams.classroomId));
+  }
+
+  async function publishChanges() {
+    if (!lesson) return;
+    setPublishing(true);
+    try {
+      const saved = await publishTeacherLessonChanges(lesson.id, lesson);
+      replaceLesson(saved, lessonSource);
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   return (
     <ScreenContainer>
-      <Header title="Trust Pack" subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject}`} showBack />
+      <Header
+        title={isViewMode ? "Lesson Trust Details" : "Trust Pack"}
+        subtitle={`${lesson.title} - ${lesson.grade} ${lesson.subject} - ${isViewMode ? statusLabel : "Generated draft"}`}
+        showBack
+        onBack={isViewMode ? goBackToOrigin : undefined}
+      />
       <ReviewTabs active="trust" params={reviewParams} />
 
       <Card style={styles.card}>
@@ -86,25 +145,73 @@ export default function TrustPackScreen() {
       <Card style={styles.infoCard}>
         <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
         <Text style={styles.infoText}>
-          Content is generated as a teacher-reviewed draft. The first build keeps exports local and clearly labels mock,
-          hosted, or local runtime mode.
+          {isViewMode
+            ? "This lesson has already been generated. Editing it will mark it as needing teacher review before sharing updates."
+            : "Content is generated as a teacher-reviewed draft. The first build keeps exports local and clearly labels mock, hosted, or local runtime mode."}
         </Text>
       </Card>
 
       <View style={styles.actions}>
-        <AppButton
-          title="Export"
-          variant="outline"
-          leftIcon={<Ionicons name="download-outline" size={20} color={colors.text} />}
-          style={styles.actionButton}
-        />
-        <AppButton
-          title="Save to Library"
-          variant="success"
-          leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
-          onPress={() => router.push("/(teacher)/lessons")}
-          style={styles.actionButton}
-        />
+        {isViewMode ? (
+          <>
+            <AppButton
+              title="Edit"
+              variant="outline"
+              leftIcon={<Ionicons name="create-outline" size={20} color={colors.text} />}
+              onPress={() =>
+                router.push({
+                  pathname: "/(teacher)/lesson-editor",
+                  params: {
+                    ...reviewParams,
+                    returnTo: "trust"
+                  }
+                })
+              }
+              style={styles.actionButton}
+            />
+            {needsPublish ? (
+              <AppButton
+                title="Publish Changes"
+                variant="success"
+                loading={publishing}
+                leftIcon={<Ionicons name="cloud-upload-outline" size={20} color={colors.white} />}
+                onPress={publishChanges}
+                style={styles.actionButton}
+              />
+            ) : (
+              <AppButton
+                title="Create Assignment"
+                leftIcon={<Ionicons name="clipboard-outline" size={20} color={colors.white} />}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(teacher)/create-assignment",
+                    params: {
+                      lessonId: lesson.id,
+                      classroomId: lesson.classroomId ?? params.classroomId
+                    }
+                  })
+                }
+                style={styles.actionButton}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <AppButton
+              title="Export"
+              variant="outline"
+              leftIcon={<Ionicons name="download-outline" size={20} color={colors.text} />}
+              style={styles.actionButton}
+            />
+            <AppButton
+              title="Save to Library"
+              variant="success"
+              leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
+              onPress={() => router.push("/(teacher)/lessons")}
+              style={styles.actionButton}
+            />
+          </>
+        )}
       </View>
     </ScreenContainer>
   );
@@ -175,5 +282,16 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: spacing.md
+  },
+  stateText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "700",
+    textAlign: "center"
   }
 });

@@ -12,57 +12,65 @@ export const subjectChapters: SubjectChapter[] = [
     id: "science-plant-processes",
     subject: "Science",
     title: "Chapter 1: Plant Processes",
-    description: "Photosynthesis, water movement, and diagram-based revision.",
-    lectureIds: ["photosynthesis", "water-cycle"],
-    assignmentIds: ["photosynthesis-quiz"]
+    description: "Photosynthesis, plant nutrition, stomata, and accessible diagram revision.",
+    lectureIds: ["photosynthesis", "plant-nutrition-stomata"],
+    assignmentIds: ["photosynthesis-quiz", "plant-nutrition-stomata-practice"]
   },
   {
-    id: "science-human-systems",
+    id: "science-water-cycle",
     subject: "Science",
-    title: "Chapter 2: Human Body Systems",
-    description: "Digestive system notes with accessible step-by-step explanations.",
-    lectureIds: ["digestive-system"],
-    assignmentIds: ["digestive-system-revision"]
+    title: "Chapter 2: Water and Weather",
+    description: "Water cycle stages, cloud formation, rainfall, and audio-first support.",
+    lectureIds: ["water-cycle", "cloud-formation-rainfall"],
+    assignmentIds: ["water-cycle-diagram", "cloud-rainfall-check"]
+  },
+  {
+    id: "science-human-body",
+    subject: "Science",
+    title: "Chapter 1: Human Body Systems",
+    description: "Digestive system path, organ roles, teeth, saliva, and enzymes.",
+    lectureIds: ["digestive-system", "teeth-saliva-enzymes"],
+    assignmentIds: ["digestive-system-revision", "teeth-saliva-enzymes-practice"]
+  },
+  {
+    id: "science-acids-bases",
+    subject: "Science",
+    title: "Chapter 2: Acids, Bases, and Indicators",
+    description: "Litmus tests, natural indicators, everyday examples, and lab safety notes.",
+    lectureIds: ["acids-and-bases", "natural-indicators"],
+    assignmentIds: ["acids-bases-safety", "natural-indicators-observation"]
   },
   {
     id: "math-fractions",
     subject: "Math",
     title: "Chapter 1: Fractions",
-    description: "Number lines, equal parts, and fraction practice.",
-    lectureIds: ["fractions"],
-    assignmentIds: ["fractions-practice"]
+    description: "Number lines, equal parts, equivalent fractions, and practice.",
+    lectureIds: ["fractions", "equivalent-fractions"],
+    assignmentIds: ["fractions-practice", "equivalent-fractions-practice"]
   },
   {
     id: "math-algebra",
     subject: "Math",
     title: "Chapter 2: Algebra Basics",
-    description: "Linear equations, inverse operations, and balanced steps.",
-    lectureIds: ["linear-equations"],
-    assignmentIds: ["linear-equations-practice"]
+    description: "Linear equations, word problems, inverse operations, and balanced steps.",
+    lectureIds: ["linear-equations", "word-problems-equations"],
+    assignmentIds: ["linear-equations-practice", "word-problems-equations-practice"]
   },
   {
-    id: "english-reading",
-    subject: "English",
-    title: "Chapter 1: Reading Skills",
-    description: "Finding the main idea and supporting details in a passage.",
-    lectureIds: ["reading-main-idea"],
-    assignmentIds: ["reading-main-idea-check"]
+    id: "math-measurement",
+    subject: "Math",
+    title: "Chapter 1: Measurement",
+    description: "Area, perimeter, units, composite rectangles, and measurement problems.",
+    lectureIds: ["area-perimeter", "composite-rectangles"],
+    assignmentIds: ["area-perimeter-practice", "composite-rectangles-practice"]
   },
   {
-    id: "social-civics",
-    subject: "Social Studies",
-    title: "Chapter 1: Community and Constitution",
-    description: "Rights, duties, and Indian Constitution basics.",
-    lectureIds: ["constitution-basics"],
-    assignmentIds: ["constitution-basics-exit-ticket"]
-  },
-  {
-    id: "chemistry-acids-bases",
-    subject: "Science",
-    title: "Chapter 1: Acids, Bases, and Indicators",
-    description: "Litmus tests, everyday examples, and lab safety.",
-    lectureIds: ["acids-and-bases"],
-    assignmentIds: []
+    id: "math-data-handling",
+    subject: "Math",
+    title: "Chapter 2: Data Handling",
+    description: "Bar graphs, scale reading, averages, and comparison questions.",
+    lectureIds: ["data-handling", "mean-median-mode"],
+    assignmentIds: ["data-handling-exit-ticket", "mean-median-mode-practice"]
   }
 ];
 

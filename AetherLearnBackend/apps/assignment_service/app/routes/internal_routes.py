@@ -80,6 +80,14 @@ async def teacher_assignments(request: Request, teacher_id: str):
     return await svc.list_teacher(teacher_id)
 
 
+@router.delete("/assignments/{assignment_id}")
+async def delete_assignment(request: Request, assignment_id: str):
+    await require_service(request)
+    ctx = user_context(request)
+    svc, *_ = services(request)
+    return await svc.delete_for_teacher(ctx.user_id, assignment_id, ctx.role)
+
+
 @router.get("/student/{student_id}/assignments")
 async def student_assignments(
     request: Request,

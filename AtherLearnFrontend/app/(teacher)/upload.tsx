@@ -3,19 +3,19 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ApiClientError } from "@/api/client";
-import { fetchTeacherClassrooms, generateLessonFromText } from "@/api/backend";
+import { fetchTeacherDashboard, generateLessonFromText } from "@/api/backend";
 import { useDefaultModelPreference } from "@/api/localPreferences";
 import { AppButton } from "@/components/AppButton";
 import { Card } from "@/components/Card";
 import { Header } from "@/components/Header";
 import { LessonSourcePreview } from "@/components/LessonSourcePreview";
 import { ModelModeSelector } from "@/components/ModelModeSelector";
-import { ReviewTabs } from "@/components/ReviewTabs";
 import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { classrooms as demoClassrooms } from "@/data/classrooms";
-import { chaptersForSubject } from "@/data/subjectChapters";
-import { ClassSubject, Classroom } from "@/types";
+import { lessonPacks as demoLessonPacks } from "@/data/lessonPacks";
+import { chaptersForSubject, type SubjectChapter } from "@/data/subjectChapters";
+import { Classroom, LessonPack } from "@/types";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const uploadTypes = [
@@ -25,18 +25,63 @@ const uploadTypes = [
   { label: "Handwritten note", icon: "create-outline" }
 ] as const;
 
+type ChapterOption = Pick<SubjectChapter, "id" | "title" | "description"> & {
+  source: "preset" | "saved";
+};
+
+function slugify(value: string, fallback: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback;
+}
+
+function customChapterId(subject: string, title: string) {
+  return `${slugify(subject, "subject")}-${slugify(title, "custom-chapter")}`;
+}
+
+function chapterOptionsFor(
+  presetChapters: SubjectChapter[],
+  lessons: LessonPack[],
+  classroomId: string,
+  subject: string
+): ChapterOption[] {
+  const options: ChapterOption[] = presetChapters.map((chapter) => ({
+    id: chapter.id,
+    title: chapter.title,
+    description: chapter.description,
+    source: "preset"
+  }));
+  const seen = new Set(options.map((chapter) => chapter.id));
+  for (const lesson of lessons) {
+    if (lesson.subject !== subject) continue;
+    if (lesson.classroomId && lesson.classroomId !== classroomId) continue;
+    const title = lesson.chapterTitle?.trim();
+    if (!title) continue;
+    const id = lesson.chapterId?.trim() || customChapterId(subject, title);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    options.push({
+      id,
+      title,
+      description: "Teacher-created chapter from saved notes.",
+      source: "saved"
+    });
+  }
+  return options;
+}
+
 export default function UploadLectureScreen() {
   const params = useLocalSearchParams<{ classroomId?: string }>();
   const [availableClassrooms, setAvailableClassrooms] = useState<Classroom[]>(demoClassrooms);
+  const [existingLessons, setExistingLessons] = useState<LessonPack[]>(demoLessonPacks);
   const [selectedClassroomId, setSelectedClassroomId] = useState(params.classroomId ?? demoClassrooms[0].id);
   const [selectedClassSubjectId, setSelectedClassSubjectId] = useState(
     demoClassrooms[0].classSubjects?.[0]?.id ?? ""
   );
-  const [title, setTitle] = useState("Photosynthesis and Plant Nutrition");
-  const [topicTitle, setTopicTitle] = useState("Photosynthesis");
-  const [notesText, setNotesText] = useState(
-    "Green plants use sunlight, water, and carbon dioxide to prepare food. The process is called photosynthesis. Plants make glucose and release oxygen."
-  );
+  const [title, setTitle] = useState("Classroom Notes");
+  const [topicTitle, setTopicTitle] = useState("");
+  const [notesText, setNotesText] = useState("");
+  const [addingChapter, setAddingChapter] = useState(false);
+  const [customChapterTitle, setCustomChapterTitle] = useState("");
+  const [customChapterDescription, setCustomChapterDescription] = useState("");
   const [message, setMessage] = useState("Using local demo classes until backend data is available.");
   const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,16 +89,21 @@ export default function UploadLectureScreen() {
 
   useEffect(() => {
     let mounted = true;
-    fetchTeacherClassrooms()
-      .then((items) => {
-        if (!mounted || items.length === 0) return;
-        setAvailableClassrooms(items);
-        const preferred = params.classroomId && items.some((item) => item.id === params.classroomId)
+    fetchTeacherDashboard()
+      .then((data) => {
+        if (!mounted || data.classes.length === 0) return;
+        setAvailableClassrooms(data.classes);
+        setExistingLessons(data.lessons.length ? data.lessons : demoLessonPacks);
+        const preferred = params.classroomId && data.classes.some((item) => item.id === params.classroomId)
           ? params.classroomId
-          : items[0].id;
+          : data.classes[0].id;
         setSelectedClassroomId(preferred);
-        setConnected(true);
-        setMessage("Connected to backend classes. Generated notes stay private until assigned.");
+        setConnected(data.source === "backend");
+        setMessage(
+          data.source === "backend"
+            ? "Connected to backend classes. Generated notes stay private until assigned."
+            : "Backend unavailable. Showing local demo classes."
+        );
       })
       .catch(() => {
         if (!mounted) return;
@@ -76,14 +126,28 @@ export default function UploadLectureScreen() {
   const selectedSubjectName = selectedClassSubject?.subject ?? selectedClassroom.subjects[0] ?? "General";
   const subjectChapters = useMemo(() => chaptersForSubject(selectedSubjectName), [selectedSubjectName]);
   const [selectedChapterId, setSelectedChapterId] = useState(subjectChapters[0]?.id ?? "custom-chapter");
-  const selectedChapter = subjectChapters.find((chapter) => chapter.id === selectedChapterId) ?? subjectChapters[0];
-  const canSubmit = title.trim().length > 0 && notesText.trim().length > 0 && Boolean(selectedClassroom?.id);
-  const reviewParams = {
-    classroomId: selectedClassroom.id,
-    grade: selectedClassroom.grade ?? selectedClassroom.title,
-    subject: selectedSubjectName
-  };
-
+  const chapterOptions = useMemo(
+    () => chapterOptionsFor(subjectChapters, existingLessons, selectedClassroom.id, selectedSubjectName),
+    [existingLessons, selectedClassroom.id, selectedSubjectName, subjectChapters]
+  );
+  const selectedChapter = chapterOptions.find((chapter) => chapter.id === selectedChapterId) ?? chapterOptions[0];
+  const customChapterReady = !addingChapter || customChapterTitle.trim().length > 0;
+  const activeChapter = addingChapter
+    ? {
+        id: customChapterId(selectedSubjectName, customChapterTitle || "Custom Chapter"),
+        title: customChapterTitle.trim() || "Custom Chapter",
+        description: customChapterDescription.trim()
+      }
+    : selectedChapter ?? {
+        id: "custom-chapter",
+        title: "Chapter 1: Classroom Notes",
+        description: "Teacher-created material."
+      };
+  const canSubmit =
+    title.trim().length > 0 &&
+    notesText.trim().length > 0 &&
+    Boolean(selectedClassroom?.id) &&
+    customChapterReady;
   useEffect(() => {
     const firstSubjectId = classSubjects[0]?.id ?? "";
     if (!classSubjects.some((item) => item.id === selectedClassSubjectId)) {
@@ -92,15 +156,17 @@ export default function UploadLectureScreen() {
   }, [classSubjects, selectedClassSubjectId]);
 
   useEffect(() => {
-    const firstChapterId = subjectChapters[0]?.id ?? "custom-chapter";
-    if (!subjectChapters.some((chapter) => chapter.id === selectedChapterId)) {
+    if (addingChapter) return;
+    const firstChapterId = chapterOptions[0]?.id ?? "custom-chapter";
+    if (!chapterOptions.some((chapter) => chapter.id === selectedChapterId)) {
       setSelectedChapterId(firstChapterId);
     }
-  }, [selectedChapterId, subjectChapters]);
+  }, [addingChapter, chapterOptions, selectedChapterId]);
 
   function selectClassroom(classroom: Classroom) {
     setSelectedClassroomId(classroom.id);
     setSelectedClassSubjectId(classroom.classSubjects?.[0]?.id ?? classroom.subjects[0] ?? "");
+    setAddingChapter(false);
   }
 
   async function analyzeLecture() {
@@ -112,9 +178,9 @@ export default function UploadLectureScreen() {
         text: notesText.trim(),
         classroomId: selectedClassroom.id,
         classSubjectId: selectedClassSubject?.id,
-        chapterId: selectedChapter?.id ?? "custom-chapter",
-        chapterTitle: selectedChapter?.title ?? "Chapter 1: Classroom Notes",
-        topicId: topicTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "class-topic",
+        chapterId: activeChapter.id,
+        chapterTitle: activeChapter.title,
+        topicId: slugify(topicTitle || title, "class-topic"),
         topicTitle: topicTitle.trim() || title.trim(),
         subject: selectedSubjectName,
         gradeBand: selectedClassroom.grade ?? selectedClassroom.title,
@@ -128,7 +194,8 @@ export default function UploadLectureScreen() {
           title: lesson.title,
           grade: lesson.grade,
           subject: lesson.subject,
-          classroomId: lesson.classroomId ?? selectedClassroom.id
+          classroomId: lesson.classroomId ?? selectedClassroom.id,
+          mode: "generated"
         }
       });
     } catch (error) {
@@ -146,8 +213,13 @@ export default function UploadLectureScreen() {
     <ScreenContainer>
       <Header title="Create Notes" subtitle="Build a private grade-scoped lesson pack for this class." />
 
-      <ReviewTabs active="source" params={reviewParams} />
-      <LessonSourcePreview compact />
+      <LessonSourcePreview
+        compact
+        topic={topicTitle.trim() || title}
+        subject={selectedSubjectName}
+        sourceType={addingChapter ? activeChapter.title : "Draft text notes"}
+        detectedText={notesText.trim() ? [notesText.trim().slice(0, 80)] : []}
+      />
 
       <Card style={styles.uploadCard}>
         <View style={styles.uploadIcon}>
@@ -191,7 +263,10 @@ export default function UploadLectureScreen() {
                 key={subject.id}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                onPress={() => setSelectedClassSubjectId(subject.id)}
+                onPress={() => {
+                  setSelectedClassSubjectId(subject.id);
+                  setAddingChapter(false);
+                }}
                 style={[styles.chip, selected && styles.chipSelected]}
               >
                 <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
@@ -206,18 +281,42 @@ export default function UploadLectureScreen() {
 
         <Text style={styles.label}>Chapter</Text>
         <View style={styles.selectorColumn}>
-          {(subjectChapters.length
-            ? subjectChapters
-            : [{ id: "custom-chapter", title: "Chapter 1: Classroom Notes", description: "Teacher-created material." }]
-          ).map((chapter) => (
+          {chapterOptions.map((chapter) => (
             <ChoiceChip
               key={chapter.id}
-              label={chapter.title}
-              selected={selectedChapterId === chapter.id}
-              onPress={() => setSelectedChapterId(chapter.id)}
+              label={`${chapter.title}${chapter.source === "saved" ? " (saved)" : ""}`}
+              selected={!addingChapter && selectedChapterId === chapter.id}
+              onPress={() => {
+                setSelectedChapterId(chapter.id);
+                setAddingChapter(false);
+              }}
             />
           ))}
+          <ChoiceChip
+            label="+ Add chapter"
+            selected={addingChapter}
+            onPress={() => setAddingChapter(true)}
+          />
         </View>
+        {addingChapter ? (
+          <View style={styles.customChapterBox}>
+            <Text style={styles.label}>New chapter title</Text>
+            <TextInput
+              value={customChapterTitle}
+              onChangeText={setCustomChapterTitle}
+              style={styles.input}
+              placeholder="Example: Chapter 3: Motion and Force"
+            />
+            <Text style={styles.label}>Chapter description</Text>
+            <TextInput
+              value={customChapterDescription}
+              onChangeText={setCustomChapterDescription}
+              style={[styles.input, styles.descriptionInput]}
+              placeholder="Short description for this chapter"
+              multiline
+            />
+          </View>
+        ) : null}
 
         <Text style={styles.label}>Topic</Text>
         <TextInput value={topicTitle} onChangeText={setTopicTitle} style={styles.input} placeholder="Topic name" />
@@ -388,6 +487,19 @@ const styles = StyleSheet.create({
     minHeight: 96,
     paddingTop: spacing.md,
     textAlignVertical: "top"
+  },
+  descriptionInput: {
+    minHeight: 76,
+    paddingTop: spacing.md,
+    textAlignVertical: "top"
+  },
+  customChapterBox: {
+    gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    padding: spacing.md
   },
   gradeLine: {
     color: colors.secondary,

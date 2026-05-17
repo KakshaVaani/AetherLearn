@@ -1,0 +1,178 @@
+[
+  {
+    "id": "sub-demo-photosynthesis",
+    "assignmentId": "photosynthesis-quiz",
+    "classroomId": "class-7a",
+    "studentId": "student-demo",
+    "studentName": "Ravi Kumar",
+    "accessibilityProfile": "Blind / Low Vision",
+    "score": 76,
+    "aiFeedbackStatus": "Needs review",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-meera-plant-nutrition-stomata",
+    "assignmentId": "plant-nutrition-stomata-practice",
+    "classroomId": "class-7a",
+    "studentId": "student-meera",
+    "studentName": "Meera Nair",
+    "accessibilityProfile": "Standard",
+    "score": 81,
+    "aiFeedbackStatus": "Needs review",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-neha-water-cycle",
+    "assignmentId": "water-cycle-diagram",
+    "classroomId": "class-7a",
+    "studentId": "student-neha",
+    "studentName": "Neha Verma",
+    "accessibilityProfile": "Slow Learner",
+    "score": null,
+    "aiFeedbackStatus": "Generating",
+    "status": "Pending"
+  },
+  {
+    "id": "sub-demo-cloud-formation-rainfall",
+    "assignmentId": "cloud-rainfall-check",
+    "classroomId": "class-7a",
+    "studentId": "student-demo",
+    "studentName": "Ravi Kumar",
+    "accessibilityProfile": "Blind / Low Vision",
+    "score": 91,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-zoya-digestive-system",
+    "assignmentId": "digestive-system-revision",
+    "classroomId": "class-7b",
+    "studentId": "student-zoya",
+    "studentName": "Zoya Khan",
+    "accessibilityProfile": "Multilingual",
+    "score": 96,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-ishita-teeth-saliva-enzymes",
+    "assignmentId": "teeth-saliva-enzymes-practice",
+    "classroomId": "class-7b",
+    "studentId": "student-ishita",
+    "studentName": "Ishita Rao",
+    "accessibilityProfile": "Dyslexia Friendly",
+    "score": 80,
+    "aiFeedbackStatus": "Needs review",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-zoya-acids-and-bases",
+    "assignmentId": "acids-bases-safety",
+    "classroomId": "class-7b",
+    "studentId": "student-zoya",
+    "studentName": "Zoya Khan",
+    "accessibilityProfile": "Multilingual",
+    "score": null,
+    "aiFeedbackStatus": "Generating",
+    "status": "Pending"
+  },
+  {
+    "id": "sub-ishita-natural-indicators",
+    "assignmentId": "natural-indicators-observation",
+    "classroomId": "class-7b",
+    "studentId": "student-ishita",
+    "studentName": "Ishita Rao",
+    "accessibilityProfile": "Dyslexia Friendly",
+    "score": 90,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-kiran-fractions",
+    "assignmentId": "fractions-practice",
+    "classroomId": "class-8a",
+    "studentId": "student-kiran",
+    "studentName": "Kiran Patel",
+    "accessibilityProfile": "Standard",
+    "score": 95,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-aarav-equivalent-fractions",
+    "assignmentId": "equivalent-fractions-practice",
+    "classroomId": "class-8a",
+    "studentId": "student-aarav",
+    "studentName": "Aarav Singh",
+    "accessibilityProfile": "Dyslexia Friendly",
+    "score": 79,
+    "aiFeedbackStatus": "Needs review",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-rafiq-linear-equations",
+    "assignmentId": "linear-equations-practice",
+    "classroomId": "class-8a",
+    "studentId": "student-rafiq",
+    "studentName": "Rafiq Ansari",
+    "accessibilityProfile": "Multilingual",
+    "score": null,
+    "aiFeedbackStatus": "Generating",
+    "status": "Pending"
+  },
+  {
+    "id": "sub-kiran-word-problems-equations",
+    "assignmentId": "word-problems-equations-practice",
+    "classroomId": "class-8a",
+    "studentId": "student-kiran",
+    "studentName": "Kiran Patel",
+    "accessibilityProfile": "Standard",
+    "score": 89,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-dev-area-perimeter",
+    "assignmentId": "area-perimeter-practice",
+    "classroomId": "class-8b",
+    "studentId": "student-dev",
+    "studentName": "Dev Malhotra",
+    "accessibilityProfile": "Slow Learner",
+    "score": 94,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-tara-composite-rectangles",
+    "assignmentId": "composite-rectangles-practice",
+    "classroomId": "class-8b",
+    "studentId": "student-tara",
+    "studentName": "Tara Iyer",
+    "accessibilityProfile": "Standard",
+    "score": 78,
+    "aiFeedbackStatus": "Needs review",
+    "status": "Graded"
+  },
+  {
+    "id": "sub-dev-data-handling",
+    "assignmentId": "data-handling-exit-ticket",
+    "classroomId": "class-8b",
+    "studentId": "student-dev",
+    "studentName": "Dev Malhotra",
+    "accessibilityProfile": "Slow Learner",
+    "score": null,
+    "aiFeedbackStatus": "Generating",
+    "status": "Pending"
+  },
+  {
+    "id": "sub-tara-mean-median-mode",
+    "assignmentId": "mean-median-mode-practice",
+    "classroomId": "class-8b",
+    "studentId": "student-tara",
+    "studentName": "Tara Iyer",
+    "accessibilityProfile": "Standard",
+    "score": 88,
+    "aiFeedbackStatus": "Ready",
+    "status": "Graded"
+  }
+]

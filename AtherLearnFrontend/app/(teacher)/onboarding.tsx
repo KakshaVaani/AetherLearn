@@ -26,7 +26,7 @@ export default function TeacherOnboardingScreen() {
   const [schoolSuggestions, setSchoolSuggestions] = useState<SchoolSuggestion[]>([]);
   const [className, setClassName] = useState("Section A");
   const [grade, setGrade] = useState("Grade 8");
-  const [selectedSubjects, setSelectedSubjects] = useState(["Science", "Math", "English"]);
+  const [selectedSubjects, setSelectedSubjects] = useState(["Science", "Math"]);
   const [existingClasses, setExistingClasses] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("Link your teaching classes before posting notes.");

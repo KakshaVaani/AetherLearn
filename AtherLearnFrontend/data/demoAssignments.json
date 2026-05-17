@@ -1,0 +1,921 @@
+[
+  {
+    "id": "photosynthesis-quiz",
+    "title": "Photosynthesis Quick Check",
+    "lessonId": "photosynthesis",
+    "linkedLecture": "photosynthesis",
+    "classroomId": "class-7a",
+    "classroom": "class-7a",
+    "subject": "Science",
+    "postedAt": "2026-05-14T09:00:00.000Z",
+    "dueAt": "May 18, 2026",
+    "dueDate": "May 18, 2026",
+    "answerMode": "mcq",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is photosynthesis?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Food-making in green plants.",
+          "Chlorophyll",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q2",
+        "prompt": "Name two inputs and two outputs.",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Inputs: water and carbon dioxide; outputs: glucose and oxygen.",
+          "Glucose",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q3",
+        "prompt": "Why is chlorophyll important?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "It traps light energy.",
+          "Stomata",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q4",
+        "prompt": "Where does carbon dioxide enter the leaf?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Through stomata.",
+          "Producer",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q5",
+        "prompt": "Why do animals depend on photosynthesis?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "It provides food directly or indirectly and releases oxygen.",
+          "Photosynthesis",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "plant-nutrition-stomata-practice",
+    "title": "Plant Nutrition and Stomata Practice",
+    "lessonId": "plant-nutrition-stomata",
+    "linkedLecture": "plant-nutrition-stomata",
+    "classroomId": "class-7a",
+    "classroom": "class-7a",
+    "subject": "Science",
+    "postedAt": "2026-05-15T09:00:00.000Z",
+    "dueAt": "May 19, 2026",
+    "dueDate": "May 19, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does autotrophic nutrition mean?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Why does a leaf need stomata?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "What do guard cells do?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Which gas enters through stomata?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "Why can open stomata be risky on a hot day?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "water-cycle-diagram",
+    "title": "Water Cycle Diagram Labels",
+    "lessonId": "water-cycle",
+    "linkedLecture": "water-cycle",
+    "classroomId": "class-7a",
+    "classroom": "class-7a",
+    "subject": "Science",
+    "postedAt": "2026-05-16T09:00:00.000Z",
+    "dueAt": "May 20, 2026",
+    "dueDate": "May 20, 2026",
+    "answerMode": "short_answer",
+    "status": "draft",
+    "frontendStatus": "Draft",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What provides energy for evaporation?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "What is condensation?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Name three forms of precipitation.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Where can water collect?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "Why is clean water still limited if water cycles?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "cloud-rainfall-check",
+    "title": "Cloud Formation Exit Ticket",
+    "lessonId": "cloud-formation-rainfall",
+    "linkedLecture": "cloud-formation-rainfall",
+    "classroomId": "class-7a",
+    "classroom": "class-7a",
+    "subject": "Science",
+    "postedAt": "2026-05-17T09:00:00.000Z",
+    "dueAt": "May 21, 2026",
+    "dueDate": "May 21, 2026",
+    "answerMode": "mcq",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What must happen before water vapour becomes droplets?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "It must cool.",
+          "Droplet",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q2",
+        "prompt": "Why do clouds form high in the sky?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Rising air cools higher up.",
+          "Moist air",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q3",
+        "prompt": "Why does rain fall from a cloud?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Droplets join and become heavy.",
+          "Rainfall",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q4",
+        "prompt": "Name an everyday condensation example.",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Foggy mirror or cold bottle drops.",
+          "Gravity",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q5",
+        "prompt": "Which water-cycle stage is cloud formation?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Condensation.",
+          "Condensation",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "digestive-system-revision",
+    "title": "Digestive System Revision",
+    "lessonId": "digestive-system",
+    "linkedLecture": "digestive-system",
+    "classroomId": "class-7b",
+    "classroom": "class-7b",
+    "subject": "Science",
+    "postedAt": "2026-05-14T09:00:00.000Z",
+    "dueAt": "May 21, 2026",
+    "dueDate": "May 21, 2026",
+    "answerMode": "mcq",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Where does digestion begin?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Mouth.",
+          "Oesophagus",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q2",
+        "prompt": "What does the oesophagus do?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Pushes food to the stomach.",
+          "Stomach",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q3",
+        "prompt": "Where are most nutrients absorbed?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Small intestine.",
+          "Small intestine",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q4",
+        "prompt": "Why is the small intestine long and folded?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "To provide more surface area for absorption.",
+          "Large intestine",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q5",
+        "prompt": "What does the large intestine absorb?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Water.",
+          "Digestion",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "teeth-saliva-enzymes-practice",
+    "title": "Teeth and Saliva Practice",
+    "lessonId": "teeth-saliva-enzymes",
+    "linkedLecture": "teeth-saliva-enzymes",
+    "classroomId": "class-7b",
+    "classroom": "class-7b",
+    "subject": "Science",
+    "postedAt": "2026-05-15T09:00:00.000Z",
+    "dueAt": "May 22, 2026",
+    "dueDate": "May 22, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Which teeth cut food?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "What do molars do?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why is saliva important?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "What does amylase act on?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "How does the tongue help swallowing?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "acids-bases-safety",
+    "title": "Acids and Bases Lab Safety",
+    "lessonId": "acids-and-bases",
+    "linkedLecture": "acids-and-bases",
+    "classroomId": "class-7b",
+    "classroom": "class-7b",
+    "subject": "Science",
+    "postedAt": "2026-05-16T09:00:00.000Z",
+    "dueAt": "May 22, 2026",
+    "dueDate": "May 22, 2026",
+    "answerMode": "long_answer",
+    "status": "draft",
+    "frontendStatus": "Draft",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Explain with lesson evidence: What is litmus?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Explain with lesson evidence: Which litmus changes in acid?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Explain with lesson evidence: Which litmus changes in base?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Explain with lesson evidence: Why is tasting unsafe?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "natural-indicators-observation",
+    "title": "Natural Indicators Observation",
+    "lessonId": "natural-indicators",
+    "linkedLecture": "natural-indicators",
+    "classroomId": "class-7b",
+    "classroom": "class-7b",
+    "subject": "Science",
+    "postedAt": "2026-05-17T09:00:00.000Z",
+    "dueAt": "May 23, 2026",
+    "dueDate": "May 23, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What is a natural indicator?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "What happens to turmeric in a base?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why is a control useful?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Name one safe basic solution for demonstration.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "What should be written in the observation table?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "fractions-practice",
+    "title": "Fractions Number Line Practice",
+    "lessonId": "fractions",
+    "linkedLecture": "fractions",
+    "classroomId": "class-8a",
+    "classroom": "class-8a",
+    "subject": "Math",
+    "postedAt": "2026-05-14T09:00:00.000Z",
+    "dueAt": "May 18, 2026",
+    "dueDate": "May 18, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "How many equal spaces are needed for fifths?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Where is one-half on a number line?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Why is two-fourths equal to one-half?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Which is greater: three-fourths or one-fourth?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "What mistake happens if you count tick marks?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "equivalent-fractions-practice",
+    "title": "Equivalent Fractions Practice",
+    "lessonId": "equivalent-fractions",
+    "linkedLecture": "equivalent-fractions",
+    "classroomId": "class-8a",
+    "classroom": "class-8a",
+    "subject": "Math",
+    "postedAt": "2026-05-15T09:00:00.000Z",
+    "dueAt": "May 19, 2026",
+    "dueDate": "May 19, 2026",
+    "answerMode": "mcq",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Why is 2/4 equivalent to 1/2?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "They show the same amount.",
+          "Simplify",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q2",
+        "prompt": "Find an equivalent fraction for 2/3 with denominator 12.",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "8/12.",
+          "Common factor",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q3",
+        "prompt": "Simplify 8/12.",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "2/3.",
+          "Fraction strip",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q4",
+        "prompt": "Which rule keeps the fraction value same?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Multiply or divide numerator and denominator by the same non-zero number.",
+          "Simplest form",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q5",
+        "prompt": "What is simplest form?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "No common factor except 1.",
+          "Equivalent fractions",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "linear-equations-practice",
+    "title": "Linear Equations Balance Practice",
+    "lessonId": "linear-equations",
+    "linkedLecture": "linear-equations",
+    "classroomId": "class-8a",
+    "classroom": "class-8a",
+    "subject": "Math",
+    "postedAt": "2026-05-16T09:00:00.000Z",
+    "dueAt": "May 20, 2026",
+    "dueDate": "May 20, 2026",
+    "answerMode": "long_answer",
+    "status": "draft",
+    "frontendStatus": "Draft",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Explain with lesson evidence: Why must both sides get the same operation?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Explain with lesson evidence: Solve x - 4 = 9.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Explain with lesson evidence: Solve 4x = 20.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Explain with lesson evidence: Solve 3x + 2 = 14.",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "word-problems-equations-practice",
+    "title": "Word Problems to Equations",
+    "lessonId": "word-problems-equations",
+    "linkedLecture": "word-problems-equations",
+    "classroomId": "class-8a",
+    "classroom": "class-8a",
+    "subject": "Math",
+    "postedAt": "2026-05-17T09:00:00.000Z",
+    "dueAt": "May 21, 2026",
+    "dueDate": "May 21, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What should you do before writing an equation?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Translate: a number plus 9 is 30.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Translate: five times a number is 40.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Solve x - 8 = 12.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "Why should the answer be checked in words?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "area-perimeter-practice",
+    "title": "Area and Perimeter Practice",
+    "lessonId": "area-perimeter",
+    "linkedLecture": "area-perimeter",
+    "classroomId": "class-8b",
+    "classroom": "class-8b",
+    "subject": "Math",
+    "postedAt": "2026-05-14T09:00:00.000Z",
+    "dueAt": "May 23, 2026",
+    "dueDate": "May 23, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What does area measure?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "What does perimeter measure?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Find area of 10 cm by 6 cm.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Find perimeter of 10 cm by 6 cm.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "Why does area use square units?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "composite-rectangles-practice",
+    "title": "Composite Rectangles Practice",
+    "lessonId": "composite-rectangles",
+    "linkedLecture": "composite-rectangles",
+    "classroomId": "class-8b",
+    "classroom": "class-8b",
+    "subject": "Math",
+    "postedAt": "2026-05-15T09:00:00.000Z",
+    "dueAt": "May 24, 2026",
+    "dueDate": "May 24, 2026",
+    "answerMode": "long_answer",
+    "status": "draft",
+    "frontendStatus": "Draft",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Explain with lesson evidence: Why split a composite shape?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Explain with lesson evidence: What formula is used for each rectangle?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Explain with lesson evidence: How do you avoid double-counting?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Explain with lesson evidence: Find total area if parts are 18 and 25 square cm.",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  },
+  {
+    "id": "data-handling-exit-ticket",
+    "title": "Bar Graph Exit Ticket",
+    "lessonId": "data-handling",
+    "linkedLecture": "data-handling",
+    "classroomId": "class-8b",
+    "classroom": "class-8b",
+    "subject": "Math",
+    "postedAt": "2026-05-16T09:00:00.000Z",
+    "dueAt": "May 24, 2026",
+    "dueDate": "May 24, 2026",
+    "answerMode": "mcq",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Why should you read the title first?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "It tells what data is shown.",
+          "Scale",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q2",
+        "prompt": "What does the y-axis show?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Numbers or frequency.",
+          "Axis",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q3",
+        "prompt": "What does scale mean?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Value of each step.",
+          "Category",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q4",
+        "prompt": "How do you find the tallest category?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Compare bar heights and read values.",
+          "Frequency",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      },
+      {
+        "id": "q5",
+        "prompt": "How do you find the difference between two bars?",
+        "hint": "Use the detailed lesson notes before answering.",
+        "options": [
+          "Subtract smaller value from larger value.",
+          "Bar graph",
+          "A guess outside the notes",
+          "Need to review the lesson"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mean-median-mode-practice",
+    "title": "Mean Median Mode Practice",
+    "lessonId": "mean-median-mode",
+    "linkedLecture": "mean-median-mode",
+    "classroomId": "class-8b",
+    "classroom": "class-8b",
+    "subject": "Math",
+    "postedAt": "2026-05-17T09:00:00.000Z",
+    "dueAt": "May 25, 2026",
+    "dueDate": "May 25, 2026",
+    "answerMode": "short_answer",
+    "status": "assigned",
+    "frontendStatus": "Published",
+    "versions": [
+      "Standard",
+      "Blind / Low Vision",
+      "Dyslexia Friendly",
+      "Multilingual",
+      "Slow Learner"
+    ],
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Find mean of 2, 4, 6.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q2",
+        "prompt": "Find median of 7, 3, 5.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q3",
+        "prompt": "Find mode of 1, 2, 2, 3, 4.",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q4",
+        "prompt": "Can a data set have no mode?",
+        "hint": "Use the detailed lesson notes before answering."
+      },
+      {
+        "id": "q5",
+        "prompt": "Which measure uses all values?",
+        "hint": "Use the detailed lesson notes before answering."
+      }
+    ]
+  }
+]

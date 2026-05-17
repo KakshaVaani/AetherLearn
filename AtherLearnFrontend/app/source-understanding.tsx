@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { publishTeacherLessonChanges } from "@/api/backend";
 import { AppButton } from "@/components/AppButton";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
@@ -11,6 +13,13 @@ import { ScreenContainer } from "@/components/ScreenContainer";
 import { SectionHeader } from "@/components/SectionHeader";
 import { useLessonPackReview } from "@/hooks/useLessonPackReview";
 import { colors, radii, spacing } from "@/constants/theme";
+import {
+  lessonOriginRoute,
+  lessonStateLabel,
+  lessonStateTone,
+  resolveLessonOrigin,
+  resolveLessonReviewMode
+} from "@/utils/lessonReview";
 
 function toStringList(value: unknown): string[] {
   if (Array.isArray(value)) {
@@ -46,8 +55,34 @@ export default function SourceUnderstandingScreen() {
     title?: string;
     grade?: string;
     subject?: string;
+    mode?: "generated" | "view";
+    origin?: "classroom" | "library";
   }>();
-  const { lesson, connected } = useLessonPackReview(params.lessonId);
+  const { lesson, loading, connected, notFound, source: lessonSource, replaceLesson } = useLessonPackReview(params.lessonId);
+  const [publishing, setPublishing] = useState(false);
+
+  if (loading || !lesson) {
+    return (
+      <ScreenContainer>
+        <Header
+          title={notFound ? "Lesson not found" : "Loading Source Pack"}
+          subtitle={notFound ? "This lesson is not available in the current workspace." : "Fetching the selected lesson."}
+          showBack
+        />
+        <Card style={styles.stateCard}>
+          {notFound ? (
+            <Ionicons name="alert-circle-outline" size={24} color={colors.warning} />
+          ) : (
+            <ActivityIndicator color={colors.primary} />
+          )}
+          <Text style={styles.emptyState}>
+            {notFound ? "Return to the class and open a synced lesson." : "Loading topic-specific notes..."}
+          </Text>
+        </Card>
+      </ScreenContainer>
+    );
+  }
+
   const source = {
     topic: lesson.sourceCard?.topic ?? lesson.title,
     confidence: typeof lesson.sourceCard?.confidence === "number" ? lesson.sourceCard.confidence : 0,
@@ -60,15 +95,40 @@ export default function SourceUnderstandingScreen() {
     classroomId: params.classroomId ?? lesson.classroomId ?? undefined,
     title: params.title ?? lesson.title,
     grade: params.grade ?? lesson.grade,
-    subject: params.subject ?? lesson.subject
+    subject: params.subject ?? lesson.subject,
+    mode: resolveLessonReviewMode(params.mode, params.lessonId),
+    origin: resolveLessonOrigin(params.origin, params.classroomId ?? lesson.classroomId ?? undefined)
   };
+  const isViewMode = reviewParams.mode === "view";
+  const statusLabel = lessonStateLabel(lesson);
+  const needsPublish = isViewMode && lesson.status === "Needs Review";
+
+  function goBackToOrigin() {
+    router.replace(lessonOriginRoute(reviewParams.origin, reviewParams.classroomId));
+  }
+
+  async function publishChanges() {
+    if (!lesson) return;
+    setPublishing(true);
+    try {
+      const saved = await publishTeacherLessonChanges(lesson.id, lesson);
+      replaceLesson(saved, lessonSource);
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   return (
     <ScreenContainer>
-      <Header title="Source Pack" subtitle={lesson.title} showBack />
+      <Header
+        title={isViewMode ? "Lesson Notes" : "Source Pack"}
+        subtitle={lesson.title}
+        showBack
+        onBack={isViewMode ? goBackToOrigin : undefined}
+      />
       <ReviewTabs active="source" params={reviewParams} />
 
-      <LessonSourcePreview compact />
+      <LessonSourcePreview lesson={lesson} compact />
 
       <Card style={styles.topicCard}>
         <View style={styles.topicHeader}>
@@ -76,10 +136,10 @@ export default function SourceUnderstandingScreen() {
             <Text style={styles.label}>Detected Topic</Text>
             <Text style={styles.topic}>{source.topic}</Text>
             <Text style={styles.meta}>
-              {lesson.grade} - {lesson.subject} - {connected ? "Backend draft" : "Demo preview"}
+              {lesson.grade} - {lesson.subject} - {isViewMode ? statusLabel : connected ? "Backend draft" : "Demo preview"}
             </Text>
           </View>
-          <Badge label={`${source.confidence}% confidence`} tone="success" />
+          <Badge label={isViewMode ? statusLabel : `${source.confidence}% confidence`} tone={isViewMode ? lessonStateTone(lesson) : "success"} />
         </View>
       </Card>
 
@@ -107,14 +167,48 @@ export default function SourceUnderstandingScreen() {
           title="Edit"
           variant="outline"
           leftIcon={<Ionicons name="create-outline" size={20} color={colors.text} />}
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/lesson-editor",
+              params: {
+                ...reviewParams,
+                returnTo: "source"
+              }
+            })
+          }
           style={styles.actionButton}
         />
-        <AppButton
-          title="Confirm"
-          leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
-          onPress={() => router.push({ pathname: "/teacher-pack", params: reviewParams })}
-          style={styles.actionButton}
-        />
+        {needsPublish ? (
+          <AppButton
+            title="Publish Changes"
+            loading={publishing}
+            leftIcon={<Ionicons name="cloud-upload-outline" size={20} color={colors.white} />}
+            onPress={publishChanges}
+            style={styles.actionButton}
+          />
+        ) : isViewMode ? (
+          <AppButton
+            title="Create Assignment"
+            leftIcon={<Ionicons name="clipboard-outline" size={20} color={colors.white} />}
+            onPress={() =>
+              router.push({
+                pathname: "/(teacher)/create-assignment",
+                params: {
+                  lessonId: lesson.id,
+                  classroomId: lesson.classroomId ?? params.classroomId
+                }
+              })
+            }
+            style={styles.actionButton}
+          />
+        ) : (
+          <AppButton
+            title="Confirm"
+            leftIcon={<Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />}
+            onPress={() => router.push({ pathname: "/teacher-pack", params: reviewParams })}
+            style={styles.actionButton}
+          />
+        )}
       </View>
     </ScreenContainer>
   );
@@ -160,6 +254,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "700"
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: spacing.md
   },
   chip: {
     minHeight: 34,

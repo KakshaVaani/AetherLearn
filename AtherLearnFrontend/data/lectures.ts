@@ -11,6 +11,15 @@ const lectureMeta: Record<string, { source: string; postedAt: string; teacherPdf
       uploadedAt: "May 13, 2026"
     }
   },
+  "plant-nutrition-stomata": {
+    source: "Leaf cross-section board notes",
+    postedAt: "2026-05-13T09:45:00.000Z",
+    teacherPdf: {
+      fileName: "plant-nutrition-stomata.pdf",
+      pageCount: 8,
+      uploadedAt: "May 13, 2026"
+    }
+  },
   "water-cycle": {
     source: "Textbook diagram photo",
     postedAt: "2026-05-13T10:15:00.000Z",
@@ -20,22 +29,13 @@ const lectureMeta: Record<string, { source: string; postedAt: string; teacherPdf
       uploadedAt: "May 13, 2026"
     }
   },
-  fractions: {
-    source: "Math worksheet scan",
-    postedAt: "2026-05-12T10:30:00.000Z",
+  "cloud-formation-rainfall": {
+    source: "Weather chart and rainfall sketch",
+    postedAt: "2026-05-13T11:00:00.000Z",
     teacherPdf: {
-      fileName: "fractions-number-line-practice.pdf",
-      pageCount: 5,
-      uploadedAt: "May 12, 2026"
-    }
-  },
-  "linear-equations": {
-    source: "Algebra worked-example worksheet",
-    postedAt: "2026-05-14T08:20:00.000Z",
-    teacherPdf: {
-      fileName: "linear-equations-balanced-steps.pdf",
+      fileName: "cloud-formation-rainfall.pdf",
       pageCount: 7,
-      uploadedAt: "May 14, 2026"
+      uploadedAt: "May 13, 2026"
     }
   },
   "digestive-system": {
@@ -44,6 +44,15 @@ const lectureMeta: Record<string, { source: string; postedAt: string; teacherPdf
     teacherPdf: {
       fileName: "digestive-system-overview.pdf",
       pageCount: 9,
+      uploadedAt: "May 14, 2026"
+    }
+  },
+  "teeth-saliva-enzymes": {
+    source: "Mouth anatomy worksheet",
+    postedAt: "2026-05-14T10:30:00.000Z",
+    teacherPdf: {
+      fileName: "teeth-saliva-enzymes.pdf",
+      pageCount: 8,
       uploadedAt: "May 14, 2026"
     }
   },
@@ -56,22 +65,85 @@ const lectureMeta: Record<string, { source: string; postedAt: string; teacherPdf
       uploadedAt: "May 15, 2026"
     }
   },
-  "reading-main-idea": {
-    source: "Reading passage handout",
-    postedAt: "2026-05-15T08:40:00.000Z",
+  "natural-indicators": {
+    source: "Turmeric and china rose observation sheet",
+    postedAt: "2026-05-15T11:40:00.000Z",
     teacherPdf: {
-      fileName: "reading-main-idea-supporting-details.pdf",
-      pageCount: 4,
+      fileName: "natural-indicators-observation.pdf",
+      pageCount: 7,
       uploadedAt: "May 15, 2026"
     }
   },
-  "constitution-basics": {
-    source: "Civics notebook notes",
-    postedAt: "2026-05-16T09:10:00.000Z",
+  fractions: {
+    source: "Math worksheet scan",
+    postedAt: "2026-05-12T10:30:00.000Z",
     teacherPdf: {
-      fileName: "constitution-rights-duties-notes.pdf",
+      fileName: "fractions-number-line-practice.pdf",
       pageCount: 5,
+      uploadedAt: "May 12, 2026"
+    }
+  },
+  "equivalent-fractions": {
+    source: "Fraction strips classwork",
+    postedAt: "2026-05-12T11:20:00.000Z",
+    teacherPdf: {
+      fileName: "equivalent-fractions-strips.pdf",
+      pageCount: 6,
+      uploadedAt: "May 12, 2026"
+    }
+  },
+  "linear-equations": {
+    source: "Algebra worked-example worksheet",
+    postedAt: "2026-05-14T08:20:00.000Z",
+    teacherPdf: {
+      fileName: "linear-equations-balanced-steps.pdf",
+      pageCount: 7,
+      uploadedAt: "May 14, 2026"
+    }
+  },
+  "word-problems-equations": {
+    source: "Algebra word problem worksheet",
+    postedAt: "2026-05-14T09:10:00.000Z",
+    teacherPdf: {
+      fileName: "word-problems-to-equations.pdf",
+      pageCount: 7,
+      uploadedAt: "May 14, 2026"
+    }
+  },
+  "area-perimeter": {
+    source: "Notebook measurement example",
+    postedAt: "2026-05-16T11:00:00.000Z",
+    teacherPdf: {
+      fileName: "area-perimeter-rectangles.pdf",
+      pageCount: 6,
       uploadedAt: "May 16, 2026"
+    }
+  },
+  "composite-rectangles": {
+    source: "Composite rectangle grid worksheet",
+    postedAt: "2026-05-16T11:45:00.000Z",
+    teacherPdf: {
+      fileName: "composite-rectangles.pdf",
+      pageCount: 7,
+      uploadedAt: "May 16, 2026"
+    }
+  },
+  "data-handling": {
+    source: "Bar graph worksheet",
+    postedAt: "2026-05-17T08:15:00.000Z",
+    teacherPdf: {
+      fileName: "reading-bar-graphs.pdf",
+      pageCount: 5,
+      uploadedAt: "May 17, 2026"
+    }
+  },
+  "mean-median-mode": {
+    source: "Class marks data table",
+    postedAt: "2026-05-17T09:00:00.000Z",
+    teacherPdf: {
+      fileName: "mean-median-mode.pdf",
+      pageCount: 6,
+      uploadedAt: "May 17, 2026"
     }
   }
 };
