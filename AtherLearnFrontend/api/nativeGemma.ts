@@ -11,6 +11,7 @@ export type DeviceCapabilities = {
   modelDirectory?: string;
   seedDirectory?: string;
   nativeBridgeAvailable: boolean;
+  seededModelImportAvailable?: boolean;
 };
 
 export type ModelStatus = {
@@ -42,13 +43,13 @@ export type NativeGenerationResult = {
 };
 
 type AetherGemmaModule = {
-  getDeviceCapabilities(): Promise<DeviceCapabilities>;
-  getModelStatus(modelId: string): Promise<ModelStatus>;
-  getSeededModelStatus(modelId: string, modelFile: string): Promise<SeededModelStatus>;
-  downloadModel(modelId: string, modelFile: string, commitHash: string): Promise<ModelStatus>;
-  importSeededModel(modelId: string, modelFile: string): Promise<ModelStatus>;
-  deleteModel(modelId: string): Promise<{ modelId: string; deleted: boolean }>;
-  generate(request: NativeGenerationRequest): Promise<NativeGenerationResult>;
+  getDeviceCapabilities?: () => Promise<DeviceCapabilities>;
+  getModelStatus?: (modelId: string) => Promise<ModelStatus>;
+  getSeededModelStatus?: (modelId: string, modelFile: string) => Promise<SeededModelStatus>;
+  downloadModel?: (modelId: string, modelFile: string, commitHash: string) => Promise<ModelStatus>;
+  importSeededModel?: (modelId: string, modelFile: string) => Promise<ModelStatus>;
+  deleteModel?: (modelId: string) => Promise<{ modelId: string; deleted: boolean }>;
+  generate?: (request: NativeGenerationRequest) => Promise<NativeGenerationResult>;
 };
 
 function bridge(): AetherGemmaModule | null {
@@ -60,48 +61,85 @@ function bridge(): AetherGemmaModule | null {
   }
 }
 
+function hasNativeFunction<Key extends keyof AetherGemmaModule>(
+  native: AetherGemmaModule,
+  key: Key
+): native is AetherGemmaModule & Record<Key, NonNullable<AetherGemmaModule[Key]>> {
+  return typeof native[key] === "function";
+}
+
+function fallbackDeviceCapabilities(): DeviceCapabilities {
+  return {
+    platform: Platform.OS,
+    androidSdk: 0,
+    totalMemoryBytes: 0,
+    availableMemoryBytes: 0,
+    freeStorageBytes: 0,
+    nativeBridgeAvailable: false,
+    seededModelImportAvailable: false
+  };
+}
+
+function missingNativeMethodError(methodName: keyof AetherGemmaModule) {
+  return new Error(`Native Gemma bridge is missing ${methodName}. Rebuild the Android development client.`);
+}
+
 export async function getDeviceCapabilities(): Promise<DeviceCapabilities> {
   const native = bridge();
-  if (!native) {
+  if (!native || !hasNativeFunction(native, "getDeviceCapabilities")) return fallbackDeviceCapabilities();
+  try {
+    const capabilities = await native.getDeviceCapabilities();
     return {
-      platform: Platform.OS,
-      androidSdk: 0,
-      totalMemoryBytes: 0,
-      availableMemoryBytes: 0,
-      freeStorageBytes: 0,
-      nativeBridgeAvailable: false
+      ...capabilities,
+      seededModelImportAvailable:
+        hasNativeFunction(native, "getSeededModelStatus") && hasNativeFunction(native, "importSeededModel")
     };
+  } catch {
+    return fallbackDeviceCapabilities();
   }
-  return native.getDeviceCapabilities();
 }
 
 export async function getModelStatus(model: LocalModelDefinition): Promise<ModelStatus> {
   const native = bridge();
-  if (!native) return { modelId: model.id, downloaded: false, bytes: 0 };
-  return native.getModelStatus(model.modelId);
+  if (!native || !hasNativeFunction(native, "getModelStatus")) {
+    return { modelId: model.id, downloaded: false, bytes: 0 };
+  }
+  try {
+    return await native.getModelStatus(model.modelId);
+  } catch {
+    return { modelId: model.id, downloaded: false, bytes: 0 };
+  }
 }
 
 export async function getSeededModelStatus(model: LocalModelDefinition): Promise<SeededModelStatus> {
   const native = bridge();
-  if (!native) return { modelId: model.id, available: false, bytes: 0 };
-  return native.getSeededModelStatus(model.modelId, model.modelFile);
+  if (!native || !hasNativeFunction(native, "getSeededModelStatus")) {
+    return { modelId: model.id, available: false, bytes: 0 };
+  }
+  try {
+    return await native.getSeededModelStatus(model.modelId, model.modelFile);
+  } catch {
+    return { modelId: model.id, available: false, bytes: 0 };
+  }
 }
 
 export async function downloadModel(model: LocalModelDefinition): Promise<ModelStatus> {
   const native = bridge();
   if (!native) throw new Error("Native Gemma bridge is unavailable. Build an Android development client.");
+  if (!hasNativeFunction(native, "downloadModel")) throw missingNativeMethodError("downloadModel");
   return native.downloadModel(model.modelId, model.modelFile, model.commitHash);
 }
 
 export async function importSeededModel(model: LocalModelDefinition): Promise<ModelStatus> {
   const native = bridge();
   if (!native) throw new Error("Native Gemma bridge is unavailable. Build an Android development client.");
+  if (!hasNativeFunction(native, "importSeededModel")) throw missingNativeMethodError("importSeededModel");
   return native.importSeededModel(model.modelId, model.modelFile);
 }
 
 export async function deleteModel(model: LocalModelDefinition) {
   const native = bridge();
-  if (!native) return { modelId: model.id, deleted: false };
+  if (!native || !hasNativeFunction(native, "deleteModel")) return { modelId: model.id, deleted: false };
   return native.deleteModel(model.modelId);
 }
 
@@ -111,6 +149,7 @@ export async function generateWithNativeGemma(
 ) {
   const native = bridge();
   if (!native) throw new Error("Native Gemma bridge is unavailable. Build an Android development client.");
+  if (!hasNativeFunction(native, "generate")) throw missingNativeMethodError("generate");
   return native.generate({ ...request, modelId: model.modelId });
 }
 

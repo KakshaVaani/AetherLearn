@@ -44,7 +44,7 @@ export function LocalModelSettingsPanel() {
     for (const modelId of modelOrder) {
       const model = localModelCatalog[modelId];
       nextStatuses[modelId] = await getModelStatus(model);
-      if (modelId === "gemma-4-e2b-it") {
+      if (modelId === "gemma-4-e2b-it" && nextCapabilities.seededModelImportAvailable) {
         nextSeededStatuses[modelId] = await getSeededModelStatus(model);
       }
     }
@@ -53,7 +53,9 @@ export function LocalModelSettingsPanel() {
   }
 
   useEffect(() => {
-    refresh();
+    void refresh().catch((error) => {
+      setMessage(error instanceof Error ? error.message : "Could not refresh local model status.");
+    });
   }, []);
 
   async function handleDownload(modelId: LocalModelId) {
@@ -144,7 +146,7 @@ export function LocalModelSettingsPanel() {
                 <Text style={styles.modelMeta}>
                   {formatGb(model.sizeInBytes)} GB, needs {model.minDeviceMemoryGb} GB RAM
                 </Text>
-                {isSeededModel && capabilities?.seedDirectory ? (
+                {isSeededModel && capabilities?.seededModelImportAvailable && capabilities.seedDirectory ? (
                   <View style={styles.seedBox}>
                     <Text style={styles.seedTitle}>Seed path</Text>
                     <Text style={styles.seedText}>
