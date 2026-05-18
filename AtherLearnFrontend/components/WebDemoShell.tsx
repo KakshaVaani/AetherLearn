@@ -1,7 +1,10 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -13,93 +16,356 @@ type WebDemoShellProps = {
   children: ReactNode;
 };
 
-const palette = {
-  ink: "#102033",
-  muted: "#607085",
-  blue: "#2563EB",
-  teal: "#0F766E",
-  saffron: "#F59E0B",
-  paper: "#F7FAFC",
-  white: "#FFFFFF",
-  border: "#DCE6F2",
-  dark: "#111827"
+type SectionKey = "impact" | "accessibility" | "deliverables";
+
+type Profile = {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  title: string;
+  context: string;
+  support: string;
+  proof: string;
 };
+
+const palette = {
+  ink: "#071327",
+  inkSoft: "#1B2D4A",
+  muted: "#60708A",
+  blue: "#2F62EA",
+  blueDark: "#174FCF",
+  teal: "#078F86",
+  amber: "#B77905",
+  green: "#047857",
+  paper: "#F6FAFF",
+  panel: "#FFFFFF",
+  line: "#DCE6F5",
+  dark: "#0B162A"
+};
+
+const profiles: Profile[] = [
+  {
+    icon: "text-outline",
+    label: "Reading access",
+    title: "Dyslexia and reading anxiety",
+    context: "Dense paragraphs become short, spaced, readable learning blocks.",
+    support: "Line focus, simplified notes, audio replay, and private doubt solving.",
+    proof: "Simplified + read aloud"
+  },
+  {
+    icon: "eye-outline",
+    label: "Vision support",
+    title: "Low vision and visual fatigue",
+    context: "The app favors large readable text and touch-sized controls.",
+    support: "Contrast-aware screens, read-aloud support, and reduced visual load.",
+    proof: "Large text + contrast"
+  },
+  {
+    icon: "cloud-offline-outline",
+    label: "Connectivity",
+    title: "Low-connectivity classrooms",
+    context: "Learning continues when the network drops or a device is shared.",
+    support: "Cached notes, practice, audio, and queued progress sync.",
+    proof: "Cached lesson path"
+  },
+  {
+    icon: "chatbubble-ellipses-outline",
+    label: "Confidence",
+    title: "Students afraid to ask",
+    context: "A learner can ask the same question repeatedly without public pressure.",
+    support: "Gemma 4 explanations, practice loops, and teacher-visible progress signals.",
+    proof: "Private Q&A loop"
+  }
+];
 
 export function WebDemoShell({ children }: WebDemoShellProps) {
   const { width, height } = useWindowDimensions();
-  const [fullDemo, setFullDemo] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const sectionStackTop = useRef(0);
+  const sectionOffsets = useRef<Partial<Record<SectionKey, number>>>({});
+  const entrance = useRef(new Animated.Value(0)).current;
+  const [liveDemoOpen, setLiveDemoOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<SectionKey>("impact");
   const desktop = Platform.OS === "web" && width >= 960;
+  const wideDesktop = width >= 1160;
 
-  if (!desktop || fullDemo) {
+  const phoneHeight = Math.min(Math.max(height - 168, 560), 710);
+  const phoneWidth = Math.min(350, Math.max(306, Math.round(phoneHeight * 0.49)));
+  const heroMinHeight = Math.min(Math.max(height - 82, 790), 860);
+  const heroTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [22, 0] });
+  const proofTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
+  const videoTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [18, 0] });
+
+  useEffect(() => {
+    if (!desktop) return;
+
+    entrance.setValue(0);
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 520,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true
+    }).start();
+  }, [desktop, entrance]);
+
+  if (!desktop) {
     return <>{children}</>;
   }
 
-  const phoneHeight = Math.min(Math.max(height - 96, 620), 760);
-  const phoneWidth = Math.min(390, Math.max(340, Math.round(phoneHeight * 0.49)));
+  function captureSection(section: SectionKey, y: number) {
+    sectionOffsets.current[section] = y;
+  }
+
+  function captureSectionStack(y: number) {
+    sectionStackTop.current = y;
+  }
+
+  function scrollToSection(section: SectionKey) {
+    const sectionY = sectionOffsets.current[section] ?? 0;
+    const targetY = sectionStackTop.current + sectionY;
+    scrollRef.current?.scrollTo({ y: Math.max(targetY - 18, 0), animated: true });
+  }
+
+  function selectSection(section: SectionKey) {
+    setActiveSection(section);
+    scrollToSection(section);
+  }
+
+  function scrollToTop() {
+    setActiveSection("impact");
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }
 
   return (
-    <View style={styles.page}>
-      <View style={styles.content}>
-        <View style={styles.storyColumn}>
-          <View style={styles.brandRow}>
+    <View style={styles.shellRoot}>
+      <View style={styles.navShell}>
+        <View style={styles.nav}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go to top"
+            onPress={scrollToTop}
+            style={({ pressed }) => [styles.brandRow, pressed && styles.pressed]}
+          >
             <View style={styles.brandMark}>
-              <Ionicons name="accessibility-outline" size={24} color={palette.white} />
+              <Ionicons name="accessibility-outline" size={24} color="#FFFFFF" />
             </View>
             <Text style={styles.brandText}>AtherLearn</Text>
-          </View>
+          </Pressable>
 
-          <View style={styles.copyBlock}>
-            <View style={styles.badge}>
-              <Ionicons name="sparkles-outline" size={16} color={palette.blue} />
-              <Text style={styles.badgeText}>Powered by Gemma 4</Text>
+          <View style={styles.navActions}>
+            <View style={styles.navCenter}>
+              <NavItem label="Impact" active={activeSection === "impact"} onPress={() => selectSection("impact")} />
+              <NavItem label="Accessibility" active={activeSection === "accessibility"} onPress={() => selectSection("accessibility")} />
+              <NavItem label="Deliverables" active={activeSection === "deliverables"} onPress={() => selectSection("deliverables")} />
             </View>
-            <Text style={styles.title}>One lesson. Every learner.</Text>
-            <Text style={styles.lede}>
-              AtherLearn helps teachers create inclusive lessons for students with
-              disabilities, mixed learning levels, and low-connectivity classrooms.
-              Gemma 4 powers the local AI path for personalized notes, practice,
-              audio support, and feedback.
-            </Text>
-          </View>
 
-          <View style={styles.reasonGrid}>
-            <ReasonCard
-              icon="accessibility-outline"
-              title="Accessibility-first"
-              body="Supports learners who need audio, simplified notes, slower practice, or alternate formats."
-              tint={palette.teal}
-            />
-            <ReasonCard
-              icon="school-outline"
-              title="Upload once"
-              body="Teachers turn one classroom material into adaptive versions and progress feedback."
-              tint={palette.blue}
-            />
-            <ReasonCard
-              icon="hardware-chip-outline"
-              title="Gemma 4 on-device path"
-              body="The demo showcases browser-local and mobile-local AI workflows where supported."
-              tint={palette.saffron}
-            />
-          </View>
-
-          <View style={styles.actionRow}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => setFullDemo(true)}
-              style={({ pressed }) => [styles.primaryAction, pressed && styles.pressed]}
+              onPress={() => setLiveDemoOpen(true)}
+              style={({ pressed }) => [styles.navCta, pressed && styles.pressed]}
             >
-              <Text style={styles.primaryActionText}>Open full demo</Text>
-              <Ionicons name="expand-outline" size={20} color={palette.white} />
+              <Text style={styles.navCtaText}>Live demo</Text>
             </Pressable>
-            <Text style={styles.helperText}>The phone frame is the real app, not screenshots.</Text>
           </View>
         </View>
+      </View>
 
-        <View style={styles.previewColumn}>
-          <View style={[styles.phone, { width: phoneWidth, height: phoneHeight }]}>
-            <View style={styles.speaker} />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.page}
+        contentContainerStyle={styles.pageContent}
+        removeClippedSubviews
+      >
+        <Animated.View
+          style={[
+            styles.hero,
+            {
+              minHeight: heroMinHeight,
+              opacity: entrance,
+              transform: [{ translateY: heroTranslate }]
+            }
+          ]}
+        >
+          <View style={styles.heroCopy}>
+            <View style={styles.eyebrow}>
+              <View style={styles.statusDot} />
+              <Text style={styles.eyebrowText}>Inclusive AI learning for classrooms with real constraints</Text>
+            </View>
+
+            <Text style={styles.headline}>One lesson should not leave four learners behind.</Text>
+            <Text style={styles.subhead}>
+              AtherLearn helps a teacher upload one lesson and turn it into accessible,
+              phone-first learning paths. Gemma 4 supports simplified notes, audio help,
+              private doubt solving, practice, feedback, and offline-ready study flows.
+            </Text>
+
+            <View style={styles.solutionPanel}>
+              <Text style={styles.solutionKicker}>How AtherLearn solves it</Text>
+              <Text style={styles.solutionText}>
+                It reduces the cost of inclusion: teachers create once, students receive
+                a version that fits their reading ability, disability, pace, language,
+                and connectivity.
+              </Text>
+            </View>
+
+            <Animated.View
+              style={[
+                styles.proofStrip,
+                {
+                  opacity: entrance,
+                  transform: [{ translateY: proofTranslate }]
+                }
+              ]}
+            >
+              <ProofItem value="Gemma 4" label="AI adaptation" />
+              <View style={styles.proofDivider} />
+              <ProofItem value="Offline" label="low-connectivity study" />
+              <View style={styles.proofDivider} />
+              <ProofItem value="Accessible" label="by default" />
+            </Animated.View>
+          </View>
+
+          <View style={styles.previewZone}>
+            <View style={[styles.phoneFrame, { width: phoneWidth, height: phoneHeight }]}>
+              <View style={styles.speaker} />
+              <View style={styles.phoneScreen} pointerEvents="none">
+                <StaticPhonePreview />
+              </View>
+            </View>
+          </View>
+        </Animated.View>
+
+        <Animated.View
+          style={{
+            opacity: entrance,
+            transform: [{ translateY: videoTranslate }]
+          }}
+        >
+          <VideoFeature />
+        </Animated.View>
+
+        <View style={styles.sectionStack} onLayout={(event) => captureSectionStack(event.nativeEvent.layout.y)}>
+          <View
+            style={styles.sectionBlock}
+            onLayout={(event) => captureSection("impact", event.nativeEvent.layout.y)}
+          >
+            <SectionIntro
+              kicker="Impact"
+              title="AtherLearn turns inclusion from extra work into the default workflow."
+              body="The product is built around measurable classroom outcomes: more learners can access the same lesson, ask safely, continue offline, and show progress back to the teacher."
+            />
+            <View style={styles.metricGrid}>
+              <MetricCard value="1" label="teacher upload" body="A single classroom material becomes many learning formats." />
+              <MetricCard value="4" label="support paths" body="Reading, audio, private doubt solving, and offline practice." />
+              <MetricCard value="0" label="public shame" body="Students can ask repeatedly without exposing confusion in class." />
+            </View>
+          </View>
+
+          <View
+            style={styles.sectionBlock}
+            onLayout={(event) => captureSection("accessibility", event.nativeEvent.layout.y)}
+          >
+            <SectionIntro
+              kicker="Accessibility"
+              title="Designed for learners who are usually asked to adjust."
+              body="AtherLearn treats accessibility as the product core: disability support, language flexibility, low-bandwidth access, and teacher visibility are part of the same flow."
+            />
+            <View style={styles.profileGrid}>
+              {profiles.map((profile) => (
+                <ProfileCard key={profile.title} profile={profile} wide={wideDesktop} />
+              ))}
+            </View>
+          </View>
+
+          <View
+            style={styles.sectionBlock}
+            onLayout={(event) => captureSection("deliverables", event.nativeEvent.layout.y)}
+          >
+            <SectionIntro
+              kicker="Deliverables"
+              title="A practical product package for pilots, not just a prototype."
+              body="The deployable surface combines a web walkthrough, a mobile-first app experience, local AI capability where supported, and teacher/student flows that can be evaluated in a school pilot."
+            />
+            <View style={styles.deliverableGrid}>
+              <DeliverableCard icon="globe-outline" title="Web walkthrough" body="A public Cloudflare Pages demo for no-install evaluation." />
+              <DeliverableCard icon="phone-portrait-outline" title="Mobile-first app" body="A focused phone experience matching the intended classroom device." />
+              <DeliverableCard icon="hardware-chip-outline" title="Gemma 4 path" body="Local AI workflows for personalized learning support where device/browser support allows." />
+              <DeliverableCard icon="school-outline" title="Teacher loop" body="Upload, adapt, assign, and review who needs help next." />
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {liveDemoOpen ? (
+        <View style={styles.fullscreenOverlay}>
+          <View style={[styles.fullscreenBackdrop, webOnlyStyles.blurBackdrop]} />
+          <View style={styles.fullscreenHeader}>
+            <View>
+              <Text style={styles.fullscreenKicker}>Live app mode</Text>
+              <Text style={styles.fullscreenTitle}>Use AtherLearn in a focused phone view.</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close live app mode"
+              onPress={() => setLiveDemoOpen(false)}
+              style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="close" size={24} color={palette.ink} />
+            </Pressable>
+          </View>
+          <View style={[styles.modalPhone, { width: Math.min(430, width - 64), height: Math.min(height - 108, 840) }]}>
+            <View style={styles.modalSpeaker} />
             <View style={styles.phoneScreen}>{children}</View>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function NavItem({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [styles.navItem, active && styles.navItemActive, pressed && styles.pressed]}
+    >
+      <Text style={[styles.navText, active && styles.navTextActive]}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function VideoFeature() {
+  return (
+    <View style={styles.videoSection}>
+      <View style={styles.videoStoryCard}>
+        <View style={styles.videoCopy}>
+          <Text style={styles.sectionKicker}>Pitch film</Text>
+          <Text style={styles.videoTitle}>The promise we made to Suyash.</Text>
+          <Text style={styles.videoBody}>
+            During an NGO visit, a boy named Suyash told us he could not understand his
+            lessons because he was dyslexic. He said he failed subjects, classmates laughed,
+            and then he asked, "Bhaiya, can you teach me?" We came back carrying that
+            question. AtherLearn is our answer: five months later, we want to return and say,
+            "Suyash, we are with you. Go fly."
+          </Text>
+          <View style={styles.videoPromise}>
+            <Ionicons name="heart-outline" size={20} color={palette.blue} />
+            <Text style={styles.videoPromiseText}>
+              Built so a child can ask for help without shame, and a teacher can reach them
+              without rebuilding every lesson by hand.
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.videoFrame}>
+        <View style={styles.videoSurface}>
+          <View style={styles.videoPlay}>
+            <Ionicons name="play" size={30} color="#FFFFFF" />
+          </View>
+          <View style={styles.videoFrameCopy}>
+            <Text style={styles.videoFrameTitle}>Portrait story film</Text>
+            <Text style={styles.videoFrameBody}>Suyash, Gemma 4, and the learner path</Text>
           </View>
         </View>
       </View>
@@ -107,37 +373,130 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
   );
 }
 
-function ReasonCard({
+function SectionIntro({ kicker, title, body }: { kicker: string; title: string; body: string }) {
+  return (
+    <View style={styles.sectionIntro}>
+      <Text style={styles.sectionKicker}>{kicker}</Text>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={styles.sectionBody}>{body}</Text>
+    </View>
+  );
+}
+
+function MetricCard({ value, label, body }: { value: string; label: string; body: string }) {
+  return (
+    <View style={styles.metricCard}>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricBody}>{body}</Text>
+    </View>
+  );
+}
+
+function ProofItem({ value, label }: { value: string; label: string }) {
+  return (
+    <View style={styles.proofItem}>
+      <Text style={styles.proofValue}>{value}</Text>
+      <Text style={styles.proofLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function ProfileCard({ profile, wide }: { profile: Profile; wide: boolean }) {
+  return (
+    <View style={[styles.profileCard, wide ? styles.profileCardWide : styles.profileCardNarrow]}>
+      <View style={styles.profileCardTop}>
+        <View style={styles.profileIcon}>
+          <Ionicons name={profile.icon} size={22} color={palette.blue} />
+        </View>
+        <Text style={styles.profileLabel}>{profile.label}</Text>
+      </View>
+      <View style={styles.profileCopy}>
+        <Text style={styles.profileTitle}>{profile.title}</Text>
+        <View style={styles.profileDivider} />
+        <View style={styles.profileRow}>
+          <Text style={styles.profileRowLabel}>Barrier</Text>
+          <Text style={styles.profileContext}>{profile.context}</Text>
+        </View>
+        <View style={styles.profileRow}>
+          <Text style={styles.profileRowLabel}>Response</Text>
+          <Text style={styles.profileSupport}>{profile.support}</Text>
+        </View>
+        <View style={styles.profileProof}>
+          <Ionicons name="checkmark-circle" size={15} color={palette.green} />
+          <Text style={styles.profileProofText}>{profile.proof}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function DeliverableCard({
   icon,
   title,
-  body,
-  tint
+  body
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   body: string;
-  tint: string;
 }) {
   return (
-    <View style={styles.reasonCard}>
-      <View style={[styles.reasonIcon, { backgroundColor: `${tint}18` }]}>
-        <Ionicons name={icon} size={22} color={tint} />
-      </View>
-      <View style={styles.reasonCopy}>
-        <Text style={styles.reasonTitle}>{title}</Text>
-        <Text style={styles.reasonBody}>{body}</Text>
-      </View>
+    <View style={styles.deliverableCard}>
+      <Ionicons name={icon} size={24} color={palette.blue} />
+      <Text style={styles.deliverableTitle}>{title}</Text>
+      <Text style={styles.deliverableBody}>{body}</Text>
     </View>
   );
 }
 
-const phoneShadow = {
-  shadowColor: "#07111F",
-  shadowOffset: { width: 0, height: 28 },
-  shadowOpacity: 0.24,
-  shadowRadius: 42,
-  elevation: 12
-};
+function StaticPhonePreview() {
+  return (
+    <View style={styles.staticPhoneContent}>
+      <View style={styles.staticHeader}>
+        <View style={styles.staticBrand}>
+          <View style={styles.staticMark}>
+            <Ionicons name="accessibility-outline" size={18} color="#FFFFFF" />
+          </View>
+          <Text style={styles.staticBrandText}>AtherLearn</Text>
+        </View>
+      </View>
+
+      <View style={styles.staticBody}>
+        <Text style={styles.staticMode}>Teacher upload</Text>
+        <Text style={styles.staticTitle}>Chapter material becomes accessible study paths.</Text>
+        <Text style={styles.staticSubtitle}>
+          Gemma 4 helps create simplified notes, audio support, practice, and feedback.
+        </Text>
+
+        <View style={styles.staticCard}>
+          <View style={styles.staticCardIcon}>
+            <Ionicons name="accessibility-outline" size={24} color={palette.blue} />
+          </View>
+          <View style={styles.staticCardCopy}>
+            <Text style={styles.staticCardTitle}>Inclusive outputs</Text>
+            <Text style={styles.staticCardBody}>Dyslexia support, low-vision readable text, audio, and private Q&A.</Text>
+          </View>
+        </View>
+
+        <View style={styles.staticCard}>
+          <View style={styles.staticCardIconTeal}>
+            <Ionicons name="cloud-offline-outline" size={24} color={palette.teal} />
+          </View>
+          <View style={styles.staticCardCopy}>
+            <Text style={styles.staticCardTitle}>Offline-ready learning</Text>
+            <Text style={styles.staticCardBody}>Notes and practice continue on the phone when connectivity drops.</Text>
+          </View>
+        </View>
+
+        <View style={styles.staticPillRow}>
+          <Text style={styles.staticPill}>Teacher</Text>
+          <Text style={styles.staticPill}>Student</Text>
+          <Text style={styles.staticPill}>Practice</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 const cardShadow = {
   shadowColor: "#0F172A",
@@ -147,27 +506,233 @@ const cardShadow = {
   elevation: 4
 };
 
+const phoneShadow = {
+  shadowColor: "#07111F",
+  shadowOffset: { width: 0, height: 28 },
+  shadowOpacity: 0.24,
+  shadowRadius: 42,
+  elevation: 12
+};
+
+const webOnlyStyles = {
+  blurBackdrop: {
+    backdropFilter: "blur(18px)"
+  } as never
+};
+
 const styles = StyleSheet.create({
+  shellRoot: {
+    flex: 1,
+    backgroundColor: palette.paper
+  },
   page: {
     flex: 1,
     minHeight: "100vh" as never,
     backgroundColor: palette.paper
   },
-  content: {
-    flex: 1,
+  pageContent: {
+    width: "100%",
+    maxWidth: 1200,
+    alignSelf: "center",
+    paddingHorizontal: 32,
+    paddingBottom: 56
+  },
+  navShell: {
+    width: "100%",
+    backgroundColor: "rgba(246,250,255,0.94)" as never,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.line,
+    zIndex: 20
+  },
+  nav: {
+    width: "100%",
+    maxWidth: 1200,
+    alignSelf: "center",
+    minHeight: 80,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 40,
-    paddingHorizontal: 32,
-    paddingVertical: 40
+    justifyContent: "space-between",
+    gap: 32,
+    paddingHorizontal: 32
   },
-  previewColumn: {
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  brandMark: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.blue,
+    ...cardShadow
+  },
+  brandText: {
+    color: palette.ink,
+    fontSize: 20,
+    lineHeight: 27,
+    fontWeight: "900"
+  },
+  navActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 34,
+    marginLeft: "auto" as never
+  },
+  navCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12
+  },
+  navItem: {
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: "transparent" as never
+  },
+  navItemActive: {
+    backgroundColor: "#EAF1FF",
+    borderColor: "#C9DAFF"
+  },
+  navText: {
+    color: palette.inkSoft,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  navTextActive: {
+    color: palette.blueDark
+  },
+  navCta: {
+    minHeight: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.dark,
+    paddingHorizontal: 20,
+    ...cardShadow
+  },
+  navCtaText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  hero: {
+    minHeight: 704,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 56,
+    paddingVertical: 34
+  },
+  heroCopy: {
+    flex: 1,
+    maxWidth: 660,
+    gap: 22
+  },
+  eyebrow: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "#C9DAFF",
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 13
+  },
+  statusDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: palette.green
+  },
+  eyebrowText: {
+    color: palette.blueDark,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  headline: {
+    color: palette.ink,
+    fontSize: 66,
+    lineHeight: 72,
+    fontWeight: "900"
+  },
+  subhead: {
+    color: palette.muted,
+    fontSize: 18,
+    lineHeight: 31,
+    maxWidth: 640
+  },
+  solutionPanel: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
+    padding: 18,
+    gap: 8,
+    ...cardShadow
+  },
+  solutionKicker: {
+    color: palette.blueDark,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "900"
+  },
+  solutionText: {
+    color: palette.ink,
+    fontSize: 20,
+    lineHeight: 29,
+    fontWeight: "800"
+  },
+  proofStrip: {
+    alignSelf: "flex-start",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: "rgba(255,255,255,0.82)" as never,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    ...cardShadow
+  },
+  proofItem: {
+    minWidth: 112,
+    gap: 3
+  },
+  proofValue: {
+    color: palette.ink,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  proofLabel: {
+    color: palette.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "800"
+  },
+  proofDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: palette.line,
+    marginHorizontal: 14
+  },
+  previewZone: {
+    width: 382,
+    minHeight: 700,
     alignItems: "center",
     justifyContent: "center"
   },
-  phone: {
-    borderRadius: 46,
+  phoneFrame: {
+    borderRadius: 42,
     backgroundColor: palette.dark,
     borderWidth: 10,
     borderColor: "#172033",
@@ -184,7 +749,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 6,
     borderRadius: 6,
-    backgroundColor: "#344157",
+    backgroundColor: "#52627D",
     zIndex: 2
   },
   phoneScreen: {
@@ -193,123 +758,494 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     backgroundColor: "#F6F8FC"
   },
-  storyColumn: {
-    width: 520,
-    maxWidth: "46%" as never,
-    gap: 30
-  },
-  brandRow: {
+  videoSection: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
+    justifyContent: "space-between",
+    gap: 28,
+    marginBottom: 30
+  },
+  videoStoryCard: {
+    flex: 1,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: "rgba(255,255,255,0.86)" as never,
+    justifyContent: "center",
+    padding: 28,
+    ...cardShadow
+  },
+  videoCopy: {
+    maxWidth: 690,
+    justifyContent: "center",
     gap: 14
   },
-  brandMark: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: palette.blue
-  },
-  brandText: {
+  videoTitle: {
     color: palette.ink,
-    fontSize: 24,
-    lineHeight: 31,
+    fontSize: 30,
+    lineHeight: 36,
     fontWeight: "900"
   },
-  copyBlock: {
-    gap: 18
+  videoBody: {
+    color: palette.muted,
+    fontSize: 16,
+    lineHeight: 27
   },
-  badge: {
-    alignSelf: "flex-start",
-    minHeight: 34,
-    borderRadius: 17,
+  videoPromise: {
+    maxWidth: 620,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#CFE0FF",
-    backgroundColor: "#EEF5FF",
+    borderColor: "#C9DAFF",
+    backgroundColor: "#F6FAFF",
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12
+    alignItems: "flex-start",
+    gap: 10,
+    padding: 14,
+    marginTop: 4
   },
-  badgeText: {
-    color: palette.blue,
+  videoPromiseText: {
+    flex: 1,
+    color: palette.inkSoft,
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: "800"
+  },
+  videoFrame: {
+    width: 300,
+    minHeight: 500,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4
+  },
+  videoSurface: {
+    width: "100%",
+    height: "100%",
+    minHeight: 456,
+    maxWidth: 256,
+    aspectRatio: 9 / 16,
+    borderRadius: 26,
+    borderWidth: 8,
+    borderColor: "#D8E4FF",
+    backgroundColor: palette.dark,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 14,
+    overflow: "hidden"
+  },
+  videoPlay: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: palette.blue,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: 4,
+    ...cardShadow
+  },
+  videoFrameCopy: {
+    alignItems: "center",
+    gap: 4
+  },
+  videoFrameTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900"
+  },
+  videoFrameBody: {
+    color: "rgba(255,255,255,0.72)" as never,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "800"
+  },
+  sectionStack: {
+    gap: 28,
+    paddingTop: 18,
+    paddingBottom: 56
+  },
+  sectionBlock: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: "rgba(255,255,255,0.72)" as never,
+    padding: 22,
+    ...cardShadow
+  },
+  sectionIntro: {
+    maxWidth: 820,
+    gap: 10,
+    marginBottom: 24
+  },
+  sectionKicker: {
+    color: palette.blueDark,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: "900"
   },
-  title: {
+  sectionTitle: {
     color: palette.ink,
-    fontSize: 48,
-    lineHeight: 56,
+    fontSize: 42,
+    lineHeight: 48,
     fontWeight: "900"
   },
-  lede: {
+  sectionBody: {
     color: palette.muted,
-    fontSize: 18,
-    lineHeight: 30
+    fontSize: 17,
+    lineHeight: 28
   },
-  reasonGrid: {
+  metricGrid: {
+    flexDirection: "row",
     gap: 14
   },
-  reasonCard: {
-    minHeight: 96,
+  metricCard: {
+    flex: 1,
+    minHeight: 178,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: palette.border,
-    backgroundColor: palette.white,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
     padding: 18,
     ...cardShadow
   },
-  reasonIcon: {
-    width: 46,
-    height: 46,
+  metricValue: {
+    color: palette.blue,
+    fontSize: 46,
+    lineHeight: 50,
+    fontWeight: "900"
+  },
+  metricLabel: {
+    color: palette.ink,
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "900",
+    marginTop: 4
+  },
+  metricBody: {
+    color: palette.muted,
+    fontSize: 14,
+    lineHeight: 22,
+    marginTop: 8
+  },
+  profileGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14
+  },
+  profileCard: {
+    minHeight: 244,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
+    padding: 16,
+    gap: 14,
+    ...cardShadow
+  },
+  profileCardWide: {
+    flex: 1
+  },
+  profileCardNarrow: {
+    width: "48.5%" as never
+  },
+  profileCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  profileIcon: {
+    width: 40,
+    height: 40,
     borderRadius: 8,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
+    backgroundColor: "#EAF1FF"
   },
-  reasonCopy: {
+  profileLabel: {
+    color: palette.blueDark,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "900",
+    textTransform: "uppercase" as never
+  },
+  profileCopy: {
+    gap: 10
+  },
+  profileTitle: {
+    color: palette.ink,
+    fontSize: 17,
+    lineHeight: 22,
+    fontWeight: "900"
+  },
+  profileDivider: {
+    height: 1,
+    backgroundColor: "#E7EEF8"
+  },
+  profileRow: {
+    gap: 3
+  },
+  profileRowLabel: {
+    color: palette.muted,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "900",
+    textTransform: "uppercase" as never
+  },
+  profileContext: {
+    color: palette.inkSoft,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: "700"
+  },
+  profileSupport: {
+    color: palette.muted,
+    fontSize: 13,
+    lineHeight: 19
+  },
+  profileProof: {
+    minHeight: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#BDEFD3",
+    backgroundColor: "#E8FAEF",
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 6,
+    paddingHorizontal: 9
+  },
+  profileProofText: {
+    color: palette.green,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "900"
+  },
+  deliverableGrid: {
+    flexDirection: "row",
+    gap: 14
+  },
+  deliverableCard: {
+    flex: 1,
+    minHeight: 194,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: palette.panel,
+    padding: 18,
+    gap: 10,
+    ...cardShadow
+  },
+  deliverableTitle: {
+    color: palette.ink,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900"
+  },
+  deliverableBody: {
+    color: palette.muted,
+    fontSize: 14,
+    lineHeight: 22
+  },
+  staticPhoneContent: {
+    flex: 1,
+    backgroundColor: "#F6F8FC"
+  },
+  staticHeader: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 18,
+    paddingHorizontal: 20
+  },
+  staticBrand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  staticMark: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.blue
+  },
+  staticBrandText: {
+    color: palette.ink,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900"
+  },
+  staticLivePill: {
+    minHeight: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#BDEFD3",
+    backgroundColor: "#E8FAEF",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 9
+  },
+  staticLiveText: {
+    color: palette.green,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "900"
+  },
+  staticBody: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    gap: 12
+  },
+  staticMode: {
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    backgroundColor: "#EAF1FF",
+    color: palette.blue,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  staticTitle: {
+    color: palette.ink,
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: "900"
+  },
+  staticSubtitle: {
+    color: palette.muted,
+    fontSize: 14,
+    lineHeight: 22
+  },
+  staticCard: {
+    minHeight: 96,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: palette.line,
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+    ...cardShadow
+  },
+  staticCardIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#EAF1FF"
+  },
+  staticCardIconTeal: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E7FAF7"
+  },
+  staticCardCopy: {
     flex: 1,
     gap: 4
   },
-  reasonTitle: {
+  staticCardTitle: {
     color: palette.ink,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "900"
   },
-  reasonBody: {
+  staticCardBody: {
     color: palette.muted,
-    fontSize: 14,
-    lineHeight: 21
+    fontSize: 12,
+    lineHeight: 18
   },
-  actionRow: {
-    gap: 12
-  },
-  primaryAction: {
-    alignSelf: "flex-start",
-    minHeight: 54,
-    borderRadius: 8,
-    backgroundColor: palette.blue,
+  staticPillRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  staticPill: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#CFE0FF",
+    backgroundColor: "#FFFFFF",
+    color: palette.blueDark,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "900",
+    paddingHorizontal: 9,
+    paddingVertical: 6
+  },
+  fullscreenOverlay: {
+    position: "fixed" as never,
+    inset: 0 as never,
+    zIndex: 100,
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    paddingHorizontal: 22
+    padding: 28
   },
-  primaryActionText: {
-    color: palette.white,
-    fontSize: 16,
-    lineHeight: 22,
+  fullscreenBackdrop: {
+    position: "absolute",
+    inset: 0 as never,
+    backgroundColor: "rgba(5, 14, 31, 0.74)" as never
+  },
+  fullscreenHeader: {
+    position: "absolute",
+    top: 22,
+    left: 28,
+    right: 28,
+    zIndex: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+  },
+  fullscreenKicker: {
+    color: "rgba(255,255,255,0.72)" as never,
+    fontSize: 13,
+    lineHeight: 19,
     fontWeight: "900"
   },
-  helperText: {
-    color: palette.muted,
-    fontSize: 14,
-    lineHeight: 20
+  fullscreenTitle: {
+    color: "#FFFFFF",
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: "900"
+  },
+  closeButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    ...cardShadow
+  },
+  modalPhone: {
+    borderRadius: 52,
+    backgroundColor: palette.dark,
+    borderWidth: 12,
+    borderColor: "#172033",
+    paddingTop: 24,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    overflow: "hidden",
+    zIndex: 1,
+    ...phoneShadow
+  },
+  modalSpeaker: {
+    position: "absolute",
+    top: 12,
+    alignSelf: "center",
+    width: 78,
+    height: 6,
+    borderRadius: 6,
+    backgroundColor: "#52627D",
+    zIndex: 2
   },
   pressed: {
     opacity: 0.86

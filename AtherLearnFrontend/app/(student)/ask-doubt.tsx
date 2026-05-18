@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +25,8 @@ export default function AskDoubtScreen() {
   const visuals = studentAccessibilityVisuals(preferences);
   const metrics = studentTextMetrics(preferences.textSize);
   const [lessonId, setLessonId] = useState(lectures[0].id);
+  const [subject, setSubject] = useState(lectures[0].subject);
+  const [openSelector, setOpenSelector] = useState<"subject" | "lesson" | null>(null);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [followUp, setFollowUp] = useState("");
@@ -32,10 +34,24 @@ export default function AskDoubtScreen() {
   const [loading, setLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [modelPreference, setModelPreference] = useDefaultModelPreference();
-  const selectedLecture = useMemo(
-    () => lectures.find((lecture) => lecture.id === lessonId) ?? lectures[0],
-    [lessonId]
+  const subjectOptions = useMemo(
+    () => Array.from(new Set(lectures.map((lecture) => lecture.subject))).sort(),
+    []
   );
+  const lessonOptions = useMemo(
+    () => lectures.filter((lecture) => lecture.subject === subject),
+    [subject]
+  );
+  const selectedLecture = useMemo(
+    () => lessonOptions.find((lecture) => lecture.id === lessonId) ?? lessonOptions[0] ?? lectures[0],
+    [lessonId, lessonOptions]
+  );
+
+  useEffect(() => {
+    if (!lessonOptions.some((lecture) => lecture.id === lessonId)) {
+      setLessonId(lessonOptions[0]?.id ?? lectures[0].id);
+    }
+  }, [lessonId, lessonOptions]);
 
   useEffect(() => {
     return () => {
@@ -106,25 +122,50 @@ export default function AskDoubtScreen() {
 
       <Card style={[styles.card, visuals.cardStyle]}>
         <Text style={[styles.label, visuals.titleTextStyle]}>Lesson context</Text>
-        <View style={styles.lessonList}>
-          {lectures.map((lecture) => {
-            const selected = lessonId === lecture.id;
-            return (
-              <Pressable
+        <View style={styles.selectorGrid}>
+          <DropdownField
+            label="Subject"
+            value={subject}
+            open={openSelector === "subject"}
+            onToggle={() => setOpenSelector((current) => current === "subject" ? null : "subject")}
+          >
+            {subjectOptions.map((item) => (
+              <DropdownOption
+                key={item}
+                label={item}
+                selected={subject === item}
+                onPress={() => {
+                  setSubject(item);
+                  setLessonId(lectures.find((lecture) => lecture.subject === item)?.id ?? lectures[0].id);
+                  setOpenSelector(null);
+                }}
+              />
+            ))}
+          </DropdownField>
+
+          <DropdownField
+            label="Context"
+            value={selectedLecture.title}
+            open={openSelector === "lesson"}
+            onToggle={() => setOpenSelector((current) => current === "lesson" ? null : "lesson")}
+          >
+            {lessonOptions.map((lecture) => (
+              <DropdownOption
                 key={lecture.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setLessonId(lecture.id)}
-                style={[styles.lessonChip, selected && styles.lessonChipSelected]}
-              >
-                <Text style={[styles.lessonChipText, selected && styles.lessonChipTextSelected]}>
-                  {lecture.subject}
-                </Text>
-              </Pressable>
-            );
-          })}
+                label={lecture.title}
+                selected={lessonId === lecture.id}
+                onPress={() => {
+                  setLessonId(lecture.id);
+                  setOpenSelector(null);
+                }}
+              />
+            ))}
+          </DropdownField>
         </View>
-        <Text style={[styles.contextTitle, visuals.titleTextStyle]}>{selectedLecture.title}</Text>
+        <View style={styles.contextSummary}>
+          <Ionicons name="book-outline" size={18} color={colors.primary} />
+          <Text style={[styles.contextTitle, visuals.titleTextStyle]}>{selectedLecture.title}</Text>
+        </View>
       </Card>
 
       <Card style={[styles.card, visuals.cardStyle]}>
@@ -179,6 +220,60 @@ export default function AskDoubtScreen() {
         </Card>
       ) : null}
     </ScreenContainer>
+  );
+}
+
+function DropdownField({
+  label,
+  value,
+  open,
+  onToggle,
+  children
+}: {
+  label: string;
+  value: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <View style={styles.dropdownWrap}>
+      <Text style={styles.dropdownLabel}>{label}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
+        onPress={onToggle}
+        style={[styles.dropdownButton, open && styles.dropdownButtonOpen]}
+      >
+        <Text numberOfLines={1} style={styles.dropdownValue}>{value}</Text>
+        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
+      </Pressable>
+      {open ? <View style={styles.dropdownMenu}>{children}</View> : null}
+    </View>
+  );
+}
+
+function DropdownOption({
+  label,
+  selected,
+  onPress
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[styles.dropdownOption, selected && styles.dropdownOptionSelected]}
+    >
+      <Text numberOfLines={2} style={[styles.dropdownOptionText, selected && styles.dropdownOptionTextSelected]}>
+        {label}
+      </Text>
+      {selected ? <Ionicons name="checkmark-circle" size={18} color={colors.primary} /> : null}
+    </Pressable>
   );
 }
 
@@ -259,36 +354,87 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "900"
   },
-  lessonList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm
+  selectorGrid: {
+    gap: spacing.md
   },
-  lessonChip: {
-    minHeight: 38,
-    borderRadius: radii.pill,
+  dropdownWrap: {
+    position: "relative",
+    gap: spacing.xs,
+    zIndex: 2
+  },
+  dropdownLabel: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "900",
+    textTransform: "uppercase"
+  },
+  dropdownButton: {
+    minHeight: 50,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    justifyContent: "center"
+    backgroundColor: colors.background,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md
   },
-  lessonChipSelected: {
+  dropdownButtonOpen: {
     borderColor: colors.primary,
     backgroundColor: colors.primarySoft
   },
-  lessonChipText: {
-    color: colors.muted,
-    fontSize: 13,
-    lineHeight: 18,
+  dropdownValue: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "900"
   },
-  lessonChipTextSelected: {
-    color: colors.primaryDark
+  dropdownMenu: {
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    overflow: "hidden"
+  },
+  dropdownOption: {
+    minHeight: 46,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm
+  },
+  dropdownOptionSelected: {
+    backgroundColor: colors.primarySoft
+  },
+  dropdownOptionText: {
+    flex: 1,
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "800"
+  },
+  dropdownOptionTextSelected: {
+    color: colors.primaryDark,
+    fontWeight: "900"
+  },
+  contextSummary: {
+    borderRadius: radii.md,
+    backgroundColor: colors.primarySoft,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.md
   },
   contextTitle: {
+    flex: 1,
     color: colors.text,
-    fontSize: 18,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 21,
     fontWeight: "900"
   },
   input: {
