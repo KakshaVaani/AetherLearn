@@ -40,13 +40,6 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
   return (
     <View style={styles.page}>
       <View style={styles.content}>
-        <View style={styles.previewColumn}>
-          <View style={[styles.phone, { width: phoneWidth, height: phoneHeight }]}>
-            <View style={styles.speaker} />
-            <View style={styles.phoneScreen}>{children}</View>
-          </View>
-        </View>
-
         <View style={styles.storyColumn}>
           <View style={styles.brandRow}>
             <View style={styles.brandMark}>
@@ -56,30 +49,36 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
           </View>
 
           <View style={styles.copyBlock}>
-            <Text style={styles.title}>AI learning that still works when the classroom is offline.</Text>
+            <View style={styles.badge}>
+              <Ionicons name="sparkles-outline" size={16} color={palette.blue} />
+              <Text style={styles.badgeText}>Powered by Gemma 4</Text>
+            </View>
+            <Text style={styles.title}>One lesson. Every learner.</Text>
             <Text style={styles.lede}>
-              We built AtherLearn for teachers and students who cannot assume fast devices,
-              reliable internet, or one-size-fits-all lessons.
+              AtherLearn helps teachers create inclusive lessons for students with
+              disabilities, mixed learning levels, and low-connectivity classrooms.
+              Gemma 4 powers the local AI path for personalized notes, practice,
+              audio support, and feedback.
             </Text>
           </View>
 
           <View style={styles.reasonGrid}>
             <ReasonCard
-              icon="school-outline"
-              title="For teachers"
-              body="Upload one lesson and review classroom progress from a simple mobile workflow."
+              icon="accessibility-outline"
+              title="Accessibility-first"
+              body="Supports learners who need audio, simplified notes, slower practice, or alternate formats."
               tint={palette.teal}
             />
             <ReasonCard
-              icon="book-outline"
-              title="For students"
-              body="Get notes, practice, audio support, and feedback shaped around each learner."
+              icon="school-outline"
+              title="Upload once"
+              body="Teachers turn one classroom material into adaptive versions and progress feedback."
               tint={palette.blue}
             />
             <ReasonCard
-              icon="shield-checkmark-outline"
-              title="For low connectivity"
-              body="Demo data, local storage, and optional on-device AI keep the experience usable."
+              icon="hardware-chip-outline"
+              title="Gemma 4 on-device path"
+              body="The demo showcases browser-local and mobile-local AI workflows where supported."
               tint={palette.saffron}
             />
           </View>
@@ -94,6 +93,13 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               <Ionicons name="expand-outline" size={20} color={palette.white} />
             </Pressable>
             <Text style={styles.helperText}>The phone frame is the real app, not screenshots.</Text>
+          </View>
+        </View>
+
+        <View style={styles.previewColumn}>
+          <View style={[styles.phone, { width: phoneWidth, height: phoneHeight }]}>
+            <View style={styles.speaker} />
+            <View style={styles.phoneScreen}>{children}</View>
           </View>
         </View>
       </View>
@@ -213,6 +219,24 @@ const styles = StyleSheet.create({
   },
   copyBlock: {
     gap: 18
+  },
+  badge: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "#CFE0FF",
+    backgroundColor: "#EEF5FF",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12
+  },
+  badgeText: {
+    color: palette.blue,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "900"
   },
   title: {
     color: palette.ink,
