@@ -1,9 +1,9 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { createElement, ReactNode, useRef, useState } from "react";
 import {
-  Animated,
-  Easing,
   Platform,
   Pressable,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -82,30 +82,15 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
   const scrollRef = useRef<ScrollView>(null);
   const sectionStackTop = useRef(0);
   const sectionOffsets = useRef<Partial<Record<SectionKey, number>>>({});
-  const entrance = useRef(new Animated.Value(0)).current;
+  const activeSectionRef = useRef<SectionKey | null>(null);
   const [liveDemoOpen, setLiveDemoOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<SectionKey>("impact");
+  const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
   const desktop = Platform.OS === "web" && width >= 960;
   const wideDesktop = width >= 1160;
 
   const phoneHeight = Math.min(Math.max(height - 168, 560), 710);
   const phoneWidth = Math.min(350, Math.max(306, Math.round(phoneHeight * 0.49)));
   const heroMinHeight = Math.min(Math.max(height - 82, 790), 860);
-  const heroTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [22, 0] });
-  const proofTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
-  const videoTranslate = entrance.interpolate({ inputRange: [0, 1], outputRange: [18, 0] });
-
-  useEffect(() => {
-    if (!desktop) return;
-
-    entrance.setValue(0);
-    Animated.timing(entrance, {
-      toValue: 1,
-      duration: 520,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true
-    }).start();
-  }, [desktop, entrance]);
 
   if (!desktop) {
     return <>{children}</>;
@@ -125,14 +110,39 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
     scrollRef.current?.scrollTo({ y: Math.max(targetY - 18, 0), animated: true });
   }
 
-  function selectSection(section: SectionKey) {
+  function updateActiveSection(section: SectionKey | null) {
+    if (activeSectionRef.current === section) return;
+    activeSectionRef.current = section;
     setActiveSection(section);
+  }
+
+  function selectSection(section: SectionKey) {
+    updateActiveSection(section);
     scrollToSection(section);
   }
 
   function scrollToTop() {
-    setActiveSection("impact");
+    updateActiveSection(null);
     scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }
+
+  function handlePageScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const y = event.nativeEvent.contentOffset.y;
+    const stackTop = sectionStackTop.current;
+
+    if (!stackTop || y < stackTop - 96) {
+      updateActiveSection(null);
+      return;
+    }
+
+    const orderedSections: SectionKey[] = ["impact", "accessibility", "deliverables"];
+    const nextSection = orderedSections.reduce<SectionKey | null>((current, section) => {
+      const sectionY = sectionOffsets.current[section];
+      if (sectionY === undefined) return current;
+      return y >= stackTop + sectionY - 96 ? section : current;
+    }, null);
+
+    updateActiveSection(nextSection);
   }
 
   return (
@@ -146,7 +156,7 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
             style={({ pressed }) => [styles.brandRow, pressed && styles.pressed]}
           >
             <View style={styles.brandMark}>
-              <Ionicons name="accessibility-outline" size={24} color="#FFFFFF" />
+              <AccessibilityGlyph size={24} color="#FFFFFF" />
             </View>
             <Text style={styles.brandText}>AtherLearn</Text>
           </Pressable>
@@ -173,18 +183,11 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
         ref={scrollRef}
         style={styles.page}
         contentContainerStyle={styles.pageContent}
+        onScroll={handlePageScroll}
+        scrollEventThrottle={16}
         removeClippedSubviews
       >
-        <Animated.View
-          style={[
-            styles.hero,
-            {
-              minHeight: heroMinHeight,
-              opacity: entrance,
-              transform: [{ translateY: heroTranslate }]
-            }
-          ]}
-        >
+        <View style={[styles.hero, { minHeight: heroMinHeight }]}>
           <View style={styles.heroCopy}>
             <View style={styles.eyebrow}>
               <View style={styles.statusDot} />
@@ -207,21 +210,13 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               </Text>
             </View>
 
-            <Animated.View
-              style={[
-                styles.proofStrip,
-                {
-                  opacity: entrance,
-                  transform: [{ translateY: proofTranslate }]
-                }
-              ]}
-            >
+            <View style={styles.proofStrip}>
               <ProofItem value="Gemma 4" label="AI adaptation" />
               <View style={styles.proofDivider} />
               <ProofItem value="Offline" label="low-connectivity study" />
               <View style={styles.proofDivider} />
               <ProofItem value="Accessible" label="by default" />
-            </Animated.View>
+            </View>
           </View>
 
           <View style={styles.previewZone}>
@@ -232,16 +227,11 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               </View>
             </View>
           </View>
-        </Animated.View>
+        </View>
 
-        <Animated.View
-          style={{
-            opacity: entrance,
-            transform: [{ translateY: videoTranslate }]
-          }}
-        >
+        <View>
           <VideoFeature />
-        </Animated.View>
+        </View>
 
         <View style={styles.sectionStack} onLayout={(event) => captureSectionStack(event.nativeEvent.layout.y)}>
           <View
@@ -334,6 +324,83 @@ function NavItem({ label, active, onPress }: { label: string; active: boolean; o
   );
 }
 
+function AccessibilityGlyph({ size, color }: { size: number; color: string }) {
+  const stroke = Math.max(2, Math.round(size * 0.1));
+  const head = Math.max(4, Math.round(size * 0.18));
+
+  return (
+    <View style={[styles.glyphRoot, { width: size, height: size }]}>
+      <View
+        style={[
+          styles.glyphDot,
+          {
+            top: size * 0.06,
+            left: (size - head) / 2,
+            width: head,
+            height: head,
+            borderRadius: head / 2,
+            backgroundColor: color
+          }
+        ]}
+      />
+      <View
+        style={[
+          styles.glyphLine,
+          {
+            top: size * 0.33,
+            left: size * 0.16,
+            width: size * 0.68,
+            height: stroke,
+            borderRadius: stroke,
+            backgroundColor: color
+          }
+        ]}
+      />
+      <View
+        style={[
+          styles.glyphLine,
+          {
+            top: size * 0.34,
+            left: (size - stroke) / 2,
+            width: stroke,
+            height: size * 0.38,
+            borderRadius: stroke,
+            backgroundColor: color
+          }
+        ]}
+      />
+      <View
+        style={[
+          styles.glyphLimb,
+          {
+            top: size * 0.62,
+            left: size * 0.34,
+            width: stroke,
+            height: size * 0.32,
+            borderRadius: stroke,
+            backgroundColor: color,
+            transform: [{ rotate: "18deg" }]
+          }
+        ]}
+      />
+      <View
+        style={[
+          styles.glyphLimb,
+          {
+            top: size * 0.62,
+            right: size * 0.34,
+            width: stroke,
+            height: size * 0.32,
+            borderRadius: stroke,
+            backgroundColor: color,
+            transform: [{ rotate: "-18deg" }]
+          }
+        ]}
+      />
+    </View>
+  );
+}
+
 function VideoFeature() {
   return (
     <View style={styles.videoSection}>
@@ -358,19 +425,50 @@ function VideoFeature() {
         </View>
       </View>
 
-      <View style={styles.videoFrame}>
-        <View style={styles.videoSurface}>
-          <View style={styles.videoPlay}>
-            <Ionicons name="play" size={30} color="#FFFFFF" />
-          </View>
-          <View style={styles.videoFrameCopy}>
-            <Text style={styles.videoFrameTitle}>Portrait story film</Text>
-            <Text style={styles.videoFrameBody}>Suyash, Gemma 4, and the learner path</Text>
-          </View>
+      <View style={styles.videoStage}>
+        <View style={styles.videoStageGlow} />
+        <View style={styles.videoFrame}>
+          <YouTubeEmbed videoId="927kTEB4QKw" title="AtherLearn portrait story film" />
+        </View>
+        <View style={styles.videoCaption}>
+          <Ionicons name="phone-portrait-outline" size={16} color={palette.blue} />
+          <Text style={styles.videoCaptionText}>Portrait demo film</Text>
         </View>
       </View>
     </View>
   );
+}
+
+function YouTubeEmbed({ videoId, title }: { videoId: string; title: string }) {
+  if (Platform.OS !== "web") {
+    return (
+      <>
+        <View style={styles.videoPlay}>
+          <Ionicons name="play" size={30} color="#FFFFFF" />
+        </View>
+        <View style={styles.videoFrameCopy}>
+          <Text style={styles.videoFrameTitle}>Portrait story film</Text>
+          <Text style={styles.videoFrameBody}>Suyash, Gemma 4, and the learner path</Text>
+        </View>
+      </>
+    );
+  }
+
+  return createElement("iframe", {
+    title,
+    src: `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1`,
+    allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+    allowFullScreen: true,
+    loading: "lazy",
+    referrerPolicy: "strict-origin-when-cross-origin",
+    style: {
+      width: "100%",
+      height: "100%",
+      border: 0,
+      display: "block",
+      backgroundColor: palette.dark
+    }
+  });
 }
 
 function SectionIntro({ kicker, title, body }: { kicker: string; title: string; body: string }) {
@@ -455,7 +553,7 @@ function StaticPhonePreview() {
       <View style={styles.staticHeader}>
         <View style={styles.staticBrand}>
           <View style={styles.staticMark}>
-            <Ionicons name="accessibility-outline" size={18} color="#FFFFFF" />
+            <AccessibilityGlyph size={18} color="#FFFFFF" />
           </View>
           <Text style={styles.staticBrandText}>AtherLearn</Text>
         </View>
@@ -470,7 +568,7 @@ function StaticPhonePreview() {
 
         <View style={styles.staticCard}>
           <View style={styles.staticCardIcon}>
-            <Ionicons name="accessibility-outline" size={24} color={palette.blue} />
+            <AccessibilityGlyph size={24} color={palette.blue} />
           </View>
           <View style={styles.staticCardCopy}>
             <Text style={styles.staticCardTitle}>Inclusive outputs</Text>
@@ -574,6 +672,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 27,
     fontWeight: "900"
+  },
+  glyphRoot: {
+    position: "relative",
+    alignItems: "center"
+  },
+  glyphDot: {
+    position: "absolute"
+  },
+  glyphLine: {
+    position: "absolute",
+    alignSelf: "center"
+  },
+  glyphLimb: {
+    position: "absolute"
   },
   navActions: {
     flexDirection: "row",
@@ -760,10 +872,10 @@ const styles = StyleSheet.create({
   },
   videoSection: {
     flexDirection: "row",
-    alignItems: "stretch",
+    alignItems: "center",
     justifyContent: "space-between",
-    gap: 28,
-    marginBottom: 30
+    gap: 34,
+    marginBottom: 34
   },
   videoStoryCard: {
     flex: 1,
@@ -810,27 +922,54 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "800"
   },
-  videoFrame: {
-    width: 300,
-    minHeight: 500,
+  videoStage: {
+    position: "relative",
+    width: 364,
+    minHeight: 640,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 4
+    paddingVertical: 18
   },
-  videoSurface: {
-    width: "100%",
-    height: "100%",
-    minHeight: 456,
-    maxWidth: 256,
-    aspectRatio: 9 / 16,
-    borderRadius: 26,
-    borderWidth: 8,
-    borderColor: "#D8E4FF",
+  videoStageGlow: {
+    position: "absolute",
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(47,98,234,0.12)" as never,
+    transform: [{ scaleX: 1.15 }],
+    top: 108
+  },
+  videoFrame: {
+    width: 302,
+    height: 536,
+    borderRadius: 36,
+    borderWidth: 10,
+    borderColor: palette.dark,
     backgroundColor: palette.dark,
     alignItems: "center",
     justifyContent: "center",
-    gap: 14,
-    overflow: "hidden"
+    overflow: "hidden",
+    ...phoneShadow
+  },
+  videoCaption: {
+    marginTop: 14,
+    minHeight: 40,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#C9DAFF",
+    backgroundColor: "rgba(255,255,255,0.9)" as never,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    ...cardShadow
+  },
+  videoCaptionText: {
+    color: palette.ink,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900"
   },
   videoPlay: {
     width: 70,

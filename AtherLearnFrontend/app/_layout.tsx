@@ -1,6 +1,4 @@
 import { useEffect } from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
 import { router, Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getSession } from "@/api/session";
@@ -9,7 +7,6 @@ import { colors } from "@/constants/theme";
 
 export default function RootLayout() {
   const pathname = usePathname();
-  const [fontsLoaded] = useFonts(Ionicons.font);
 
   useEffect(() => {
     const publicRoute = pathname === "/" || pathname.startsWith("/login");
@@ -17,10 +14,6 @@ export default function RootLayout() {
       router.replace("/");
     }
   }, [pathname]);
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   const appStack = (
     <>
