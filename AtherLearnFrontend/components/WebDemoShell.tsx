@@ -19,7 +19,7 @@ type WebDemoShellProps = {
 type SectionKey = "impact" | "accessibility" | "deliverables";
 
 type Profile = {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: "reading" | "vision" | "offline" | "chat";
   label: string;
   title: string;
   context: string;
@@ -44,7 +44,7 @@ const palette = {
 
 const profiles: Profile[] = [
   {
-    icon: "text-outline",
+    icon: "reading",
     label: "Reading access",
     title: "Dyslexia and reading anxiety",
     context: "Dense paragraphs become short, spaced, readable learning blocks.",
@@ -52,7 +52,7 @@ const profiles: Profile[] = [
     proof: "Simplified + read aloud"
   },
   {
-    icon: "eye-outline",
+    icon: "vision",
     label: "Vision support",
     title: "Low vision and visual fatigue",
     context: "The app favors large readable text and touch-sized controls.",
@@ -60,7 +60,7 @@ const profiles: Profile[] = [
     proof: "Large text + contrast"
   },
   {
-    icon: "cloud-offline-outline",
+    icon: "offline",
     label: "Connectivity",
     title: "Low-connectivity classrooms",
     context: "Learning continues when the network drops or a device is shared.",
@@ -68,7 +68,7 @@ const profiles: Profile[] = [
     proof: "Cached lesson path"
   },
   {
-    icon: "chatbubble-ellipses-outline",
+    icon: "chat",
     label: "Confidence",
     title: "Students afraid to ask",
     context: "A learner can ask the same question repeatedly without public pressure.",
@@ -156,7 +156,7 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
             style={({ pressed }) => [styles.brandRow, pressed && styles.pressed]}
           >
             <View style={styles.brandMark}>
-              <AccessibilityGlyph size={24} color="#FFFFFF" />
+              <BrandGlyph size={25} color="#FFFFFF" />
             </View>
             <Text style={styles.brandText}>AtherLearn</Text>
           </Pressable>
@@ -173,7 +173,9 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               onPress={() => setLiveDemoOpen(true)}
               style={({ pressed }) => [styles.navCta, pressed && styles.pressed]}
             >
+              <View style={styles.navCtaDot} />
               <Text style={styles.navCtaText}>Live demo</Text>
+              <Text style={styles.navCtaArrow}>→</Text>
             </Pressable>
           </View>
         </View>
@@ -276,10 +278,10 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               body="The deployable surface combines a web walkthrough, a mobile-first app experience, local AI capability where supported, and teacher/student flows that can be evaluated in a school pilot."
             />
             <View style={styles.deliverableGrid}>
-              <DeliverableCard icon="globe-outline" title="Web walkthrough" body="A public Cloudflare Pages demo for no-install evaluation." />
-              <DeliverableCard icon="phone-portrait-outline" title="Mobile-first app" body="A focused phone experience matching the intended classroom device." />
-              <DeliverableCard icon="hardware-chip-outline" title="Gemma 4 path" body="Local AI workflows for personalized learning support where device/browser support allows." />
-              <DeliverableCard icon="school-outline" title="Teacher loop" body="Upload, adapt, assign, and review who needs help next." />
+              <DeliverableCard icon="web" title="Web walkthrough" body="A public Cloudflare Pages demo for no-install evaluation." />
+              <DeliverableCard icon="mobile" title="Mobile-first app" body="A focused phone experience matching the intended classroom device." />
+              <DeliverableCard icon="ai" title="Gemma 4 path" body="Local AI workflows for personalized learning support where device/browser support allows." />
+              <DeliverableCard icon="teacher" title="Teacher loop" body="Upload, adapt, assign, and review who needs help next." />
             </View>
           </View>
         </View>
@@ -299,7 +301,7 @@ export function WebDemoShell({ children }: WebDemoShellProps) {
               onPress={() => setLiveDemoOpen(false)}
               style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
             >
-              <Ionicons name="close" size={24} color={palette.ink} />
+              <Text style={styles.closeButtonText}>×</Text>
             </Pressable>
           </View>
           <View style={[styles.modalPhone, { width: Math.min(430, width - 64), height: Math.min(height - 108, 840) }]}>
@@ -324,7 +326,83 @@ function NavItem({ label, active, onPress }: { label: string; active: boolean; o
   );
 }
 
+function BrandGlyph({ size, color }: { size: number; color: string }) {
+  if (Platform.OS === "web") {
+    return createElement(
+      "svg",
+      {
+        width: size,
+        height: size,
+        viewBox: "0 0 24 24",
+        fill: "none",
+        "aria-hidden": true
+      },
+      createElement("circle", {
+        cx: 12,
+        cy: 5.1,
+        r: 1.9,
+        fill: color
+      }),
+      createElement("path", {
+        d: "M6.3 9.2h11.4M12 7.8v6.9M9.1 19.2l2.9-4.5 2.9 4.5M9.5 12.1 12 13.5l2.5-1.4",
+        stroke: color,
+        strokeWidth: 2.1,
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      })
+    );
+  }
+
+  return <AccessibilityGlyph size={size} color={color} />;
+}
+
 function AccessibilityGlyph({ size, color }: { size: number; color: string }) {
+  if (Platform.OS === "web") {
+    return createElement(
+      "svg",
+      {
+        width: size,
+        height: size,
+        viewBox: "0 0 24 24",
+        fill: "none",
+        "aria-hidden": true
+      },
+      createElement("circle", {
+        cx: 12,
+        cy: 4.5,
+        r: 2,
+        stroke: color,
+        strokeWidth: 2.2
+      }),
+      createElement("path", {
+        d: "M5 8.2C7.7 7.1 9.8 6.6 12 6.6s4.3.5 7 1.6",
+        stroke: color,
+        strokeWidth: 2.2,
+        strokeLinecap: "round"
+      }),
+      createElement("path", {
+        d: "M12 7.4v12.8",
+        stroke: color,
+        strokeWidth: 2.2,
+        strokeLinecap: "round"
+      }),
+      createElement("path", {
+        d: "M8.7 11.2 12 13.1l3.3-1.9",
+        stroke: color,
+        strokeWidth: 2.2,
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      }),
+      createElement("path", {
+        d: "m9.2 20.2 2.8-7.1 2.8 7.1",
+        stroke: color,
+        strokeWidth: 2.2,
+        strokeLinecap: "round",
+        strokeLinejoin: "round"
+      })
+    );
+  }
+
   const stroke = Math.max(2, Math.round(size * 0.1));
   const head = Math.max(4, Math.round(size * 0.18));
 
@@ -401,6 +479,122 @@ function AccessibilityGlyph({ size, color }: { size: number; color: string }) {
   );
 }
 
+function CheckGlyph({ size, color }: { size: number; color: string }) {
+  const stroke = Math.max(2, Math.round(size * 0.12));
+
+  return (
+    <View style={[styles.checkGlyphRoot, { width: size, height: size, borderRadius: size / 2, borderColor: color }]}>
+      <View
+        style={[
+          styles.checkGlyphShort,
+          {
+            width: size * 0.3,
+            height: stroke,
+            backgroundColor: color,
+            transform: [{ rotate: "45deg" }]
+          }
+        ]}
+      />
+      <View
+        style={[
+          styles.checkGlyphLong,
+          {
+            width: size * 0.48,
+            height: stroke,
+            backgroundColor: color,
+            transform: [{ rotate: "-45deg" }]
+          }
+        ]}
+      />
+    </View>
+  );
+}
+
+function PhoneGlyph({ size, color }: { size: number; color: string }) {
+  return (
+    <View style={[styles.phoneGlyphRoot, { width: size * 0.62, height: size, borderColor: color, borderRadius: size * 0.16 }]}>
+      <View style={[styles.phoneGlyphButton, { width: size * 0.16, height: Math.max(2, size * 0.08), backgroundColor: color }]} />
+    </View>
+  );
+}
+
+function SupportGlyph({
+  kind,
+  size,
+  color
+}: {
+  kind: "reading" | "vision" | "offline" | "chat" | "web" | "mobile" | "ai" | "teacher";
+  size: number;
+  color: string;
+}) {
+  if (kind === "reading") {
+    return (
+      <View style={[styles.supportGlyphRoot, { width: size, height: size }]}>
+        <View style={[styles.bookGlyphPage, { borderColor: color, left: size * 0.08 }]} />
+        <View style={[styles.bookGlyphPage, { borderColor: color, right: size * 0.08 }]} />
+      </View>
+    );
+  }
+
+  if (kind === "vision") {
+    return (
+      <View style={[styles.eyeGlyphRoot, { width: size, height: size * 0.68, borderColor: color, borderRadius: size }]}>
+        <View style={[styles.eyeGlyphDot, { width: size * 0.22, height: size * 0.22, borderRadius: size, backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  if (kind === "offline") {
+    return (
+      <View style={[styles.supportGlyphRoot, { width: size, height: size }]}>
+        <View style={[styles.cloudGlyph, { borderColor: color }]} />
+        <View style={[styles.slashGlyph, { backgroundColor: color, transform: [{ rotate: "42deg" }] }]} />
+      </View>
+    );
+  }
+
+  if (kind === "chat") {
+    return (
+      <View style={[styles.chatGlyphRoot, { width: size, height: size * 0.74, borderColor: color, borderRadius: size * 0.25 }]}>
+        <View style={[styles.chatGlyphDot, { backgroundColor: color, left: size * 0.25 }]} />
+        <View style={[styles.chatGlyphDot, { backgroundColor: color, left: size * 0.44 }]} />
+        <View style={[styles.chatGlyphDot, { backgroundColor: color, left: size * 0.63 }]} />
+      </View>
+    );
+  }
+
+  if (kind === "mobile") {
+    return <PhoneGlyph size={size} color={color} />;
+  }
+
+  if (kind === "web") {
+    return (
+      <View style={[styles.webGlyphRoot, { width: size, height: size * 0.72, borderColor: color }]}>
+        <View style={[styles.webGlyphBar, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  if (kind === "teacher") {
+    return (
+      <View style={[styles.supportGlyphRoot, { width: size, height: size }]}>
+        <View style={[styles.teacherGlyphBoard, { borderColor: color }]} />
+        <View style={[styles.teacherGlyphBase, { backgroundColor: color }]} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.aiGlyphRoot, { width: size, height: size }]}>
+      <View style={[styles.aiGlyphCenter, { width: size * 0.34, height: size * 0.34, borderRadius: size, backgroundColor: color }]} />
+      <View style={[styles.aiGlyphRay, { height: size, backgroundColor: color }]} />
+      <View style={[styles.aiGlyphRay, { height: size, backgroundColor: color, transform: [{ rotate: "90deg" }] }]} />
+      <View style={[styles.aiGlyphRay, { height: size, backgroundColor: color, transform: [{ rotate: "45deg" }] }]} />
+      <View style={[styles.aiGlyphRay, { height: size, backgroundColor: color, transform: [{ rotate: "-45deg" }] }]} />
+    </View>
+  );
+}
+
 function VideoFeature() {
   return (
     <View style={styles.videoSection}>
@@ -416,7 +610,9 @@ function VideoFeature() {
             "Suyash, we are with you. Go fly."
           </Text>
           <View style={styles.videoPromise}>
-            <Ionicons name="heart-outline" size={20} color={palette.blue} />
+            <View style={styles.promiseIcon}>
+              <Text style={styles.promiseIconText}>!</Text>
+            </View>
             <Text style={styles.videoPromiseText}>
               Built so a child can ask for help without shame, and a teacher can reach them
               without rebuilding every lesson by hand.
@@ -431,7 +627,7 @@ function VideoFeature() {
           <YouTubeEmbed videoId="927kTEB4QKw" title="AtherLearn portrait story film" />
         </View>
         <View style={styles.videoCaption}>
-          <Ionicons name="phone-portrait-outline" size={16} color={palette.blue} />
+          <PhoneGlyph size={15} color={palette.blue} />
           <Text style={styles.videoCaptionText}>Portrait demo film</Text>
         </View>
       </View>
@@ -505,7 +701,7 @@ function ProfileCard({ profile, wide }: { profile: Profile; wide: boolean }) {
     <View style={[styles.profileCard, wide ? styles.profileCardWide : styles.profileCardNarrow]}>
       <View style={styles.profileCardTop}>
         <View style={styles.profileIcon}>
-          <Ionicons name={profile.icon} size={22} color={palette.blue} />
+          <SupportGlyph kind={profile.icon} size={22} color={palette.blue} />
         </View>
         <Text style={styles.profileLabel}>{profile.label}</Text>
       </View>
@@ -521,7 +717,7 @@ function ProfileCard({ profile, wide }: { profile: Profile; wide: boolean }) {
           <Text style={styles.profileSupport}>{profile.support}</Text>
         </View>
         <View style={styles.profileProof}>
-          <Ionicons name="checkmark-circle" size={15} color={palette.green} />
+          <CheckGlyph size={15} color={palette.green} />
           <Text style={styles.profileProofText}>{profile.proof}</Text>
         </View>
       </View>
@@ -534,13 +730,13 @@ function DeliverableCard({
   title,
   body
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: "web" | "mobile" | "ai" | "teacher";
   title: string;
   body: string;
 }) {
   return (
     <View style={styles.deliverableCard}>
-      <Ionicons name={icon} size={24} color={palette.blue} />
+      <SupportGlyph kind={icon} size={24} color={palette.blue} />
       <Text style={styles.deliverableTitle}>{title}</Text>
       <Text style={styles.deliverableBody}>{body}</Text>
     </View>
@@ -553,7 +749,7 @@ function StaticPhonePreview() {
       <View style={styles.staticHeader}>
         <View style={styles.staticBrand}>
           <View style={styles.staticMark}>
-            <AccessibilityGlyph size={18} color="#FFFFFF" />
+            <BrandGlyph size={18} color="#FFFFFF" />
           </View>
           <Text style={styles.staticBrandText}>AtherLearn</Text>
         </View>
@@ -578,7 +774,7 @@ function StaticPhonePreview() {
 
         <View style={styles.staticCard}>
           <View style={styles.staticCardIconTeal}>
-            <Ionicons name="cloud-offline-outline" size={24} color={palette.teal} />
+            <SupportGlyph kind="offline" size={24} color={palette.teal} />
           </View>
           <View style={styles.staticCardCopy}>
             <Text style={styles.staticCardTitle}>Offline-ready learning</Text>
@@ -673,6 +869,10 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     fontWeight: "900"
   },
+  brandGlyphFallback: {
+    fontWeight: "900",
+    textAlign: "center"
+  },
   glyphRoot: {
     position: "relative",
     alignItems: "center"
@@ -686,6 +886,106 @@ const styles = StyleSheet.create({
   },
   glyphLimb: {
     position: "absolute"
+  },
+  checkGlyphRoot: {
+    position: "relative",
+    borderWidth: 2
+  },
+  checkGlyphShort: {
+    position: "absolute",
+    left: "24%" as never,
+    top: "50%" as never,
+    borderRadius: 99
+  },
+  checkGlyphLong: {
+    position: "absolute",
+    left: "42%" as never,
+    top: "43%" as never,
+    borderRadius: 99
+  },
+  phoneGlyphRoot: {
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 2
+  },
+  phoneGlyphButton: {
+    borderRadius: 99
+  },
+  supportGlyphRoot: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  bookGlyphPage: {
+    position: "absolute",
+    top: "16%" as never,
+    width: "40%" as never,
+    height: "70%" as never,
+    borderWidth: 2,
+    borderRadius: 4
+  },
+  eyeGlyphRoot: {
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  eyeGlyphDot: {},
+  cloudGlyph: {
+    width: "72%" as never,
+    height: "48%" as never,
+    borderWidth: 2,
+    borderRadius: 99
+  },
+  slashGlyph: {
+    position: "absolute",
+    width: 2,
+    height: "96%" as never,
+    borderRadius: 99
+  },
+  chatGlyphRoot: {
+    position: "relative",
+    borderWidth: 2,
+    justifyContent: "center"
+  },
+  chatGlyphDot: {
+    position: "absolute",
+    width: 3,
+    height: 3,
+    borderRadius: 3
+  },
+  webGlyphRoot: {
+    borderWidth: 2,
+    borderRadius: 5,
+    overflow: "hidden"
+  },
+  webGlyphBar: {
+    height: 4,
+    width: "100%" as never
+  },
+  teacherGlyphBoard: {
+    width: "80%" as never,
+    height: "58%" as never,
+    borderWidth: 2,
+    borderRadius: 4
+  },
+  teacherGlyphBase: {
+    width: "48%" as never,
+    height: 2,
+    borderRadius: 99,
+    marginTop: 3
+  },
+  aiGlyphRoot: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  aiGlyphCenter: {},
+  aiGlyphRay: {
+    position: "absolute",
+    width: 2,
+    borderRadius: 99,
+    opacity: 0.8
   },
   navActions: {
     flexDirection: "row",
@@ -719,17 +1019,37 @@ const styles = StyleSheet.create({
     color: palette.blueDark
   },
   navCta: {
-    minHeight: 42,
-    borderRadius: 21,
+    minHeight: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: palette.dark,
-    paddingHorizontal: 20,
-    ...cardShadow
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: palette.blue,
+    borderWidth: 1,
+    borderColor: "#AFC6FF",
+    paddingHorizontal: 18,
+    shadowColor: palette.blue,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.28,
+    shadowRadius: 28,
+    elevation: 8
+  },
+  navCtaDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#DFFCEF"
   },
   navCtaText: {
     color: "#FFFFFF",
     fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "900"
+  },
+  navCtaArrow: {
+    color: "#FFFFFF",
+    fontSize: 16,
     lineHeight: 20,
     fontWeight: "900"
   },
@@ -914,6 +1234,20 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 14,
     marginTop: 4
+  },
+  promiseIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.blue
+  },
+  promiseIconText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "900"
   },
   videoPromiseText: {
     flex: 1,
@@ -1363,6 +1697,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
     ...cardShadow
+  },
+  closeButtonText: {
+    color: palette.ink,
+    fontSize: 24,
+    lineHeight: 26,
+    fontWeight: "900"
   },
   modalPhone: {
     borderRadius: 52,
