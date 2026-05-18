@@ -16,11 +16,13 @@ import { subjects } from "@/data/subjects";
 import { colors, radii, spacing } from "@/constants/theme";
 
 const classes = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10"];
+const demoClassCode = "CLASS8A";
+const demoSchool = "AtherLearn Demo School";
 
 export default function StudentOnboardingScreen() {
-  const [school, setSchool] = useState("");
+  const [school, setSchool] = useState(demoSchool);
   const [schoolSuggestions, setSchoolSuggestions] = useState<SchoolSuggestion[]>([]);
-  const [classCode, setClassCode] = useState("");
+  const [classCode, setClassCode] = useState(demoClassCode);
   const [className, setClassName] = useState("Grade 8");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(["Science", "Math"]);
   const [saving, setSaving] = useState(false);
