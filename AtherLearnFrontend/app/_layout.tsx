@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { router, Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getSession } from "@/api/session";
+import { WebDemoShell } from "@/components/WebDemoShell";
 import { colors } from "@/constants/theme";
 
 export default function RootLayout() {
@@ -14,7 +15,7 @@ export default function RootLayout() {
     }
   }, [pathname]);
 
-  return (
+  const appStack = (
     <>
       <StatusBar style="dark" backgroundColor={colors.background} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
@@ -31,4 +32,6 @@ export default function RootLayout() {
       </Stack>
     </>
   );
+
+  return <WebDemoShell>{appStack}</WebDemoShell>;
 }
