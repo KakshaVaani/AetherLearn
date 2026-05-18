@@ -1,11 +1,15 @@
 import { useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { router, Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getSession } from "@/api/session";
+import { WebDemoShell } from "@/components/WebDemoShell";
 import { colors } from "@/constants/theme";
 
 export default function RootLayout() {
   const pathname = usePathname();
+  const [fontsLoaded] = useFonts(Ionicons.font);
 
   useEffect(() => {
     const publicRoute = pathname === "/" || pathname.startsWith("/login");
@@ -14,7 +18,11 @@ export default function RootLayout() {
     }
   }, [pathname]);
 
-  return (
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const appStack = (
     <>
       <StatusBar style="dark" backgroundColor={colors.background} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
@@ -31,4 +39,6 @@ export default function RootLayout() {
       </Stack>
     </>
   );
+
+  return <WebDemoShell>{appStack}</WebDemoShell>;
 }
