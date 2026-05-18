@@ -14,6 +14,7 @@ import {
   ModelPreference,
   RuntimeMode
 } from "@/types";
+import { normalizeAccessibilityModes } from "@/utils/accessibilityModes";
 
 export type AskLessonResponse = {
   answer: string;
@@ -390,7 +391,10 @@ export async function generateLocalAssignmentDraft(
     title: parsed?.title ?? `${input.lessonPack.title} Assignment`,
     instructions: parsed?.instructions ?? "Complete the lesson pack and answer the questions.",
     answerMode: parsed?.answerMode ?? input.questionType ?? "short_answer",
-    versions: parsed?.versions?.length ? parsed.versions : input.preferredVersions ?? ["Standard"],
+    versions: normalizeAccessibilityModes(
+      parsed?.versions,
+      input.preferredVersions?.length ? input.preferredVersions : ["Standard"]
+    ),
     questions
   };
 }

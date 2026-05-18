@@ -1,13 +1,8 @@
 import { AccessibilityMode } from "@/types";
 import { colors } from "@/constants/theme";
+import { accessibilityModes } from "@/utils/accessibilityModes";
 
-export const accessibilityModes: AccessibilityMode[] = [
-  "Standard",
-  "Blind / Low Vision",
-  "Dyslexia Friendly",
-  "Multilingual",
-  "Slow Learner"
-];
+export { accessibilityModes };
 
 export const accessibilityMeta: Record<
   AccessibilityMode,

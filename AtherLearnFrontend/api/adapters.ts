@@ -10,6 +10,7 @@ import {
   User
 } from "@/types";
 import { normalizeAssignmentAnswerMode } from "@/utils/assignmentModes";
+import { defaultAssignmentVersions, normalizeAccessibilityModes } from "@/utils/accessibilityModes";
 
 type BackendLessonPack = {
   id: string;
@@ -368,7 +369,7 @@ export function backendAssignmentToAssignment(assignment: BackendAssignment): As
       hint: question.hint ?? undefined,
       options: question.options ?? undefined
     }));
-  const versions = (assignment.versions?.filter(Boolean) ?? []) as AccessibilityMode[];
+  const versions = normalizeAccessibilityModes(assignment.versions, defaultAssignmentVersions);
 
   return {
     id: assignment.id,
@@ -379,7 +380,7 @@ export function backendAssignmentToAssignment(assignment: BackendAssignment): As
     postedAt: "Synced from backend",
     dueDate: assignment.dueAt ?? "No due date",
     answerMode: normalizeAssignmentAnswerMode(assignment.answerMode),
-    versions: versions.length ? versions : ["Standard", "Dyslexia Friendly", "Blind / Low Vision"],
+    versions,
     questions: questions.length
       ? questions
       : [

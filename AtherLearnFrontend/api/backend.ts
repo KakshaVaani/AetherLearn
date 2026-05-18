@@ -37,6 +37,7 @@ import {
   Role
 } from "@/types";
 import { normalizeAssignmentAnswerMode } from "@/utils/assignmentModes";
+import { normalizeAccessibilityModes } from "@/utils/accessibilityModes";
 
 type LoginResponse = {
   user: {
@@ -745,7 +746,10 @@ export async function generateAssignmentDraftFromLesson(input: {
     title: response.title,
     instructions: response.instructions,
     answerMode: normalizeAssignmentAnswerMode(response.answerMode),
-    versions: ((response.versions ?? []) as AccessibilityMode[]),
+    versions: normalizeAccessibilityModes(
+      response.versions,
+      input.preferredVersions?.length ? input.preferredVersions : ["Standard"]
+    ),
     questions: (response.questions ?? []).map((question, index) => ({
       id: question.id || `q${index + 1}`,
       prompt: question.prompt || "",
